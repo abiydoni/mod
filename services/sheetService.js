@@ -301,12 +301,6 @@ function saveLocalMonthSchedule(sheetName, data) {
   try {
     fs.writeFileSync(filePath, JSON.stringify(data, null, 2), 'utf8');
     storage.saveCachedSchedule(data);
-    
-    // Auto sync to Google Apps Script if configured
-    syncToGoogleAppsScript(sheetName, data.officers || []).catch(e => {
-      console.warn('Background Google Apps Script sync:', e.message);
-    });
-
     return true;
   } catch (e) {
     console.error('Error saving local schedule file:', e);
