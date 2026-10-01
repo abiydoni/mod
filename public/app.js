@@ -303,12 +303,10 @@ const app = {
   },
 
   initDateSelector() {
-    const yyyy = this.currentDate.getFullYear();
-    const mm = String(this.currentDate.getMonth() + 1).padStart(2, '0');
-    const dd = String(this.currentDate.getDate()).padStart(2, '0');
+    const wibDateStr = new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Jakarta' }).format(this.currentDate);
     const input = document.getElementById('date-selector');
     if (input) {
-      input.value = `${yyyy}-${mm}-${dd}`;
+      input.value = wibDateStr;
     }
   },
 

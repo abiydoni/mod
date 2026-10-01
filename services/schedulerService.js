@@ -7,12 +7,13 @@ let activeJobs = {};
 let dispatchedToday = {}; // { 'YYYY-MM-DD_MOD1': true }
 
 function getTodayKey(shiftKey) {
-  const todayStr = new Date().toISOString().split('T')[0];
+  const todayStr = new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Jakarta' }).format(new Date());
   return `${todayStr}_${shiftKey}`;
 }
 
 async function triggerShiftDispatch(shiftKey) {
-  console.log(`[SCHEDULER] Triggering scheduled dispatch for ${shiftKey} at ${new Date().toLocaleTimeString('id-ID')}...`);
+  const timeWib = new Date().toLocaleTimeString('id-ID', { timeZone: 'Asia/Jakarta' });
+  console.log(`[SCHEDULER] Triggering scheduled dispatch for ${shiftKey} at ${timeWib} WIB...`);
   
   try {
     const schedule = await sheetService.fetchScheduleFromGoogle();
@@ -20,7 +21,7 @@ async function triggerShiftDispatch(shiftKey) {
     
     const officers = duty[shiftKey] || [];
     if (officers.length === 0) {
-      console.log(`[SCHEDULER] No officers for shift ${shiftKey} today. Sending notification or skipping.`);
+      console.log(`[SCHEDULER] No officers for shift ${shiftKey} today (${timeWib} WIB).`);
     }
 
     const res = await waService.sendWhatsAppMessage({
@@ -31,7 +32,7 @@ async function triggerShiftDispatch(shiftKey) {
 
     const todayKey = getTodayKey(shiftKey);
     dispatchedToday[todayKey] = {
-      time: new Date().toISOString(),
+      time: new Date().toLocaleString('id-ID', { timeZone: 'Asia/Jakarta' }),
       result: res
     };
 

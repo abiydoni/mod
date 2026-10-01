@@ -470,16 +470,36 @@ function exportScheduleToCsv(scheduleData) {
 }
 
 function getDutyForDate(scheduleData, targetDate = new Date()) {
-  const day = targetDate.getDate();
-  const dayOfWeek = targetDate.getDay();
-  const monthIdx = targetDate.getMonth();
-  const year = targetDate.getFullYear();
+  let day, dayOfWeek, monthIdx, year;
 
-  const hari = HARI_INDONESIA[dayOfWeek];
-  const bulan = BULAN_INDONESIA[monthIdx];
+  if (typeof targetDate === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(targetDate.trim())) {
+    const [y, m, d] = targetDate.trim().split('-').map(Number);
+    year = y;
+    monthIdx = m - 1;
+    day = d;
+    dayOfWeek = new Date(Date.UTC(year, monthIdx, day)).getUTCDay();
+  } else {
+    const dObj = typeof targetDate === 'string' ? new Date(targetDate) : targetDate;
+    const formatter = new Intl.DateTimeFormat('en-US', {
+      timeZone: 'Asia/Jakarta',
+      year: 'numeric',
+      month: 'numeric',
+      day: 'numeric'
+    });
+    const parts = formatter.formatToParts(dObj);
+    const map = {};
+    parts.forEach(p => map[p.type] = p.value);
+    day = parseInt(map.day, 10);
+    monthIdx = parseInt(map.month, 10) - 1;
+    year = parseInt(map.year, 10);
+    dayOfWeek = new Date(Date.UTC(year, monthIdx, day)).getUTCDay();
+  }
+
+  const hari = HARI_INDONESIA[dayOfWeek] || 'Hari';
+  const bulan = BULAN_INDONESIA[monthIdx] || 'Bulan';
 
   const duty = {
-    date: targetDate.toISOString().split('T')[0],
+    date: `${year}-${String(monthIdx + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`,
     day,
     hari,
     bulan,
