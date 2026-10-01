@@ -816,7 +816,8 @@ body {
 }
 
 /* Sticky Columns for Matrix Table */
-#matrix-table td:nth-child(1), #matrix-table th:nth-child(1) {
+#matrix-table tbody td:nth-child(1),
+#matrix-table thead tr:first-child th:nth-child(1) {
   text-align: left;
   font-weight: 600;
   position: sticky;
@@ -830,7 +831,8 @@ body {
   text-overflow: ellipsis;
 }
 
-#matrix-table td:nth-child(2), #matrix-table th:nth-child(2) {
+#matrix-table tbody td:nth-child(2),
+#matrix-table thead tr:first-child th:nth-child(2) {
   text-align: left;
   font-size: 0.68rem;
   color: var(--text-muted);
@@ -845,8 +847,28 @@ body {
   text-overflow: ellipsis;
 }
 
+/* Date cells for Matrix Table (All dates 01-31 equal width) */
+#matrix-table thead tr:last-child th,
+#matrix-table tbody td:not(:nth-child(1)):not(:nth-child(2)):not(:last-child) {
+  width: 26px;
+  min-width: 26px;
+  max-width: 26px;
+  padding: 3px 1px;
+  text-align: center;
+}
+
+/* Total column for Matrix Table */
+#matrix-table thead tr:first-child th:last-child,
+#matrix-table tbody td:last-child {
+  width: 36px;
+  min-width: 36px;
+  max-width: 36px;
+  text-align: center;
+}
+
 /* Sticky Columns for Editor Table */
-#editor-table th:nth-child(1), #editor-table td:nth-child(1) {
+#editor-table tbody td:nth-child(1),
+#editor-table thead tr:first-child th:nth-child(1) {
   position: sticky;
   left: 0;
   background: #0f172a;
@@ -858,7 +880,8 @@ body {
   text-align: center;
 }
 
-#editor-table th:nth-child(2), #editor-table td:nth-child(2) {
+#editor-table tbody td:nth-child(2),
+#editor-table thead tr:first-child th:nth-child(2) {
   position: sticky;
   left: 38px;
   background: #0f172a;
@@ -872,7 +895,8 @@ body {
   text-overflow: ellipsis;
 }
 
-#editor-table th:nth-child(3), #editor-table td:nth-child(3) {
+#editor-table tbody td:nth-child(3),
+#editor-table thead tr:first-child th:nth-child(3) {
   position: sticky;
   left: 173px;
   background: #0f172a;
@@ -885,6 +909,26 @@ body {
   padding-left: 6px;
   overflow: hidden;
   text-overflow: ellipsis;
+}
+
+/* Date cells for Editor Table (All dates 01-31 equal width) */
+#editor-table thead tr:last-child th,
+#editor-table tbody td.clickable-shift {
+  width: 26px;
+  min-width: 26px;
+  max-width: 26px;
+  height: 26px;
+  padding: 2px 1px;
+  text-align: center;
+}
+
+/* Total column for Editor Table */
+#editor-table thead tr:first-child th:last-child,
+#editor-table tbody td:last-child {
+  width: 36px;
+  min-width: 36px;
+  max-width: 36px;
+  text-align: center;
 }
 
 /* Master Officers Table */
