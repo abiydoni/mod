@@ -118,10 +118,36 @@ function saveConfig(config) {
   try {
     const jsonStr = JSON.stringify(config, null, 2);
     if (db) {
+      // 1. Simpan objek konfigurasi lengkap
       db.run("INSERT OR REPLACE INTO configs (key, value, updatedAt) VALUES ('app_config', ?, datetime('now'))", [jsonStr]);
+
+      // 2. Simpan juga per parameter individual agar mudah di-query secara langsung
+      const entries = [
+        ['sheet_url', config.spreadsheet?.sheetUrl || ''],
+        ['sheet_id', config.spreadsheet?.spreadsheetId || ''],
+        ['script_webhook_url', config.spreadsheet?.scriptWebhookUrl || ''],
+        ['active_sheet_name', config.spreadsheet?.activeSheetName || 'October 2026'],
+        ['wa_api_url', config.waGateway?.apiUrl || ''],
+        ['wa_api_key', config.waGateway?.apiKey || ''],
+        ['wa_session_id', config.waGateway?.sessionId || ''],
+        ['wa_target_number', config.waGateway?.targetNumber || ''],
+        ['wa_enabled', config.waGateway?.enabled ? '1' : '0'],
+        ['time_mod1', config.schedules?.MOD1?.time || '09:00'],
+        ['time_mod2', config.schedules?.MOD2?.time || '16:00'],
+        ['time_mod', config.schedules?.MOD?.time || '18:00'],
+        ['template_mod1', config.messageTemplates?.MOD1 || ''],
+        ['template_mod2', config.messageTemplates?.MOD2 || ''],
+        ['template_mod', config.messageTemplates?.MOD || ''],
+        ['template_all', config.messageTemplates?.ALL || '']
+      ];
+
+      entries.forEach(([k, v]) => {
+        db.run("INSERT OR REPLACE INTO configs (key, value, updatedAt) VALUES (?, ?, datetime('now'))", [k, String(v)]);
+      });
+
       saveDbToDisk();
     }
-    // Also mirror to config.json
+    // Mirror ke config.json sebagai backup
     fs.writeFileSync(CONFIG_FILE, jsonStr, 'utf8');
     return true;
   } catch (err) {
