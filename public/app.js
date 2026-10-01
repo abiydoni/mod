@@ -447,8 +447,16 @@ const app = {
     setInterval(update, 1000);
   },
 
+  formatDateWIB(dateObj = this.currentDate) {
+    if (typeof dateObj === 'string') {
+      if (/^\d{4}-\d{2}-\d{2}$/.test(dateObj)) return dateObj;
+      dateObj = new Date(dateObj);
+    }
+    return new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Jakarta' }).format(dateObj);
+  },
+
   initDateSelector() {
-    const wibDateStr = new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Jakarta' }).format(this.currentDate);
+    const wibDateStr = this.formatDateWIB(this.currentDate);
     const input = document.getElementById('date-selector');
     if (input) {
       input.value = wibDateStr;
@@ -557,7 +565,7 @@ const app = {
 
   async loadDutyData() {
     try {
-      const dateStr = this.currentDate.toISOString().split('T')[0];
+      const dateStr = this.formatDateWIB();
       const res = await fetch(`/api/schedule/duty?date=${dateStr}`);
       const data = await res.json();
       this.cachedDuty = data.duty;
@@ -619,7 +627,7 @@ const app = {
   async updateWhatsAppPreview() {
     if (!this.cachedDuty) return;
     try {
-      const dateStr = this.currentDate.toISOString().split('T')[0];
+      const dateStr = this.formatDateWIB();
       const res = await fetch('/api/preview', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -645,11 +653,13 @@ const app = {
     const btn = document.getElementById('btn-sync-sheet');
     if (!btn) return;
     const originalText = btn.innerHTML;
-    this.setStatus('🔄 Menghubungi Google Sheets & menyinkronkan data CSV...', 'working');
+    btn.innerHTML = '🔄 Menyinkronkan...';
+    btn.disabled = true;
+    this.setStatus('🔄 Menghubungi Google Sheets & menyinkronkan data...', 'working');
     this.setProgress(40);
 
     try {
-      const sheetName = document.getElementById('cfg-sheet-name')?.value.trim() || '';
+      const sheetName = document.getElementById('cfg-sheet-name')?.value.trim() || this.config?.spreadsheet?.activeSheetName || 'October 2026';
       const res = await fetch('/api/schedule/sync', { 
         method: 'POST', 
         headers: { 'Content-Type': 'application/json' }, 
@@ -657,12 +667,28 @@ const app = {
       });
       const data = await res.json();
       if (data.success) {
-        this.showToast(`Berhasil disinkronkan! Ditemukan ${data.officersCount} data petugas.`, 'success');
+        this.showToast(`✅ Berhasil disinkronkan! Ditemukan ${data.officersCount} data petugas.`, 'success');
         this.setStatus(`✅ Google Sheets berhasil disinkronkan (${data.officersCount} Petugas)`, 'ready');
         this.setProgress(100, false);
         await this.loadDutyData();
         await this.loadMatrixData();
+        if (typeof this.loadEditorData === 'function') {
+          await this.loadEditorData();
+        }
       } else {
+        this.showToast(`Gagal sinkron: ${data.error}`, 'error');
+        this.setStatus(`❌ Gagal sinkronisasi: ${data.error}`, 'error');
+        this.setProgress(100, false);
+      }
+    } catch (e) {
+      this.showToast(`Error sinkronisasi: ${e.message}`, 'error');
+      this.setStatus(`❌ Error sinkronisasi: ${e.message}`, 'error');
+      this.setProgress(100, false);
+    } finally {
+      btn.innerHTML = originalText;
+      btn.disabled = false;
+    }
+  }, else {
         this.showToast(`Gagal sinkron: ${data.error}`, 'error');
         this.setStatus(`❌ Gagal sinkronisasi: ${data.error}`, 'error');
         this.setProgress(100, false);
@@ -762,7 +788,7 @@ const app = {
       modalTitle.innerText = titles[shiftKey] || 'Konfirmasi Pengiriman';
     }
     
-    const dateStr = this.currentDate.toISOString().split('T')[0];
+    const dateStr = this.formatDateWIB();
     fetch('/api/preview', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -791,7 +817,7 @@ const app = {
     }
 
     try {
-      const dateStr = this.currentDate.toISOString().split('T')[0];
+      const dateStr = this.formatDateWIB();
       const res = await fetch('/api/send/shift', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },

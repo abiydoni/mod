@@ -48,7 +48,7 @@ app.get('/api/schedule/current', async (req, res) => {
 // 3. Get Duty for a Specific Date
 app.get('/api/schedule/duty', async (req, res) => {
   try {
-    const dateParam = req.query.date ? new Date(req.query.date) : new Date();
+    const dateParam = req.query.date || new Date();
     const sheetName = req.query.sheet;
     const schedule = await sheetService.fetchScheduleFromGoogle(sheetName);
     const duty = sheetService.getDutyForDate(schedule, dateParam);
@@ -190,7 +190,7 @@ app.delete('/api/officers/:id', (req, res) => {
 app.post('/api/preview', async (req, res) => {
   try {
     const { shift = 'ALL', date = null } = req.body;
-    const targetDate = date ? new Date(date) : new Date();
+    const targetDate = date || new Date();
     const schedule = await sheetService.fetchScheduleFromGoogle();
     const duty = sheetService.getDutyForDate(schedule, targetDate);
     
@@ -214,7 +214,7 @@ app.post('/api/preview', async (req, res) => {
 app.post('/api/send/shift', async (req, res) => {
   try {
     const { shift = 'ALL', date = null } = req.body;
-    const targetDate = date ? new Date(date) : new Date();
+    const targetDate = date || new Date();
     const schedule = await sheetService.fetchScheduleFromGoogle();
     const duty = sheetService.getDutyForDate(schedule, targetDate);
 
