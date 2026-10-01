@@ -492,34 +492,29 @@
               </div>
             </div>
 
-            <!-- Email Share Guide Box -->
+            <!-- Direct Link Sharing Guide Box -->
             <div class="email-sharing-card">
               <div class="email-sharing-header">
-                <span class="email-icon">📧</span>
+                <span class="email-icon">🔗</span>
                 <div>
-                  <strong>Opsi A: Bagi Akses via Email (Spreadsheet Privat)</strong>
-                  <p class="text-muted text-xs">Jika dokumen dibatasi / privat, bagikan akses dokumen ke email sistem ini:</p>
+                  <strong>Cara Termudah & Paling Cepat (Akses Link Google Sheet)</strong>
+                  <p class="text-muted text-xs">Buka Google Sheet Anda agar dapat dibaca oleh sistem secara otomatis:</p>
                 </div>
               </div>
-              <div class="copy-email-box">
-                <code id="system-service-email">mod-scheduler@appsbee-bot.iam.gserviceaccount.com</code>
-                <button type="button" class="btn btn-sm btn-secondary" id="btn-copy-service-email" title="Salin Email">
-                  📋 Salin Email
-                </button>
-              </div>
               <div class="email-guide-pills">
-                <span class="guide-step-pill">1. Salin Email</span>
+                <span class="guide-step-pill">1. Buka Google Sheet > Klik "Bagikan" (Share) di Kanan Atas</span>
                 <span class="guide-arrow">➔</span>
-                <span class="guide-step-pill">2. Buka Google Sheet > Klik "Bagikan" > Tempelkan Email</span>
+                <span class="guide-step-pill">2. Pada "Akses Umum", pilih: <strong>"Siapa saja yang memiliki link"</strong> (Pelihat/Editor)</span>
                 <span class="guide-arrow">➔</span>
-                <span class="guide-step-pill">3. Klik "Uji Sambungan" di Bawah</span>
+                <span class="guide-step-pill">3. Klik "Uji Sambungan & Cek Akses" di Bawah</span>
               </div>
             </div>
 
-            <!-- Webhook Options -->
+            <!-- Webhook Options for Fully Private Sheet -->
             <div class="form-group mt-3">
-              <label for="cfg-script-webhook">Opsi B: Google Apps Script Webhook (Untuk Otomasi Buat/Update Tab Baru dari Web):</label>
+              <label for="cfg-script-webhook">Opsi Tambahan: Google Apps Script Webhook (Untuk Dokumen Privat / Otomasi Ekspor):</label>
               <input type="text" id="cfg-script-webhook" class="form-input" placeholder="https://script.google.com/macros/s/.../exec">
+              <p class="text-muted text-xs mt-1">Jika spreadsheet harus tetap berstatus "Dibatasi", Anda dapat membuat Webhook di menu <em>Ekstensi > Apps Script</em> pada Google Sheet.</p>
             </div>
 
             <div class="sheet-actions-bar">

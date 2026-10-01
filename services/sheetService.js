@@ -387,6 +387,31 @@ async function fetchScheduleFromGoogle(sheetName = null, forceLive = false) {
     }
   }
 
+  // 3. Coba via Google Apps Script Webhook jika ada
+  const scriptUrl = config.spreadsheet && config.spreadsheet.scriptWebhookUrl;
+  if (scriptUrl) {
+    try {
+      const webhookRes = await sendHttpsPost(scriptUrl, { action: 'get_schedule', sheetName: targetSheet });
+      const body = webhookRes.body;
+      let rows = null;
+      if (body && Array.isArray(body.data)) {
+        rows = body.data;
+      } else if (body && Array.isArray(body)) {
+        rows = body;
+      } else if (typeof body === 'string' && body.includes(',')) {
+        rows = parseCsv(body);
+      }
+      if (rows && rows.length > 0) {
+        const parsed = parseSpreadsheetRows(rows, targetSheet);
+        parsed.source = 'google_apps_script';
+        saveLocalMonthSchedule(targetSheet, parsed);
+        return parsed;
+      }
+    } catch (err) {
+      console.warn('Webhook fetch failed:', err.message);
+    }
+  }
+
   // Fallback jika sync gagal
   const existing = loadLocalMonthSchedule(targetSheet) || { sheetName: targetSheet, officers: SEED_OFFICERS, source: 'cached_data' };
   existing.syncWarning = errorMsg ? `Google Sheet belum dapat dijangkau (${errorMsg}). Menggunakan data SQLite lokal.` : null;
@@ -584,23 +609,47 @@ async function testSheetConnection({ sheetUrl, scriptWebhookUrl, sheetName = 'Oc
   const webhook = scriptWebhookUrl || (storage.getConfig().spreadsheet && storage.getConfig().spreadsheet.scriptWebhookUrl);
   if (webhook) {
     try {
-      const res = await sendHttpsPost(webhook, { action: 'ping', sheetName });
-      if (res && (res.statusCode === 200 || res.statusCode === 302)) {
+      const res = await sendHttpsPost(webhook, { action: 'get_schedule', sheetName });
+      const body = res.body;
+      let rows = null;
+      if (body && Array.isArray(body.data)) {
+        rows = body.data;
+      } else if (body && Array.isArray(body)) {
+        rows = body;
+      } else if (typeof body === 'string' && body.includes(',')) {
+        rows = parseCsv(body);
+      }
+      if (rows && rows.length > 0) {
+        const parsed = parseSpreadsheetRows(rows, sheetName);
+        parsed.source = 'google_apps_script';
+        saveLocalMonthSchedule(sheetName, parsed);
         return {
           success: true,
           connected: true,
           method: 'Google Apps Script Webhook (Spreadsheet Privat)',
           sheetName,
-          message: 'Koneksi ke Spreadsheet Privat melalui Google Apps Script Webhook Berhasil!'
+          officersCount: parsed.officers.length,
+          message: `Koneksi Webhook Berhasil! Terbaca ${parsed.officers.length} petugas dinas.`
+        };
+      } else if (res && (res.statusCode === 200 || res.statusCode === 302)) {
+        return {
+          success: true,
+          connected: true,
+          method: 'Google Apps Script Webhook (Spreadsheet Privat)',
+          sheetName,
+          officersCount: 0,
+          message: 'Koneksi ke Webhook Apps Script Berhasil!'
         };
       }
-    } catch (e) {}
+    } catch (e) {
+      console.warn('Webhook test failed:', e.message);
+    }
   }
 
   return {
     success: false,
     connected: false,
-    error: 'Akses Google Sheet belum terbuka. Jika menggunakan proteksi email, pastikan email sistem sudah ditambahkan di menu Bagikan (Share) Google Sheet atau gunakan Google Apps Script Webhook.',
+    error: 'Google Sheet saat ini berstatus Dibatasi (Restricted). Agar web dapat membaca data tanpa error 404, ubah Akses Umum di menu Bagikan menjadi "Siapa saja yang memiliki link" (Anyone with the link), atau pasang Google Apps Script Webhook (Opsi B).',
     spreadsheetId,
     sheetName
   };
