@@ -316,24 +316,54 @@ function saveLocalMonthSchedule(sheetName, data) {
 
 async function fetchScheduleFromGoogle(sheetName = null, forceLive = false) {
   const config = storage.getConfig();
-  const rawInput = (config.spreadsheet && (config.spreadsheet.sheetUrl || config.spreadsheet.spreadsheetId)) || '';
-  const spreadsheetId = extractSpreadsheetId(rawInput);
   const targetSheet = sheetName || (config.spreadsheet && config.spreadsheet.activeSheetName) || 'October 2026';
-  const gid = extractGid(rawInput);
 
-  // 1. Jika TIDAK forceLive dan sudah ada data di database SQLite, kembalikan INSTAN (0 ms)
-  const localSaved = loadLocalMonthSchedule(targetSheet);
-  if (!forceLive && localSaved && localSaved.officers && localSaved.officers.length > 0) {
-    return {
-      ...localSaved,
-      source: localSaved.source || 'sqlite_db',
-      sheetName: targetSheet
+  // 1. Jika TIDAK forceLive (misal view dashboard biasa), selalu baca dari SQLite instan (1 ms)
+  if (!forceLive) {
+    // Coba baca dari SQLite
+    const cachedSqlite = storage.getCachedSchedule(targetSheet);
+    if (cachedSqlite && cachedSqlite.officers && cachedSqlite.officers.length > 0) {
+      return cachedSqlite;
+    }
+
+    const localSaved = loadLocalMonthSchedule(targetSheet);
+    if (localSaved && localSaved.officers && localSaved.officers.length > 0) {
+      return {
+        ...localSaved,
+        source: localSaved.source || 'sqlite_db',
+        sheetName: targetSheet
+      };
+    }
+
+    // Jika belum ada jadwal sama sekali untuk bulan ini, gunakan master active officers atau seed
+    const activeMasters = storage.getAllOfficers(true);
+    if (activeMasters && activeMasters.length > 0) {
+      const initialFromMasters = {
+        sheetName: targetSheet,
+        officers: activeMasters.map(o => ({ name: o.name, role: o.role, shifts: {} })),
+        lastUpdated: new Date().toISOString(),
+        source: 'sqlite_db'
+      };
+      saveLocalMonthSchedule(targetSheet, initialFromMasters);
+      return initialFromMasters;
+    }
+
+    const seedData = {
+      sheetName: targetSheet,
+      officers: SEED_OFFICERS,
+      lastUpdated: new Date().toISOString(),
+      source: 'seed_initial'
     };
+    saveLocalMonthSchedule(targetSheet, seedData);
+    return seedData;
   }
 
+  // 2. Jika forceLive === true (tombol Sync ditekan), lakukan live fetch dari Google Sheets
+  const rawInput = (config.spreadsheet && (config.spreadsheet.sheetUrl || config.spreadsheet.spreadsheetId)) || '';
+  const spreadsheetId = extractSpreadsheetId(rawInput);
+  const gid = extractGid(rawInput);
   let errorMsg = null;
 
-  // 2. Baca Live dari Google Sheets
   if (spreadsheetId) {
     const urlsToTry = [];
     if (gid) {
@@ -357,26 +387,10 @@ async function fetchScheduleFromGoogle(sheetName = null, forceLive = false) {
     }
   }
 
-  // 3. Jika live gagal tapi ada cache lokal, gunakan cache
-  if (localSaved && localSaved.officers && localSaved.officers.length > 0) {
-    return {
-      ...localSaved,
-      source: localSaved.source || 'cached_data',
-      sheetName: targetSheet,
-      syncWarning: errorMsg ? `Google Sheet belum dapat dijangkau (${errorMsg}). Menggunakan cache/jadwal aktif.` : null
-    };
-  }
-
-  // 4. Fallback bawaan
-  const seedData = {
-    sheetName: targetSheet,
-    officers: SEED_OFFICERS,
-    lastUpdated: new Date().toISOString(),
-    source: 'seed_initial',
-    syncWarning: errorMsg ? `Google Sheet belum dapat dijangkau (${errorMsg}). Menggunakan data jadwal default.` : null
-  };
-  saveLocalMonthSchedule(targetSheet, seedData);
-  return seedData;
+  // Fallback jika sync gagal
+  const existing = loadLocalMonthSchedule(targetSheet) || { sheetName: targetSheet, officers: SEED_OFFICERS, source: 'cached_data' };
+  existing.syncWarning = errorMsg ? `Google Sheet belum dapat dijangkau (${errorMsg}). Menggunakan data SQLite lokal.` : null;
+  return existing;
 }
 
 function generateSmartSchedule(officersList, monthName = 'October', year = 2026) {

@@ -67,7 +67,7 @@ app.get('/api/schedule/duty', async (req, res) => {
 app.post('/api/schedule/sync', async (req, res) => {
   try {
     const sheetName = req.body.sheetName;
-    const schedule = await sheetService.fetchScheduleFromGoogle(sheetName);
+    const schedule = await sheetService.fetchScheduleFromGoogle(sheetName, true);
     res.json({
       success: true,
       message: 'Google Sheet disinkronkan.',
