@@ -34,6 +34,10 @@
           <span class="nav-icon">✏️</span>
           <span>Buat & Edit Jadwal</span>
         </button>
+        <button class="nav-item" data-tab="tab-officers">
+          <span class="nav-icon">👥</span>
+          <span>Data Karyawan</span>
+        </button>
         <button class="nav-item" data-tab="tab-matrix">
           <span class="nav-icon">📊</span>
           <span>Kalender Matrix</span>
@@ -289,6 +293,42 @@
         </div>
       </section>
 
+      <!-- Tab Officers: Data Master Karyawan -->
+      <section id="tab-officers" class="tab-pane">
+        <div class="panel-card">
+          <div class="matrix-header">
+            <div>
+              <h3>👥 Data Master Karyawan & Petugas MOD</h3>
+              <p class="text-muted">Kelola daftar seluruh karyawan dinas, jabatan, dan nomor WhatsApp.</p>
+            </div>
+            <div class="matrix-actions">
+              <input type="text" id="officer-search" class="form-input-sm" placeholder="🔍 Cari nama / jabatan...">
+              <button class="btn btn-primary btn-sm" id="btn-open-add-officer">
+                ➕ Tambah Karyawan
+              </button>
+            </div>
+          </div>
+
+          <div class="matrix-table-wrapper">
+            <table class="matrix-table officers-table">
+              <thead>
+                <tr>
+                  <th style="width: 60px;">No</th>
+                  <th>Nama Lengkap</th>
+                  <th>Jabatan / Posisi</th>
+                  <th>Nomor WhatsApp (Japri)</th>
+                  <th style="width: 120px;">Status</th>
+                  <th style="width: 150px;" class="text-center">Aksi</th>
+                </tr>
+              </thead>
+              <tbody id="officers-master-tbody">
+                <tr><td colspan="6" class="text-center py-4">Memuat data master karyawan...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
       <!-- Tab 2: Monthly Matrix Calendar -->
       <section id="tab-matrix" class="tab-pane">
         <div class="panel-card">
@@ -482,26 +522,35 @@
     </main>
   </div>
 
-  <!-- Modal Add Officer -->
+  <!-- Modal Add/Edit Officer -->
   <div id="modal-officer" class="modal-backdrop hidden">
     <div class="modal-box">
       <div class="modal-header">
-        <h3>➕ Tambah Petugas MOD</h3>
+        <h3 id="modal-officer-title">➕ Tambah Karyawan MOD</h3>
         <button class="modal-close" onclick="app.closeOfficerModal()">&times;</button>
       </div>
       <div class="modal-body">
+        <input type="hidden" id="edit-officer-id" value="">
         <div class="form-group">
-          <label for="new-officer-name">Nama Petugas:</label>
-          <input type="text" id="new-officer-name" class="form-input" placeholder="Contoh: Budi Santoso">
+          <label for="new-officer-name">Nama Lengkap Karyawan:</label>
+          <input type="text" id="new-officer-name" class="form-input" placeholder="Contoh: Doni Abiyantoro">
         </div>
         <div class="form-group">
           <label for="new-officer-role">Jabatan / Posisi:</label>
-          <input type="text" id="new-officer-role" class="form-input" placeholder="Contoh: Duty Manager / FO Manager">
+          <input type="text" id="new-officer-role" class="form-input" placeholder="Contoh: Chief Accountant">
+        </div>
+        <div class="form-group">
+          <label for="new-officer-phone">Nomor WhatsApp Pribadi (Opsional untuk Japri):</label>
+          <input type="text" id="new-officer-phone" class="form-input" placeholder="Contoh: 628123456789">
+        </div>
+        <div class="form-group checkbox-group">
+          <input type="checkbox" id="new-officer-active" checked>
+          <label for="new-officer-active">Status Karyawan Aktif</label>
         </div>
       </div>
       <div class="modal-footer">
         <button class="btn btn-outline" onclick="app.closeOfficerModal()">Batal</button>
-        <button class="btn btn-primary" id="btn-save-new-officer">Tambahkan ke Daftar</button>
+        <button class="btn btn-primary" id="btn-save-new-officer">Simpan Karyawan</button>
       </div>
     </div>
   </div>

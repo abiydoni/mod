@@ -64,6 +64,19 @@ async function getDb() {
       );
     `);
 
+    // Master Table Officers / Karyawan
+    db.run(`
+      CREATE TABLE IF NOT EXISTS officers (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        name TEXT NOT NULL UNIQUE,
+        role TEXT NOT NULL,
+        phone TEXT DEFAULT '',
+        isActive INTEGER DEFAULT 1,
+        createdAt TEXT DEFAULT (datetime('now')),
+        updatedAt TEXT DEFAULT (datetime('now'))
+      );
+    `);
+
     // Migrate default config into SQLite if table is empty
     const checkConfig = db.exec("SELECT value FROM configs WHERE key = 'app_config'");
     if (!checkConfig || checkConfig.length === 0 || checkConfig[0].values.length === 0) {
@@ -73,6 +86,38 @@ async function getDb() {
           db.run("INSERT INTO configs (key, value, updatedAt) VALUES ('app_config', ?, datetime('now'))", [raw]);
         } catch (e) {}
       }
+    }
+
+    // Seed Master Officers if table is empty
+    const checkOfficers = db.exec("SELECT count(*) FROM officers");
+    if (!checkOfficers || checkOfficers.length === 0 || checkOfficers[0].values[0][0] === 0) {
+      const initialOfficers = [
+        { name: 'Doni Abiyantoro', role: 'Chief Accountant' },
+        { name: 'Bekti Utami', role: 'Asst. Sales Marketing Manager' },
+        { name: 'Fajar F', role: 'Chief Engineer' },
+        { name: 'Ardhiny', role: 'HR Manager' },
+        { name: 'Rama', role: 'FO Manager' },
+        { name: 'Sugiartono', role: 'Bookkeeper' },
+        { name: 'Iqbal', role: 'Junior Sous Chef' },
+        { name: 'Agus Budiono Prastyo', role: 'IT Asst Manager' },
+        { name: 'Lukman Prayogo', role: 'R&B Asst. Manager' },
+        { name: 'Ota Setiawan', role: 'Asst EHK' },
+        { name: 'Dian Nurkhasanah', role: 'Sales Executive' },
+        { name: 'Ayu', role: 'AR/IA' },
+        { name: 'Fajar Kuncoro', role: 'Purchasing' },
+        { name: 'Hendri D Prayogo', role: 'AP/GC' },
+        { name: 'Septi Fira', role: 'Sales Executive' },
+        { name: 'Faizin', role: 'ENG Supervisor' },
+        { name: 'Guntur', role: 'HK Shift Leader' },
+        { name: 'Hendri', role: 'FBP' },
+        { name: 'Syahrul', role: 'FBP' }
+      ];
+
+      initialOfficers.forEach(o => {
+        try {
+          db.run("INSERT OR IGNORE INTO officers (name, role, phone, isActive) VALUES (?, ?, '', 1)", [o.name, o.role]);
+        } catch (err) {}
+      });
     }
 
     saveDbToDisk();
@@ -248,6 +293,75 @@ function saveCachedSchedule(data) {
   return false;
 }
 
+function getAllOfficers(onlyActive = false) {
+  try {
+    if (db) {
+      const sql = onlyActive
+        ? "SELECT * FROM officers WHERE isActive = 1 ORDER BY name ASC"
+        : "SELECT * FROM officers ORDER BY name ASC";
+      const stmt = db.prepare(sql);
+      const list = [];
+      while (stmt.step()) {
+        list.push(stmt.getAsObject());
+      }
+      stmt.free();
+      return list;
+    }
+  } catch (err) {
+    console.error('Error getting officers from SQLite:', err);
+  }
+  return [];
+}
+
+function addOfficer({ name, role, phone = '', isActive = 1 }) {
+  try {
+    if (db && name && role) {
+      db.run(`
+        INSERT INTO officers (name, role, phone, isActive, createdAt, updatedAt)
+        VALUES (?, ?, ?, ?, datetime('now'), datetime('now'))
+      `, [name.trim(), role.trim(), (phone || '').trim(), isActive ? 1 : 0]);
+      saveDbToDisk();
+      return { success: true, message: `Petugas "${name}" berhasil ditambahkan!` };
+    }
+  } catch (err) {
+    console.error('Error adding officer to SQLite:', err);
+    return { success: false, error: err.message };
+  }
+  return { success: false, error: 'Nama dan Jabatan wajib diisi' };
+}
+
+function updateOfficer(id, { name, role, phone = '', isActive = 1 }) {
+  try {
+    if (db && id) {
+      db.run(`
+        UPDATE officers
+        SET name = ?, role = ?, phone = ?, isActive = ?, updatedAt = datetime('now')
+        WHERE id = ?
+      `, [name.trim(), role.trim(), (phone || '').trim(), isActive ? 1 : 0, id]);
+      saveDbToDisk();
+      return { success: true, message: `Data petugas berhasil diperbarui!` };
+    }
+  } catch (err) {
+    console.error('Error updating officer in SQLite:', err);
+    return { success: false, error: err.message };
+  }
+  return { success: false, error: 'ID tidak valid' };
+}
+
+function deleteOfficer(id) {
+  try {
+    if (db && id) {
+      db.run("DELETE FROM officers WHERE id = ?", [id]);
+      saveDbToDisk();
+      return { success: true, message: 'Petugas berhasil dihapus dari master data!' };
+    }
+  } catch (err) {
+    console.error('Error deleting officer from SQLite:', err);
+    return { success: false, error: err.message };
+  }
+  return { success: false, error: 'ID tidak valid' };
+}
+
 module.exports = {
   getDb,
   getConfig,
@@ -255,5 +369,9 @@ module.exports = {
   getLogs,
   addLog,
   getCachedSchedule,
-  saveCachedSchedule
+  saveCachedSchedule,
+  getAllOfficers,
+  addOfficer,
+  updateOfficer,
+  deleteOfficer
 };

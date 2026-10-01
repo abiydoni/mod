@@ -6,6 +6,7 @@ const app = {
   cachedMatrix: null,
   config: null,
   editorOfficers: [],
+  masterOfficers: [],
   editorMonth: 'October',
   editorYear: 2026,
 
@@ -16,6 +17,7 @@ const app = {
     this.initDateSelector();
     await this.loadDutyData();
     await this.loadMatrixData();
+    await this.loadMasterOfficers();
     await this.loadEditorData();
     await this.loadLogs();
   },
@@ -28,6 +30,8 @@ const app = {
         this.switchTab(tabId);
         if (tabId === 'tab-editor') {
           this.loadEditorData();
+        } else if (tabId === 'tab-officers') {
+          this.loadMasterOfficers();
         }
       });
     });
@@ -72,6 +76,14 @@ const app = {
       this.filterMatrixTable(e.target.value);
     });
 
+    // Search Master Officers
+    const offSearch = document.getElementById('officer-search');
+    if (offSearch) {
+      offSearch.addEventListener('input', (e) => {
+        this.filterMasterOfficers(e.target.value);
+      });
+    }
+
     // Refresh Logs
     document.getElementById('btn-refresh-logs').addEventListener('click', () => {
       this.loadLogs();
@@ -97,6 +109,14 @@ const app = {
       this.saveConfig();
     });
 
+    // Master Officers: Open Add Modal
+    const btnOpenAddOfficer = document.getElementById('btn-open-add-officer');
+    if (btnOpenAddOfficer) {
+      btnOpenAddOfficer.addEventListener('click', () => {
+        this.openAddOfficerModal();
+      });
+    }
+
     // Editor: Load month
     document.getElementById('btn-editor-load').addEventListener('click', () => {
       this.editorMonth = document.getElementById('editor-month').value;
@@ -106,11 +126,11 @@ const app = {
 
     // Editor: Add officer modal
     document.getElementById('btn-add-officer-modal').addEventListener('click', () => {
-      this.openOfficerModal();
+      this.openAddOfficerModal();
     });
 
     document.getElementById('btn-save-new-officer').addEventListener('click', () => {
-      this.addNewOfficer();
+      this.saveOfficerMaster();
     });
 
     // Editor: Auto generate
@@ -733,9 +753,82 @@ const app = {
     this.renderEditorTable();
   },
 
-  openOfficerModal() {
+  async loadMasterOfficers() {
+    try {
+      const res = await fetch('/api/officers');
+      const data = await res.json();
+      this.masterOfficers = data.officers || [];
+      this.renderMasterOfficersTable(this.masterOfficers);
+    } catch (e) {
+      console.error('Failed to load master officers:', e);
+    }
+  },
+
+  renderMasterOfficersTable(list) {
+    const tbody = document.getElementById('officers-master-tbody');
+    if (!tbody) return;
+
+    if (!list || list.length === 0) {
+      tbody.innerHTML = `<tr><td colspan="6" class="text-center py-4">Belum ada data master karyawan. Klik "➕ Tambah Karyawan" untuk memulai.</td></tr>`;
+      return;
+    }
+
+    tbody.innerHTML = list.map((o, idx) => {
+      const isActive = o.isActive === 1 || o.isActive === true;
+      const statusBadge = isActive
+        ? '<span class="status-badge-success">Aktif</span>'
+        : '<span class="status-badge-failed">Nonaktif</span>';
+      
+      const toggleBtnText = isActive ? 'Nonaktifkan' : 'Aktifkan';
+      const phoneDisplay = o.phone ? `<code>${o.phone}</code>` : '<span class="text-muted">-</span>';
+
+      return `
+        <tr data-name="${o.name.toLowerCase()}" data-role="${o.role.toLowerCase()}">
+          <td class="text-center">${idx + 1}</td>
+          <td><strong>${o.name}</strong></td>
+          <td>${o.role}</td>
+          <td>${phoneDisplay}</td>
+          <td>${statusBadge}</td>
+          <td class="text-center">
+            <button class="btn btn-sm btn-outline" onclick="app.openEditOfficerModal(${o.id})" title="Edit Karyawan">✏️</button>
+            <button class="btn btn-sm btn-secondary" onclick="app.toggleOfficerStatus(${o.id}, ${isActive ? 0 : 1})" title="${toggleBtnText}">${isActive ? '⏸️' : '▶️'}</button>
+            <button class="btn btn-sm btn-remove-officer" onclick="app.deleteOfficerMaster(${o.id}, '${o.name.replace(/'/g, "\\'")}')" title="Hapus Permanen">🗑️</button>
+          </td>
+        </tr>
+      `;
+    }).join('');
+  },
+
+  filterMasterOfficers(query) {
+    const q = (query || '').toLowerCase().trim();
+    document.querySelectorAll('#officers-master-tbody tr').forEach(tr => {
+      const name = tr.getAttribute('data-name') || '';
+      const role = tr.getAttribute('data-role') || '';
+      tr.style.display = (name.includes(q) || role.includes(q)) ? '' : 'none';
+    });
+  },
+
+  openAddOfficerModal() {
+    document.getElementById('modal-officer-title').innerText = '➕ Tambah Karyawan Baru';
+    document.getElementById('edit-officer-id').value = '';
     document.getElementById('new-officer-name').value = '';
     document.getElementById('new-officer-role').value = '';
+    document.getElementById('new-officer-phone').value = '';
+    document.getElementById('new-officer-active').checked = true;
+    document.getElementById('modal-officer').classList.remove('hidden');
+    document.getElementById('new-officer-name').focus();
+  },
+
+  openEditOfficerModal(id) {
+    const officer = this.masterOfficers.find(o => o.id === id);
+    if (!officer) return;
+
+    document.getElementById('modal-officer-title').innerText = '✏️ Edit Data Karyawan';
+    document.getElementById('edit-officer-id').value = officer.id;
+    document.getElementById('new-officer-name').value = officer.name;
+    document.getElementById('new-officer-role').value = officer.role;
+    document.getElementById('new-officer-phone').value = officer.phone || '';
+    document.getElementById('new-officer-active').checked = (officer.isActive === 1 || officer.isActive === true);
     document.getElementById('modal-officer').classList.remove('hidden');
     document.getElementById('new-officer-name').focus();
   },
@@ -744,118 +837,108 @@ const app = {
     document.getElementById('modal-officer').classList.add('hidden');
   },
 
-  addNewOfficer() {
+  async saveOfficerMaster() {
+    const id = document.getElementById('edit-officer-id').value;
     const name = document.getElementById('new-officer-name').value.trim();
-    const role = document.getElementById('new-officer-role').value.trim() || 'Staff / Officer';
+    const role = document.getElementById('new-officer-role').value.trim();
+    const phone = document.getElementById('new-officer-phone').value.trim();
+    const isActive = document.getElementById('new-officer-active').checked ? 1 : 0;
 
-    if (!name) {
-      this.showToast('Nama petugas tidak boleh kosong!', 'error');
+    if (!name || !role) {
+      this.showToast('Nama dan Jabatan wajib diisi!', 'error');
       return;
     }
 
-    this.editorOfficers.push({
-      name,
-      role,
-      shifts: {}
-    });
+    const payload = { name, role, phone, isActive };
+    const url = id ? `/api/officers/${id}` : '/api/officers';
+    const method = id ? 'PUT' : 'POST';
 
-    this.closeOfficerModal();
-    this.renderEditorTable();
-    this.showToast(`Petugas "${name}" berhasil ditambahkan!`, 'success');
+    try {
+      const res = await fetch(url, {
+        method,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      const data = await res.json();
+      if (data.success) {
+        this.showToast(data.message || 'Data karyawan berhasil disimpan!', 'success');
+        this.closeOfficerModal();
+        await this.loadMasterOfficers();
+      } else {
+        this.showToast(`❌ Gagal: ${data.error}`, 'error');
+      }
+    } catch (e) {
+      this.showToast(`Error: ${e.message}`, 'error');
+    }
   },
 
-  removeOfficer(idx) {
-    if (!this.editorOfficers[idx]) return;
-    const name = this.editorOfficers[idx].name;
-    if (confirm(`Apakah Anda yakin ingin menghapus "${name}" dari jadwal ini?`)) {
-      this.editorOfficers.splice(idx, 1);
+  async toggleOfficerStatus(id, newStatus) {
+    const officer = this.masterOfficers.find(o => o.id === id);
+    if (!officer) return;
+
+    try {
+      const res = await fetch(`/api/officers/${id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: officer.name,
+          role: officer.role,
+          phone: officer.phone,
+          isActive: newStatus
+        })
+      });
+      const data = await res.json();
+      if (data.success) {
+        this.showToast(`Status karyawan "${officer.name}" diperbarui!`, 'success');
+        await this.loadMasterOfficers();
+      } else {
+        this.showToast(`Gagal: ${data.error}`, 'error');
+      }
+    } catch (e) {
+      this.showToast(`Error: ${e.message}`, 'error');
+    }
+  },
+
+  async deleteOfficerMaster(id, name) {
+    if (!confirm(`Apakah Anda yakin ingin menghapus "${name}" dari master data karyawan?`)) {
+      return;
+    }
+
+    try {
+      const res = await fetch(`/api/officers/${id}`, { method: 'DELETE' });
+      const data = await res.json();
+      if (data.success) {
+        this.showToast(`Karyawan "${name}" berhasil dihapus.`, 'success');
+        await this.loadMasterOfficers();
+      } else {
+        this.showToast(`Gagal: ${data.error}`, 'error');
+      }
+    } catch (e) {
+      this.showToast(`Error: ${e.message}`, 'error');
+    }
+  },
+
+  async loadEditorData() {
+    try {
+      const sheetName = `${this.editorMonth} ${this.editorYear}`;
+      const res = await fetch(`/api/schedule/current?sheet=${encodeURIComponent(sheetName)}`);
+      const data = await res.json();
+      
+      if (data.officers && data.officers.length > 0) {
+        this.editorOfficers = JSON.parse(JSON.stringify(data.officers));
+      } else {
+        // Populate from active master officers
+        const activeMasters = this.masterOfficers.filter(o => o.isActive === 1 || o.isActive === true);
+        this.editorOfficers = activeMasters.map(o => ({
+          name: o.name,
+          role: o.role,
+          shifts: {}
+        }));
+      }
+
       this.renderEditorTable();
-      this.showToast(`Petugas "${name}" dihapus.`, 'success');
-    }
-  },
-
-  async autoGenerateSchedule() {
-    if (this.editorOfficers.length === 0) {
-      this.showToast('Tambahkan minimal 1 petugas terlebih dahulu!', 'error');
-      return;
-    }
-
-    if (!confirm(`Generate rotasi jadwal otomatis untuk ${this.editorOfficers.length} petugas di ${this.editorMonth} ${this.editorYear}? (Jadwal weekend akan diisi MOD1 & MOD2, weekday akan diisi MOD)`)) {
-      return;
-    }
-
-    try {
-      const res = await fetch('/api/schedule/generate', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          month: this.editorMonth,
-          year: this.editorYear,
-          officers: this.editorOfficers
-        })
-      });
-      const data = await res.json();
-      if (data.success) {
-        this.editorOfficers = data.schedule.officers;
-        this.renderEditorTable();
-        this.showToast('⚡ Jadwal otomatis berhasil dibuat!', 'success');
-      } else {
-        this.showToast(`Gagal generate: ${data.error}`, 'error');
-      }
     } catch (e) {
-      this.showToast(`Error: ${e.message}`, 'error');
+      console.error('Failed to load editor data:', e);
     }
   },
-
-  async saveEditorSchedule() {
-    const sheetName = `${this.editorMonth} ${this.editorYear}`;
-    const btn = document.getElementById('btn-save-editor-schedule');
-    btn.innerHTML = '⏳ Menyimpan...';
-    btn.disabled = true;
-
-    try {
-      const res = await fetch('/api/schedule/save', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          sheetName,
-          officers: this.editorOfficers
-        })
-      });
-      const data = await res.json();
-      if (data.success) {
-        this.showToast('✅ Jadwal berhasil disimpan ke sistem!', 'success');
-        await this.loadDutyData();
-        await this.loadMatrixData();
-      } else {
-        this.showToast(`❌ Gagal simpan: ${data.error}`, 'error');
-      }
-    } catch (e) {
-      this.showToast(`Error: ${e.message}`, 'error');
-    } finally {
-      btn.innerHTML = '💾 Simpan Jadwal ke Sistem';
-      btn.disabled = false;
-    }
-  },
-
-  exportCsv() {
-    const sheetName = `${this.editorMonth} ${this.editorYear}`;
-    window.open(`/api/schedule/export?sheet=${encodeURIComponent(sheetName)}`, '_blank');
-  },
-
-  showToast(message, type = 'success') {
-    const toast = document.getElementById('toast');
-    toast.className = `toast ${type}`;
-    toast.innerText = message;
-    toast.classList.remove('hidden');
-
-    setTimeout(() => {
-      toast.classList.add('hidden');
-    }, 4000);
-  }
-};
-
-document.addEventListener('DOMContentLoaded', () => {
-  app.init();
-});
 

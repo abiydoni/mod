@@ -131,6 +131,40 @@ app.get('/api/schedule/export', async (req, res) => {
   }
 });
 
+// 4e. Master Data Officers CRUD API
+app.get('/api/officers', (req, res) => {
+  const onlyActive = req.query.active === 'true';
+  const list = storage.getAllOfficers(onlyActive);
+  res.json({ officers: list });
+});
+
+app.post('/api/officers', (req, res) => {
+  const result = storage.addOfficer(req.body);
+  if (result.success) {
+    res.json(result);
+  } else {
+    res.status(400).json(result);
+  }
+});
+
+app.put('/api/officers/:id', (req, res) => {
+  const result = storage.updateOfficer(req.params.id, req.body);
+  if (result.success) {
+    res.json(result);
+  } else {
+    res.status(400).json(result);
+  }
+});
+
+app.delete('/api/officers/:id', (req, res) => {
+  const result = storage.deleteOfficer(req.params.id);
+  if (result.success) {
+    res.json(result);
+  } else {
+    res.status(400).json(result);
+  }
+});
+
 // 5. Preview WA Message
 app.post('/api/preview', async (req, res) => {
   try {
