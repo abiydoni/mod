@@ -688,19 +688,6 @@ const app = {
       btn.innerHTML = originalText;
       btn.disabled = false;
     }
-  }, else {
-        this.showToast(`Gagal sinkron: ${data.error}`, 'error');
-        this.setStatus(`❌ Gagal sinkronisasi: ${data.error}`, 'error');
-        this.setProgress(100, false);
-      }
-    } catch (e) {
-      this.showToast(`Error sinkronisasi: ${e.message}`, 'error');
-      this.setStatus(`❌ Error sinkronisasi: ${e.message}`, 'error');
-      this.setProgress(100, false);
-    } finally {
-      btn.innerHTML = originalText;
-      btn.disabled = false;
-    }
   },
 
   async loadMatrixData() {
