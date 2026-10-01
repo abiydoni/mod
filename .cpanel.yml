@@ -4,6 +4,8 @@ deployment:
     - export DEPLOYPATH=/home2/appsbeem/mod.appsbee.my.id
     - /bin/rm -rf node_modules
     - /bin/cp -Rf * $DEPLOYPATH/
+    - /bin/touch $DEPLOYPATH/tmp/restart.txt
+
 
 
 
