@@ -456,6 +456,11 @@ const app = {
   },
 
   switchTab(tabId) {
+    if (tabId === 'tab-settings' && this.currentUser && this.currentUser.role !== 'admin') {
+      this.showToast('Hanya Administrator yang dapat mengakses menu Pengaturan.', 'error');
+      tabId = 'tab-today';
+    }
+
     document.querySelectorAll('.nav-item').forEach(btn => {
       btn.classList.toggle('active', btn.getAttribute('data-tab') === tabId);
     });
@@ -1443,7 +1448,8 @@ const app = {
     if (!this.currentUser) return;
     const name = this.currentUser.name || this.currentUser.username || 'User';
     const username = this.currentUser.username || 'user';
-    const role = this.currentUser.role === 'admin' ? 'Admin' : 'Operator';
+    const isAdmin = this.currentUser.role === 'admin';
+    const role = isAdmin ? 'Admin' : 'Operator';
     const initial = name.charAt(0).toUpperCase();
 
     const avatarEl = document.getElementById('top-user-avatar');
@@ -1455,7 +1461,7 @@ const app = {
     const roleEl = document.getElementById('top-user-role');
     if (roleEl) {
       roleEl.innerText = role;
-      roleEl.className = `user-role-badge ${this.currentUser.role === 'admin' ? 'admin' : 'operator'}`;
+      roleEl.className = `user-role-badge ${isAdmin ? 'admin' : 'operator'}`;
     }
 
     const menuFullnameEl = document.getElementById('menu-user-fullname');
@@ -1466,7 +1472,18 @@ const app = {
 
     const userMgmtBtn = document.getElementById('btn-open-user-mgmt');
     if (userMgmtBtn) {
-      userMgmtBtn.style.display = this.currentUser.role === 'admin' ? 'flex' : 'none';
+      userMgmtBtn.style.display = isAdmin ? 'flex' : 'none';
+    }
+
+    // Hide or show Settings tab based on role
+    const navSettingsBtn = document.getElementById('nav-item-settings');
+    if (navSettingsBtn) {
+      navSettingsBtn.style.display = isAdmin ? 'flex' : 'none';
+    }
+
+    // If non-admin is currently on settings tab, redirect to tab-today
+    if (!isAdmin && document.getElementById('tab-settings')?.classList.contains('active')) {
+      this.switchTab('tab-today');
     }
   },
 
