@@ -2,6 +2,7 @@
   "spreadsheet": {
     "spreadsheetId": "https://docs.google.com/spreadsheets/d/1whXqz67OOncn7jg9NzZlr0XP7db_23tHDoIjM0H8ziY/edit?pli=1&gid=1902059996#gid=1902059996",
     "sheetUrl": "https://docs.google.com/spreadsheets/d/1whXqz67OOncn7jg9NzZlr0XP7db_23tHDoIjM0H8ziY/edit?pli=1&gid=1902059996#gid=1902059996",
+    "scriptWebhookUrl": "https://script.google.com/macros/s/AKfycbwi5GLIypo2cM7WVS_KfBAjYLyHyBhMyPfkVg21ETCe7UniSrhwJn9PljiU-H1IwkbzhA/exec",
     "activeSheetName": "October 2026",
     "autoSyncMinutes": 30
   },
