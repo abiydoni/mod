@@ -229,10 +229,14 @@ app.get('*', (req, res) => {
 });
 
 // Start server and cron scheduler
-app.listen(PORT, () => {
-  console.log(`====================================================`);
-  console.log(`🚀 MOD WA Scheduler Server is running on port ${PORT}`);
-  console.log(`🌐 Dashboard: http://localhost:${PORT}`);
-  console.log(`====================================================`);
-  scheduler.initScheduler();
-});
+if (process.env.NODE_ENV !== 'test') {
+  app.listen(PORT, () => {
+    console.log(`====================================================`);
+    console.log(`🚀 MOD WA Scheduler Server is running on port ${PORT}`);
+    console.log(`🌐 Dashboard: http://localhost:${PORT}`);
+    console.log(`====================================================`);
+    scheduler.initScheduler();
+  });
+}
+
+module.exports = app;
