@@ -2,11 +2,5 @@
 deployment:
   tasks:
     - export DEPLOYPATH=/home2/appsbeem/mod.appsbee.my.id
-    - /bin/rm -rf node_modules
-    - /bin/cp -Rf * $DEPLOYPATH/
+    - /bin/cp -Rf public services data app.js server.js package.json config.json $DEPLOYPATH/
     - /bin/touch $DEPLOYPATH/tmp/restart.txt
-
-
-
-
-
