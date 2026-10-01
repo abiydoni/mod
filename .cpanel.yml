@@ -2,6 +2,7 @@
 deployment:
   tasks:
     - export DEPLOYPATH=/home2/appsbeem/mod.appsbee.my.id
-    - /bin/cp -R * $DEPLOYPATH
+    - /bin/cp -Rf * $DEPLOYPATH/
+
 
 
