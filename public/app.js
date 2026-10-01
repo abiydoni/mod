@@ -803,10 +803,10 @@ const app = {
           <td>${o.role}</td>
           <td>${phoneDisplay}</td>
           <td>${statusBadge}</td>
-          <td class="text-center">
-            <button class="btn btn-sm btn-outline" onclick="app.openEditOfficerModal(${o.id})" title="Edit Karyawan">✏️</button>
-            <button class="btn btn-sm btn-secondary" onclick="app.toggleOfficerStatus(${o.id}, ${isActive ? 0 : 1})" title="${toggleBtnText}">${isActive ? '⏸️' : '▶️'}</button>
-            <button class="btn btn-sm btn-remove-officer" onclick="app.deleteOfficerMaster(${o.id}, '${(o.name || '').replace(/'/g, "\\'")}')" title="Hapus Permanen">🗑️</button>
+          <td class="text-center" style="white-space:nowrap;">
+            <button class="btn btn-tbl-xs btn-outline" onclick="app.openEditOfficerModal(${o.id})" title="Edit Karyawan">✏️</button>
+            <button class="btn btn-tbl-xs btn-secondary" onclick="app.toggleOfficerStatus(${o.id}, ${isActive ? 0 : 1})" title="${toggleBtnText}">${isActive ? '⏸️' : '▶️'}</button>
+            <button class="btn btn-tbl-xs btn-remove-officer" onclick="app.deleteOfficerMaster(${o.id}, '${(o.name || '').replace(/'/g, "\\'")}')" title="Hapus Permanen">🗑️</button>
           </td>
         </tr>
       `;
