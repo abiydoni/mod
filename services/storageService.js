@@ -1,5 +1,6 @@
 const fs = require('fs');
 const path = require('path');
+const crypto = require('crypto');
 
 const DATA_DIR = path.join(__dirname, '..', 'data');
 const SCHEDULES_DIR = path.join(DATA_DIR, 'schedules');
@@ -13,11 +14,63 @@ if (!fs.existsSync(SCHEDULES_DIR)) {
 const CONFIG_FILE = path.join(__dirname, '..', 'config.json');
 const OFFICERS_FILE = path.join(DATA_DIR, 'officers.json');
 const LOGS_FILE = path.join(DATA_DIR, 'logs.json');
+const USERS_FILE = path.join(DATA_DIR, 'users.json');
 
 // In-Memory Cache for ultra-fast (sub-millisecond) response
 let cachedConfig = null;
 let cachedOfficers = null;
 let cachedLogs = null;
+let cachedUsers = null;
+
+// Password Hashing using PBKDF2 (Native Node.js crypto, zero dependencies)
+function hashPassword(password, salt = null) {
+  const s = salt || crypto.randomBytes(16).toString('hex');
+  const hash = crypto.pbkdf2Sync(password, s, 1000, 64, 'sha512').toString('hex');
+  return { hash: `${s}:${hash}`, salt: s };
+}
+
+function verifyPassword(password, storedHash) {
+  if (!storedHash || !storedHash.includes(':')) return false;
+  const [salt, originalHash] = storedHash.split(':');
+  const hash = crypto.pbkdf2Sync(password, salt, 1000, 64, 'sha512').toString('hex');
+  return hash === originalHash;
+}
+
+// 0. Initialize Users Table
+const DEFAULT_USERS = [
+  {
+    id: 1,
+    username: 'admin',
+    name: 'Administrator MOD',
+    password: hashPassword('admin123').hash,
+    role: 'admin',
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString()
+  }
+];
+
+function initUsers() {
+  if (!fs.existsSync(USERS_FILE)) {
+    try {
+      fs.writeFileSync(USERS_FILE, JSON.stringify(DEFAULT_USERS, null, 2), 'utf8');
+      cachedUsers = [...DEFAULT_USERS];
+    } catch (e) {
+      console.error('Error writing initial users:', e);
+      cachedUsers = [...DEFAULT_USERS];
+    }
+  } else {
+    try {
+      cachedUsers = JSON.parse(fs.readFileSync(USERS_FILE, 'utf8'));
+      if (!Array.isArray(cachedUsers) || cachedUsers.length === 0) {
+        cachedUsers = [...DEFAULT_USERS];
+        fs.writeFileSync(USERS_FILE, JSON.stringify(DEFAULT_USERS, null, 2), 'utf8');
+      }
+    } catch (e) {
+      cachedUsers = [...DEFAULT_USERS];
+    }
+  }
+}
+initUsers();
 
 // Initial Officers Seed
 const INITIAL_OFFICERS = [
@@ -243,6 +296,169 @@ function deleteOfficer(id) {
   }
 }
 
+// 5. Authentication & User Management
+function authenticateUser(username, password) {
+  if (!cachedUsers) initUsers();
+  if (!username || !password) return null;
+
+  const user = cachedUsers.find(u => u.username.toLowerCase() === username.trim().toLowerCase());
+  if (!user) return null;
+
+  const isValid = verifyPassword(password, user.password);
+  if (!isValid) return null;
+
+  return {
+    id: user.id,
+    username: user.username,
+    name: user.name,
+    role: user.role
+  };
+}
+
+function getAllUsers() {
+  if (!cachedUsers) initUsers();
+  return cachedUsers.map(u => ({
+    id: u.id,
+    username: u.username,
+    name: u.name,
+    role: u.role,
+    createdAt: u.createdAt,
+    updatedAt: u.updatedAt
+  }));
+}
+
+function addUser({ username, name, password, role = 'operator' }) {
+  if (!cachedUsers) initUsers();
+  const uTrim = (username || '').trim();
+  const nTrim = (name || '').trim();
+  const pTrim = (password || '').trim();
+
+  if (!uTrim || !nTrim || !pTrim) {
+    return { success: false, error: 'Username, Nama, dan Password wajib diisi.' };
+  }
+  if (pTrim.length < 4) {
+    return { success: false, error: 'Password minimal 4 karakter.' };
+  }
+
+  if (cachedUsers.some(u => u.username.toLowerCase() === uTrim.toLowerCase())) {
+    return { success: false, error: `Username "${uTrim}" sudah digunakan.` };
+  }
+
+  const nextId = cachedUsers.length > 0 ? Math.max(...cachedUsers.map(u => u.id || 0)) + 1 : 1;
+  const newUser = {
+    id: nextId,
+    username: uTrim,
+    name: nTrim,
+    password: hashPassword(pTrim).hash,
+    role: role === 'admin' ? 'admin' : 'operator',
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString()
+  };
+
+  cachedUsers.push(newUser);
+  try {
+    fs.writeFileSync(USERS_FILE, JSON.stringify(cachedUsers, null, 2), 'utf8');
+    return { success: true, message: `Pengguna "${uTrim}" berhasil ditambahkan!`, user: { id: newUser.id, username: newUser.username, name: newUser.name, role: newUser.role } };
+  } catch (err) {
+    return { success: false, error: err.message };
+  }
+}
+
+function updateUser(id, { name, role }) {
+  if (!cachedUsers) initUsers();
+  const numId = Number(id);
+  const idx = cachedUsers.findIndex(u => u.id === numId);
+  if (idx === -1) {
+    return { success: false, error: 'Pengguna tidak ditemukan.' };
+  }
+
+  cachedUsers[idx] = {
+    ...cachedUsers[idx],
+    name: name ? name.trim() : cachedUsers[idx].name,
+    role: role !== undefined ? (role === 'admin' ? 'admin' : 'operator') : cachedUsers[idx].role,
+    updatedAt: new Date().toISOString()
+  };
+
+  try {
+    fs.writeFileSync(USERS_FILE, JSON.stringify(cachedUsers, null, 2), 'utf8');
+    return { success: true, message: 'Data pengguna berhasil diperbarui!' };
+  } catch (err) {
+    return { success: false, error: err.message };
+  }
+}
+
+function changePassword(userId, currentPassword, newPassword) {
+  if (!cachedUsers) initUsers();
+  const numId = Number(userId);
+  const user = cachedUsers.find(u => u.id === numId);
+  if (!user) {
+    return { success: false, error: 'Pengguna tidak ditemukan.' };
+  }
+
+  if (!verifyPassword(currentPassword, user.password)) {
+    return { success: false, error: 'Password saat ini salah!' };
+  }
+
+  if (!newPassword || newPassword.trim().length < 4) {
+    return { success: false, error: 'Password baru minimal 4 karakter.' };
+  }
+
+  user.password = hashPassword(newPassword.trim()).hash;
+  user.updatedAt = new Date().toISOString();
+
+  try {
+    fs.writeFileSync(USERS_FILE, JSON.stringify(cachedUsers, null, 2), 'utf8');
+    return { success: true, message: 'Password berhasil diubah!' };
+  } catch (err) {
+    return { success: false, error: err.message };
+  }
+}
+
+function resetUserPassword(userId, newPassword) {
+  if (!cachedUsers) initUsers();
+  const numId = Number(userId);
+  const user = cachedUsers.find(u => u.id === numId);
+  if (!user) {
+    return { success: false, error: 'Pengguna tidak ditemukan.' };
+  }
+
+  if (!newPassword || newPassword.trim().length < 4) {
+    return { success: false, error: 'Password baru minimal 4 karakter.' };
+  }
+
+  user.password = hashPassword(newPassword.trim()).hash;
+  user.updatedAt = new Date().toISOString();
+
+  try {
+    fs.writeFileSync(USERS_FILE, JSON.stringify(cachedUsers, null, 2), 'utf8');
+    return { success: true, message: `Password pengguna "${user.username}" berhasil direset!` };
+  } catch (err) {
+    return { success: false, error: err.message };
+  }
+}
+
+function deleteUser(userId) {
+  if (!cachedUsers) initUsers();
+  const numId = Number(userId);
+  const user = cachedUsers.find(u => u.id === numId);
+  if (!user) {
+    return { success: false, error: 'Pengguna tidak ditemukan.' };
+  }
+
+  const adminCount = cachedUsers.filter(u => u.role === 'admin').length;
+  if (user.role === 'admin' && adminCount <= 1) {
+    return { success: false, error: 'Tidak dapat menghapus admin utama satu-satunya.' };
+  }
+
+  cachedUsers = cachedUsers.filter(u => u.id !== numId);
+  try {
+    fs.writeFileSync(USERS_FILE, JSON.stringify(cachedUsers, null, 2), 'utf8');
+    return { success: true, message: `Pengguna "${user.username}" berhasil dihapus.` };
+  } catch (err) {
+    return { success: false, error: err.message };
+  }
+}
+
 async function getDb() {
   return null;
 }
@@ -258,5 +474,12 @@ module.exports = {
   getAllOfficers,
   addOfficer,
   updateOfficer,
-  deleteOfficer
+  deleteOfficer,
+  authenticateUser,
+  getAllUsers,
+  addUser,
+  updateUser,
+  changePassword,
+  resetUserPassword,
+  deleteUser
 };

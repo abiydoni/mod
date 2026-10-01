@@ -1,0 +1,11 @@
+[
+  {
+    "id": 1,
+    "username": "admin",
+    "name": "Administrator MOD",
+    "password": "a7aa4da960c4b798f7a2fc3dcb70ec63:53e453d63f919effa880fbd6125be89e576b23c181df03f2662892f945f07fd535379b5d102a6f8e63efab7461fdb47fe52565c41939475ee7e0af860af8a153",
+    "role": "admin",
+    "createdAt": "2026-10-01T07:08:47.397Z",
+    "updatedAt": "2026-10-01T07:08:47.398Z"
+  }
+]

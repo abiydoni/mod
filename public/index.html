@@ -91,12 +91,40 @@
           <p class="page-subtitle" id="current-datetime-display">Memuat waktu...</p>
         </div>
         <div class="topbar-right">
-          <button id="btn-sync-sheet" class="btn btn-outline">
+          <button id="btn-sync-sheet" class="btn btn-outline btn-sm">
             <span class="btn-icon">🔄</span> Sync Google Sheets
           </button>
           <div class="gateway-badge">
             <span class="dot-indicator" id="gateway-dot"></span>
             <span id="gateway-status-text">Appsbee WA Gateway</span>
+          </div>
+          <!-- User Profile Dropdown -->
+          <div class="user-dropdown-container" id="user-dropdown-container">
+            <button class="btn-user-profile" id="btn-user-profile" type="button">
+              <div class="user-avatar" id="top-user-avatar">👤</div>
+              <div class="user-info-text">
+                <strong id="top-user-name">Administrator</strong>
+                <span class="user-role-badge" id="top-user-role">Admin</span>
+              </div>
+              <span class="dropdown-chevron">▾</span>
+            </button>
+            <div class="user-dropdown-menu hidden" id="user-dropdown-menu">
+              <div class="dropdown-header">
+                <span id="menu-user-fullname">Administrator MOD</span>
+                <small class="text-muted" id="menu-user-username">@admin</small>
+              </div>
+              <hr class="dropdown-divider">
+              <button class="dropdown-item" id="btn-open-change-pwd">
+                <span>🔑</span> Ganti Password
+              </button>
+              <button class="dropdown-item" id="btn-open-user-mgmt">
+                <span>👥</span> Kelola Pengguna (User CRUD)
+              </button>
+              <hr class="dropdown-divider">
+              <button class="dropdown-item text-danger" id="btn-logout">
+                <span>🚪</span> Keluar (Logout)
+              </button>
+            </div>
           </div>
         </div>
       </header>
@@ -681,6 +709,174 @@
       <div class="modal-footer">
         <button class="btn btn-outline" onclick="app.closeModal()">Batal</button>
         <button class="btn btn-primary" id="btn-modal-confirm-send">Kirim Sekarang 🚀</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal Change Password -->
+  <div id="modal-change-password" class="modal-backdrop hidden">
+    <div class="modal-box">
+      <div class="modal-header">
+        <h3>🔑 Ganti Password Akun</h3>
+        <button class="modal-close" onclick="app.closeModal('modal-change-password')">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div id="alert-change-pwd" class="alert-banner hidden mb-3"></div>
+        <div class="form-group">
+          <label for="pwd-current">Password Saat Ini:</label>
+          <input type="password" id="pwd-current" class="form-input" placeholder="Masukkan password saat ini">
+        </div>
+        <div class="form-group">
+          <label for="pwd-new">Password Baru:</label>
+          <input type="password" id="pwd-new" class="form-input" placeholder="Minimal 4 karakter">
+        </div>
+        <div class="form-group">
+          <label for="pwd-confirm">Konfirmasi Password Baru:</label>
+          <input type="password" id="pwd-confirm" class="form-input" placeholder="Ulangi password baru">
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-outline" onclick="app.closeModal('modal-change-password')">Batal</button>
+        <button class="btn btn-primary" id="btn-submit-change-pwd">Simpan Password Baru</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal User Management (CRUD Pengguna) -->
+  <div id="modal-users-management" class="modal-backdrop hidden">
+    <div class="modal-box modal-lg">
+      <div class="modal-header">
+        <div>
+          <h3>👥 Kelola Pengguna Aplikasi (User Management)</h3>
+          <p class="text-muted text-xs">Tambah, ubah peran, atau reset password akun pengguna sistem.</p>
+        </div>
+        <button class="modal-close" onclick="app.closeModal('modal-users-management')">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="user-mgmt-toolbar">
+          <button class="btn btn-primary btn-sm" id="btn-open-create-user">
+            ➕ Tambah Pengguna Baru
+          </button>
+        </div>
+
+        <div class="matrix-table-wrapper mt-3">
+          <table class="matrix-table officers-table">
+            <thead>
+              <tr>
+                <th style="width: 40px;">No</th>
+                <th>Username</th>
+                <th>Nama Lengkap</th>
+                <th>Peran (Role)</th>
+                <th>Dibuat</th>
+                <th class="text-center" style="width: 140px;">Aksi</th>
+              </tr>
+            </thead>
+            <tbody id="users-table-tbody">
+              <tr><td colspan="6" class="text-center py-4">Memuat data pengguna...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="app.closeModal('modal-users-management')">Tutup</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal Create/Edit User Form -->
+  <div id="modal-user-form" class="modal-backdrop hidden">
+    <div class="modal-box">
+      <div class="modal-header">
+        <h3 id="modal-user-form-title">➕ Tambah Pengguna Baru</h3>
+        <button class="modal-close" onclick="app.closeModal('modal-user-form')">&times;</button>
+      </div>
+      <div class="modal-body">
+        <input type="hidden" id="form-user-id" value="">
+        <div class="form-group">
+          <label for="form-user-username">Username:</label>
+          <input type="text" id="form-user-username" class="form-input" placeholder="Contoh: operator1">
+        </div>
+        <div class="form-group">
+          <label for="form-user-name">Nama Lengkap:</label>
+          <input type="text" id="form-user-name" class="form-input" placeholder="Contoh: Budi Santoso">
+        </div>
+        <div class="form-group" id="group-form-user-pwd">
+          <label for="form-user-pwd">Password:</label>
+          <input type="password" id="form-user-pwd" class="form-input" placeholder="Minimal 4 karakter">
+        </div>
+        <div class="form-group">
+          <label for="form-user-role">Peran / Hak Akses:</label>
+          <select id="form-user-role" class="form-input">
+            <option value="admin">Administrator (Akses Penuh + Kelola User)</option>
+            <option value="operator" selected>Operator (Jadwal, Pengiriman WA & Master Data)</option>
+          </select>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-outline" onclick="app.closeModal('modal-user-form')">Batal</button>
+        <button class="btn btn-primary" id="btn-save-user-form">Simpan Pengguna</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal Reset User Password (Admin) -->
+  <div id="modal-reset-user-pwd" class="modal-backdrop hidden">
+    <div class="modal-box">
+      <div class="modal-header">
+        <h3 id="modal-reset-pwd-title">🔑 Reset Password Pengguna</h3>
+        <button class="modal-close" onclick="app.closeModal('modal-reset-user-pwd')">&times;</button>
+      </div>
+      <div class="modal-body">
+        <input type="hidden" id="reset-target-user-id" value="">
+        <p class="text-muted text-sm mb-3">Masukkan password baru untuk pengguna: <strong id="reset-target-username"></strong></p>
+        <div class="form-group">
+          <label for="reset-new-password">Password Baru:</label>
+          <input type="password" id="reset-new-password" class="form-input" placeholder="Minimal 4 karakter">
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-outline" onclick="app.closeModal('modal-reset-user-pwd')">Batal</button>
+        <button class="btn btn-primary" id="btn-submit-reset-pwd">Reset Password</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Fullscreen Glassmorphic Login Overlay Screen -->
+  <div id="login-overlay" class="login-overlay-backdrop hidden">
+    <div class="login-card-container">
+      <div class="login-header">
+        <div class="login-brand-icon">🏨</div>
+        <h2>MOD Dispatcher</h2>
+        <p class="text-muted text-sm">Masuk untuk mengakses Dashboard Jadwal & Bot WhatsApp</p>
+      </div>
+
+      <div id="login-alert-box" class="alert-banner hidden mb-3"></div>
+
+      <form id="form-login" onsubmit="event.preventDefault(); app.submitLogin();">
+        <div class="form-group">
+          <label for="login-username">Username:</label>
+          <input type="text" id="login-username" class="form-input" placeholder="Masukkan username" required autofocus autocomplete="username">
+        </div>
+
+        <div class="form-group">
+          <label for="login-password">Password:</label>
+          <div class="pwd-input-group">
+            <input type="password" id="login-password" class="form-input" placeholder="Masukkan password" required autocomplete="current-password">
+            <button type="button" class="btn-toggle-pwd" id="btn-toggle-pwd" title="Tampilkan/Sembunyikan Password">👁️</button>
+          </div>
+        </div>
+
+        <button type="submit" class="btn btn-primary btn-block btn-lg mt-3" id="btn-login-submit">
+          🚀 Masuk ke Sistem
+        </button>
+      </form>
+
+      <div class="login-demo-hint">
+        <span class="text-muted text-xs">Akun Bawaan Sistem:</span>
+        <div class="demo-cred-pills">
+          <span>User: <code>admin</code></span>
+          <span>Pass: <code>admin123</code></span>
+        </div>
       </div>
     </div>
   </div>

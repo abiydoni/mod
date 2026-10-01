@@ -268,6 +268,110 @@ app.post('/api/config', (req, res) => {
   }
 });
 
+// 10. Authentication & User Management
+app.post('/api/auth/login', (req, res) => {
+  try {
+    const { username, password } = req.body;
+    const user = storage.authenticateUser(username, password);
+    if (user) {
+      res.json({
+        success: true,
+        user,
+        message: `Selamat datang, ${user.name}!`
+      });
+    } else {
+      res.status(401).json({
+        success: false,
+        error: 'Username atau password salah.'
+      });
+    }
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+app.post('/api/auth/change-password', (req, res) => {
+  try {
+    const { userId, currentPassword, newPassword } = req.body;
+    const result = storage.changePassword(userId, currentPassword, newPassword);
+    if (result.success) {
+      res.json(result);
+    } else {
+      res.status(400).json(result);
+    }
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// Users CRUD (Admin)
+app.get('/api/users', (req, res) => {
+  try {
+    const users = storage.getAllUsers();
+    res.json({ success: true, users });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+app.post('/api/users', (req, res) => {
+  try {
+    const { username, name, password, role } = req.body;
+    const result = storage.addUser({ username, name, password, role });
+    if (result.success) {
+      res.json(result);
+    } else {
+      res.status(400).json(result);
+    }
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+app.put('/api/users/:id', (req, res) => {
+  try {
+    const { id } = req.params;
+    const { name, role } = req.body;
+    const result = storage.updateUser(id, { name, role });
+    if (result.success) {
+      res.json(result);
+    } else {
+      res.status(400).json(result);
+    }
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+app.post('/api/users/:id/reset-password', (req, res) => {
+  try {
+    const { id } = req.params;
+    const { newPassword } = req.body;
+    const result = storage.resetUserPassword(id, newPassword);
+    if (result.success) {
+      res.json(result);
+    } else {
+      res.status(400).json(result);
+    }
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+app.delete('/api/users/:id', (req, res) => {
+  try {
+    const { id } = req.params;
+    const result = storage.deleteUser(id);
+    if (result.success) {
+      res.json(result);
+    } else {
+      res.status(400).json(result);
+    }
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
 // Catch-all for SPA UI
 app.get('*', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'index.html'));
