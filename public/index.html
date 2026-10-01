@@ -427,21 +427,46 @@
       <!-- Tab 5: Settings -->
       <section id="tab-settings" class="tab-pane">
         <div class="grid-2-cols">
-          <!-- Google Sheet Settings -->
+          <!-- Google Sheet Settings & Email Integration -->
           <div class="panel-card">
-            <h3>📊 Konfigurasi Google Sheets</h3>
-            <p class="text-muted mb-3">Tautkan dokumen spreadsheet MOD Schedule Anda</p>
+            <div class="matrix-header mb-2">
+              <div>
+                <h3>📊 Integrasi Google Sheets & Google Drive</h3>
+                <p class="text-muted">Hubungkan spreadsheet via link atau bagikan akses via email Google</p>
+              </div>
+              <span class="status-pill" id="badge-sheet-conn-status">⚪ Belum Diuji</span>
+            </div>
             
             <div class="form-group">
-              <label for="cfg-sheet-url">URL atau ID Google Sheets (Read-Only):</label>
-              <input type="text" id="cfg-sheet-url" class="form-input" placeholder="https://docs.google.com/spreadsheets/d/.../edit">
-              <small class="text-muted">Status share: <strong>"Anyone with the link can view"</strong>.</small>
+              <label for="cfg-sheet-url">URL atau ID Google Sheets:</label>
+              <input type="text" id="cfg-sheet-url" class="form-input" placeholder="https://docs.google.com/spreadsheets/d/1whXqz.../edit">
             </div>
 
-            <div class="form-group">
-              <label for="cfg-script-webhook">Google Apps Script Webhook URL (Auto-Create & Update Sheet):</label>
+            <!-- Email Sharing Instruction Card -->
+            <div class="email-sharing-card">
+              <div class="email-sharing-header">
+                <span class="email-icon">📧</span>
+                <div>
+                  <strong>Bagi Akses via Email (Spreadsheet Privat)</strong>
+                  <p class="text-muted text-xs">Jika spreadsheet tidak dibuka untuk umum, bagikan akses ke email sistem ini:</p>
+                </div>
+              </div>
+              <div class="copy-email-box">
+                <code id="system-service-email">mod-scheduler@appsbee-bot.iam.gserviceaccount.com</code>
+                <button type="button" class="btn btn-sm btn-secondary" id="btn-copy-service-email" title="Salin Email">
+                  📋 Salin Email
+                </button>
+              </div>
+              <ol class="email-steps-list">
+                <li>Buka Google Sheet Anda > Klik tombol <strong>Bagikan (Share)</strong> di pojok kanan atas.</li>
+                <li>Tempelkan (Paste) email di atas, pilih peran <strong>Pelihat (Viewer)</strong> atau <strong>Editor</strong>, lalu klik Kirim.</li>
+                <li>Klik tombol <strong>"🔍 Uji & Hubungkan Sekarang"</strong> di bawah untuk memverifikasi.</li>
+              </ol>
+            </div>
+
+            <div class="form-group mt-3">
+              <label for="cfg-script-webhook">Google Apps Script Webhook (Opsional untuk Buat/Edit Tab Otomatis):</label>
               <input type="text" id="cfg-script-webhook" class="form-input" placeholder="https://script.google.com/macros/s/.../exec">
-              <small class="text-muted">Untuk otomatis membuat tab baru dan mengupdate sheet saat klik simpan.</small>
             </div>
 
             <div class="form-group">
@@ -449,9 +474,14 @@
               <input type="text" id="cfg-sheet-name" class="form-input" placeholder="October 2026">
             </div>
 
-            <button id="btn-test-sheet" class="btn btn-outline btn-sm">
-              🔍 Test Baca Spreadsheet
-            </button>
+            <div class="sheet-actions-bar">
+              <button id="btn-test-sheet" type="button" class="btn btn-primary btn-sm">
+                🔍 Uji & Hubungkan Sekarang
+              </button>
+            </div>
+
+            <!-- Connection Test Result Box -->
+            <div id="sheet-test-result-box" class="sheet-test-result-box hidden"></div>
           </div>
 
           <!-- WA Gateway Settings -->

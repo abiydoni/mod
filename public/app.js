@@ -277,6 +277,21 @@ const app = {
         this.testGoogleSheetConnection();
       });
     }
+
+    // Copy Service Email Button
+    const btnCopyEmail = document.getElementById('btn-copy-service-email');
+    if (btnCopyEmail) {
+      btnCopyEmail.addEventListener('click', () => {
+        const emailEl = document.getElementById('system-service-email');
+        if (emailEl) {
+          navigator.clipboard.writeText(emailEl.innerText.trim()).then(() => {
+            this.showToast('📋 Email sistem berhasil disalin ke clipboard!', 'success');
+          }).catch(() => {
+            this.showToast('Gagal menyalin, silakan pilih teks secara manual.', 'error');
+          });
+        }
+      });
+    }
   },
 
   startClock() {
@@ -817,8 +832,89 @@ const app = {
   },
 
   async testGoogleSheetConnection() {
-    this.showToast('Menguji koneksi ke Google Sheets...', 'success');
-    await this.syncGoogleSheets();
+    const btn = document.getElementById('btn-test-sheet');
+    const resultBox = document.getElementById('sheet-test-result-box');
+    const badgeStatus = document.getElementById('badge-sheet-conn-status');
+
+    const sheetUrl = document.getElementById('cfg-sheet-url')?.value.trim() || '';
+    const scriptWebhookUrl = document.getElementById('cfg-script-webhook')?.value.trim() || '';
+    const sheetName = document.getElementById('cfg-sheet-name')?.value.trim() || 'October 2026';
+
+    if (btn) {
+      btn.innerHTML = '⏳ Sedang Menguji...';
+      btn.disabled = true;
+    }
+    this.setStatus('🔍 Menguji sambungan dan akses ke Google Sheets...', 'working');
+    this.setProgress(45);
+
+    if (resultBox) {
+      resultBox.classList.remove('hidden', 'success', 'error');
+      resultBox.innerHTML = '⏳ Menghubungi Google Drive & memverifikasi izin akses...';
+    }
+
+    try {
+      const res = await fetch('/api/sheet/test-connection', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ sheetUrl, scriptWebhookUrl, sheetName })
+      });
+      const data = await res.json();
+
+      this.setProgress(100, false);
+
+      if (data.connected && data.success) {
+        if (badgeStatus) {
+          badgeStatus.innerHTML = '🟢 Terhubung';
+          badgeStatus.className = 'status-pill status-badge-success';
+        }
+        if (resultBox) {
+          resultBox.className = 'sheet-test-result-box success';
+          resultBox.innerHTML = `
+            <strong>✅ Sambungan Google Sheet Berhasil!</strong><br>
+            • <strong>Metode:</strong> ${data.method || 'Google Drive API'}<br>
+            • <strong>Tab Terbaca:</strong> ${data.sheetName || sheetName}<br>
+            • <strong>Petugas Ditemukan:</strong> ${data.officersCount || 0} orang<br>
+            <span class="text-xs">Data jadwal berhasil disinkronkan ke sistem lokal web secara otomatis.</span>
+          `;
+        }
+        this.setStatus(`✅ Google Sheets Terhubung & Tersinkronisasi (${data.officersCount || 0} Petugas)`, 'ready');
+        this.showToast('✅ Google Sheets berhasil terhubung!', 'success');
+        await this.loadDutyData();
+        await this.loadMatrixData();
+      } else {
+        if (badgeStatus) {
+          badgeStatus.innerHTML = '🔴 Belum Terhubung';
+          badgeStatus.className = 'status-pill status-badge-failed';
+        }
+        if (resultBox) {
+          resultBox.className = 'sheet-test-result-box error';
+          resultBox.innerHTML = `
+            <strong>⚠️ Akses Google Sheet Belum Diberikan</strong><br>
+            • <strong>Penyebab:</strong> ${data.error || 'Izin akses privat ditolak Google (404/Restricted)'}.<br>
+            • <strong>Solusi:</strong> Tambahkan email di atas ke menu <strong>Bagikan (Share)</strong> pada Google Sheet Anda, atau ubah akses menjadi "Siapa saja yang memiliki link".
+          `;
+        }
+        this.setStatus('⚠️ Google Sheets belum dapat diakses', 'error');
+        this.showToast('Akses Google Sheets belum terbuka.', 'error');
+      }
+    } catch (e) {
+      this.setProgress(100, false);
+      if (badgeStatus) {
+        badgeStatus.innerHTML = '🔴 Error';
+        badgeStatus.className = 'status-pill status-badge-failed';
+      }
+      if (resultBox) {
+        resultBox.className = 'sheet-test-result-box error';
+        resultBox.innerHTML = `<strong>❌ Terjadi kesalahan:</strong> ${e.message}`;
+      }
+      this.setStatus(`❌ Error: ${e.message}`, 'error');
+      this.showToast(`Error: ${e.message}`, 'error');
+    } finally {
+      if (btn) {
+        btn.innerHTML = '🔍 Uji & Hubungkan Sekarang';
+        btn.disabled = false;
+      }
+    }
   },
 
   async loadMasterOfficers() {

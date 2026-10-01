@@ -80,6 +80,17 @@ app.post('/api/schedule/sync', async (req, res) => {
   }
 });
 
+// 4a. Test Google Sheet / Email Connection Check
+app.post('/api/sheet/test-connection', async (req, res) => {
+  try {
+    const { sheetUrl, scriptWebhookUrl, sheetName = 'October 2026' } = req.body;
+    const testResult = await sheetService.testSheetConnection({ sheetUrl, scriptWebhookUrl, sheetName });
+    res.json(testResult);
+  } catch (err) {
+    res.status(500).json({ success: false, connected: false, error: err.message });
+  }
+});
+
 // 4b. Save Custom Schedule (Directly created/edited from the app)
 app.post('/api/schedule/save', async (req, res) => {
   try {

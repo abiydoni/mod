@@ -1240,9 +1240,85 @@ label {
 .text-muted { color: var(--text-muted); }
 .font-mono { font-family: monospace; }
 .text-sm { font-size: 0.85rem; }
+.text-xs { font-size: 0.75rem; }
 .mb-2 { margin-bottom: 8px; }
 .mb-3 { margin-bottom: 12px; }
 .mb-4 { margin-bottom: 16px; }
 .max-w-2xl { max-width: 650px; }
 .text-center { text-align: center; }
 .py-4 { padding-top: 16px; padding-bottom: 16px; }
+
+/* Email Sharing Card in Settings */
+.email-sharing-card {
+  background: rgba(15, 23, 42, 0.7);
+  border: 1px solid rgba(99, 102, 241, 0.25);
+  border-radius: var(--radius-md);
+  padding: 14px;
+  margin: 12px 0;
+}
+
+.email-sharing-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.email-icon {
+  font-size: 1.4rem;
+  background: rgba(99, 102, 241, 0.2);
+  padding: 6px;
+  border-radius: 8px;
+}
+
+.copy-email-box {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: #08111e;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: var(--radius-sm);
+  padding: 8px 12px;
+  margin-bottom: 10px;
+  gap: 8px;
+}
+
+.copy-email-box code {
+  color: #38bdf8;
+  font-size: 0.82rem;
+  word-break: break-all;
+}
+
+.email-steps-list {
+  font-size: 0.78rem;
+  color: #cbd5e1;
+  padding-left: 20px;
+  line-height: 1.6;
+}
+
+.sheet-actions-bar {
+  display: flex;
+  gap: 10px;
+  margin-top: 14px;
+}
+
+.sheet-test-result-box {
+  margin-top: 12px;
+  padding: 12px 14px;
+  border-radius: var(--radius-md);
+  font-size: 0.82rem;
+  line-height: 1.5;
+  animation: slideUp 0.2s ease;
+}
+
+.sheet-test-result-box.success {
+  background: rgba(16, 185, 129, 0.15);
+  border: 1px solid rgba(16, 185, 129, 0.35);
+  color: #34d399;
+}
+
+.sheet-test-result-box.error {
+  background: rgba(244, 63, 94, 0.15);
+  border: 1px solid rgba(244, 63, 94, 0.35);
+  color: #fb7185;
+}

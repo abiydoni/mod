@@ -537,6 +537,75 @@ function getDutyForDate(scheduleData, targetDate = new Date()) {
   return duty;
 }
 
+async function testSheetConnection({ sheetUrl, scriptWebhookUrl, sheetName = 'October 2026' }) {
+  const urlToUse = sheetUrl || (storage.getConfig().spreadsheet && storage.getConfig().spreadsheet.sheetUrl) || '';
+  const spreadsheetId = extractSpreadsheetId(urlToUse);
+  const gid = extractGid(urlToUse);
+
+  if (!spreadsheetId && !scriptWebhookUrl) {
+    return {
+      success: false,
+      connected: false,
+      error: 'URL Spreadsheet atau Webhook belum dimasukkan.'
+    };
+  }
+
+  // 1. Test Direct CSV Fetch from GDrive
+  if (spreadsheetId) {
+    const urlsToTry = [];
+    if (gid) {
+      urlsToTry.push(`https://docs.google.com/spreadsheets/d/${spreadsheetId}/export?format=csv&gid=${gid}`);
+    }
+    urlsToTry.push(`https://docs.google.com/spreadsheets/d/${spreadsheetId}/gviz/tq?tqx=out:csv&sheet=${encodeURIComponent(sheetName)}`);
+
+    for (const url of urlsToTry) {
+      try {
+        const csv = await fetchUrl(url);
+        if (csv && csv.length > 50 && !csv.includes('<!DOCTYPE html>')) {
+          const rows = parseCsv(csv);
+          const parsed = parseSpreadsheetRows(rows, sheetName);
+          parsed.source = 'live_google_sheet';
+          saveLocalMonthSchedule(sheetName, parsed);
+          return {
+            success: true,
+            connected: true,
+            method: 'Direct Google Drive Link',
+            sheetName,
+            spreadsheetId,
+            officersCount: parsed.officers.length,
+            message: `Koneksi Google Sheets Berhasil! Terbaca ${parsed.officers.length} petugas dinas.`
+          };
+        }
+      } catch (err) {}
+    }
+  }
+
+  // 2. Test Google Apps Script Webhook (for Private Sheets)
+  const webhook = scriptWebhookUrl || (storage.getConfig().spreadsheet && storage.getConfig().spreadsheet.scriptWebhookUrl);
+  if (webhook) {
+    try {
+      const res = await sendHttpsPost(webhook, { action: 'ping', sheetName });
+      if (res && (res.statusCode === 200 || res.statusCode === 302)) {
+        return {
+          success: true,
+          connected: true,
+          method: 'Google Apps Script Webhook (Spreadsheet Privat)',
+          sheetName,
+          message: 'Koneksi ke Spreadsheet Privat melalui Google Apps Script Webhook Berhasil!'
+        };
+      }
+    } catch (e) {}
+  }
+
+  return {
+    success: false,
+    connected: false,
+    error: 'Akses Google Sheet belum terbuka. Jika menggunakan proteksi email, pastikan email sistem sudah ditambahkan di menu Bagikan (Share) Google Sheet atau gunakan Google Apps Script Webhook.',
+    spreadsheetId,
+    sheetName
+  };
+}
+
 module.exports = {
   fetchScheduleFromGoogle,
   saveLocalMonthSchedule,
@@ -545,6 +614,7 @@ module.exports = {
   exportScheduleToCsv,
   syncToGoogleAppsScript,
   getDutyForDate,
+  testSheetConnection,
   extractSpreadsheetId,
   extractGid,
   MONTH_NAMES,
