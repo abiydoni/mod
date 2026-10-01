@@ -1,0 +1,534 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MOD Scheduler & WA Bot Dashboard</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <!-- Ambient background lighting -->
+  <div class="glow-sphere glow-1"></div>
+  <div class="glow-sphere glow-2"></div>
+
+  <div class="app-layout">
+    <!-- Sidebar -->
+    <aside class="sidebar">
+      <div class="brand">
+        <div class="brand-icon">🏨</div>
+        <div>
+          <h1 class="brand-title">MOD Dispatcher</h1>
+          <span class="brand-sub">WhatsApp Automated Bot</span>
+        </div>
+      </div>
+
+      <nav class="nav-menu">
+        <button class="nav-item active" data-tab="tab-today">
+          <span class="nav-icon">📅</span>
+          <span>Jadwal & Kirim WA</span>
+        </button>
+        <button class="nav-item" data-tab="tab-editor">
+          <span class="nav-icon">✏️</span>
+          <span>Buat & Edit Jadwal</span>
+        </button>
+        <button class="nav-item" data-tab="tab-matrix">
+          <span class="nav-icon">📊</span>
+          <span>Kalender Matrix</span>
+        </button>
+        <button class="nav-item" data-tab="tab-broadcast">
+          <span class="nav-icon">📢</span>
+          <span>Kirim Bebas / Manual</span>
+        </button>
+        <button class="nav-item" data-tab="tab-logs">
+          <span class="nav-icon">📜</span>
+          <span>Riwayat Log</span>
+          <span class="badge" id="logs-count">0</span>
+        </button>
+        <button class="nav-item" data-tab="tab-settings">
+          <span class="nav-icon">⚙️</span>
+          <span>Pengaturan & Cron</span>
+        </button>
+      </nav>
+
+      <div class="sidebar-status-card">
+        <div class="status-header">
+          <span class="status-dot online"></span>
+          <span class="status-label">Cron Engine Aktif</span>
+        </div>
+        <div class="schedule-summary">
+          <div class="schedule-item">
+            <span>MOD 1 (Pagi)</span>
+            <strong id="cron-time-mod1">09:00 WIB</strong>
+          </div>
+          <div class="schedule-item">
+            <span>MOD 2 (Sore)</span>
+            <strong id="cron-time-mod2">16:00 WIB</strong>
+          </div>
+          <div class="schedule-item">
+            <span>MOD (Malam)</span>
+            <strong id="cron-time-mod">18:00 WIB</strong>
+          </div>
+        </div>
+      </div>
+    </aside>
+
+    <!-- Main Content Area -->
+    <main class="main-content">
+      <!-- Topbar Header -->
+      <header class="topbar">
+        <div class="topbar-left">
+          <h2 class="page-title" id="page-title">Jadwal Hari Ini & Pengiriman WA</h2>
+          <p class="page-subtitle" id="current-datetime-display">Memuat waktu...</p>
+        </div>
+        <div class="topbar-right">
+          <button id="btn-sync-sheet" class="btn btn-outline">
+            <span class="btn-icon">🔄</span> Sync Google Sheets
+          </button>
+          <div class="gateway-badge">
+            <span class="dot-indicator" id="gateway-dot"></span>
+            <span id="gateway-status-text">Appsbee WA Gateway</span>
+          </div>
+        </div>
+      </header>
+
+      <!-- Alert / Warning container if any -->
+      <div id="alert-banner" class="alert-banner hidden"></div>
+
+      <!-- Tab 1: Today's Schedule & Fast Dispatch -->
+      <section id="tab-today" class="tab-pane active">
+        <!-- Date Selector Bar -->
+        <div class="date-filter-card">
+          <div class="filter-group">
+            <label for="date-selector">Pilih Tanggal:</label>
+            <input type="date" id="date-selector" class="form-input-sm">
+            <button id="btn-today" class="btn btn-sm btn-secondary">Hari Ini</button>
+            <button id="btn-tomorrow" class="btn btn-sm btn-secondary">Besok</button>
+          </div>
+          <div class="sheet-info-tag">
+            <span>Sumber Data: </span>
+            <strong id="sheet-source-label">Google Sheets</strong>
+          </div>
+        </div>
+
+        <!-- Shift Duty Cards Grid -->
+        <div class="duty-cards-grid">
+          <!-- MOD 1 Card -->
+          <div class="duty-card mod1-card">
+            <div class="duty-card-header">
+              <div>
+                <span class="shift-tag badge-mod1">Shift Pagi (MOD 1)</span>
+                <h3 class="duty-time">⏰ Jam Kirim: 09:00 WIB</h3>
+              </div>
+              <button class="btn-icon-action" title="Preview & Kirim" onclick="app.openSendModal('MOD1')">
+                📤 Kirim
+              </button>
+            </div>
+            <div class="officer-list" id="list-mod1">
+              <div class="loading-spinner">Memuat data petugas...</div>
+            </div>
+            <div class="card-footer">
+              <button class="btn btn-sm btn-block btn-mod1" onclick="app.openSendModal('MOD1')">
+                Kirim Notifikasi MOD 1
+              </button>
+            </div>
+          </div>
+
+          <!-- MOD 2 Card -->
+          <div class="duty-card mod2-card">
+            <div class="duty-card-header">
+              <div>
+                <span class="shift-tag badge-mod2">Shift Sore (MOD 2)</span>
+                <h3 class="duty-time">⏰ Jam Kirim: 16:00 WIB</h3>
+              </div>
+              <button class="btn-icon-action" title="Preview & Kirim" onclick="app.openSendModal('MOD2')">
+                📤 Kirim
+              </button>
+            </div>
+            <div class="officer-list" id="list-mod2">
+              <div class="loading-spinner">Memuat data petugas...</div>
+            </div>
+            <div class="card-footer">
+              <button class="btn btn-sm btn-block btn-mod2" onclick="app.openSendModal('MOD2')">
+                Kirim Notifikasi MOD 2
+              </button>
+            </div>
+          </div>
+
+          <!-- MOD Card -->
+          <div class="duty-card mod-card">
+            <div class="duty-card-header">
+              <div>
+                <span class="shift-tag badge-mod">Shift Malam / Umum (MOD)</span>
+                <h3 class="duty-time">⏰ Jam Kirim: 18:00 WIB</h3>
+              </div>
+              <button class="btn-icon-action" title="Preview & Kirim" onclick="app.openSendModal('MOD')">
+                📤 Kirim
+              </button>
+            </div>
+            <div class="officer-list" id="list-mod">
+              <div class="loading-spinner">Memuat data petugas...</div>
+            </div>
+            <div class="card-footer">
+              <button class="btn btn-sm btn-block btn-mod" onclick="app.openSendModal('MOD')">
+                Kirim Notifikasi MOD
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- WhatsApp Preview Section -->
+        <div class="preview-section-card">
+          <div class="preview-header">
+            <div>
+              <h3>📱 Simulasi Pesan WhatsApp</h3>
+              <p class="text-muted">Pratinjau tampilan pesan yang akan dikirim ke Grup WhatsApp</p>
+            </div>
+            <div class="preview-toggle-group">
+              <button class="btn-chip active" onclick="app.switchPreviewShift('ALL')">Semua Shift</button>
+              <button class="btn-chip" onclick="app.switchPreviewShift('MOD1')">MOD 1 (Pagi)</button>
+              <button class="btn-chip" onclick="app.switchPreviewShift('MOD2')">MOD 2 (Sore)</button>
+              <button class="btn-chip" onclick="app.switchPreviewShift('MOD')">MOD (Malam)</button>
+            </div>
+          </div>
+          <div class="whatsapp-bubble-container">
+            <div class="whatsapp-bubble">
+              <div class="wa-header-info">
+                <strong>WhatsApp Group MOD</strong>
+                <span id="wa-preview-time">09:00</span>
+              </div>
+              <pre id="wa-preview-text" class="wa-text-content">Membuat pratinjau pesan...</pre>
+              <div class="wa-footer-meta">
+                <span>12:00</span>
+                <span class="wa-check">✓✓</span>
+              </div>
+            </div>
+          </div>
+          <div class="preview-actions">
+            <button class="btn btn-primary" id="btn-send-preview">
+              <span class="btn-icon">🚀</span> Kirim Pesan Ini Sekarang ke WA Group
+            </button>
+          </div>
+        </div>
+      </section>
+
+      <!-- Tab Editor: Buat & Kelola Jadwal MOD -->
+      <section id="tab-editor" class="tab-pane">
+        <div class="panel-card">
+          <div class="editor-header-bar">
+            <div>
+              <h3>✏️ Buat & Edit Jadwal MOD</h3>
+              <p class="text-muted">Buat jadwal baru, ubah shift per tanggal, atau generate rotasi otomatis.</p>
+            </div>
+            <div class="editor-actions-group">
+              <div class="form-row-compact">
+                <select id="editor-month" class="form-input-sm">
+                  <option value="January">Januari</option>
+                  <option value="February">Februari</option>
+                  <option value="March">Maret</option>
+                  <option value="April">April</option>
+                  <option value="May">Mei</option>
+                  <option value="June">Juni</option>
+                  <option value="July">Juli</option>
+                  <option value="August">Agustus</option>
+                  <option value="September">September</option>
+                  <option value="October" selected>Oktober</option>
+                  <option value="November">November</option>
+                  <option value="December">Desember</option>
+                </select>
+                <select id="editor-year" class="form-input-sm">
+                  <option value="2026" selected>2026</option>
+                  <option value="2027">2027</option>
+                  <option value="2028">2028</option>
+                </select>
+                <button class="btn btn-sm btn-outline" id="btn-editor-load">📂 Buka</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Editor Toolbar -->
+          <div class="editor-toolbar">
+            <div class="toolbar-left">
+              <button class="btn btn-sm btn-secondary" id="btn-add-officer-modal">
+                ➕ Tambah Petugas
+              </button>
+              <button class="btn btn-sm btn-secondary" id="btn-auto-generate-schedule" title="Rotasi adil weekend MOD1/MOD2 dan weekday MOD">
+                ⚡ Generate Otomatis (Smart Assign)
+              </button>
+              <button class="btn btn-sm btn-outline" id="btn-export-csv">
+                📥 Unduh CSV (Excel/Sheet)
+              </button>
+            </div>
+            <div class="toolbar-right">
+              <div class="legend-box">
+                <span class="legend-item"><span class="matrix-badge-mod1">MOD1</span> = Pagi</span>
+                <span class="legend-item"><span class="matrix-badge-mod2">MOD2</span> = Sore</span>
+                <span class="legend-item"><span class="matrix-badge-mod">MOD</span> = Malam</span>
+                <span class="legend-item text-muted">💡 Klik kotak tanggal untuk ganti shift</span>
+              </div>
+              <button class="btn btn-primary" id="btn-save-editor-schedule">
+                💾 Simpan Jadwal ke Sistem
+              </button>
+            </div>
+          </div>
+
+          <!-- Interactive Grid Table -->
+          <div class="matrix-table-wrapper mt-3">
+            <table class="matrix-table editor-table" id="editor-table">
+              <thead>
+                <tr id="editor-head-days"></tr>
+                <tr id="editor-head-dates"></tr>
+              </thead>
+              <tbody id="editor-tbody">
+                <tr><td colspan="35" class="text-center py-4">Memuat data editor...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- Tab 2: Monthly Matrix Calendar -->
+      <section id="tab-matrix" class="tab-pane">
+        <div class="panel-card">
+          <div class="matrix-header">
+            <div>
+              <h3>📅 Kalender Matrix Jadwal MOD</h3>
+              <p class="text-muted">Data jadwal lengkap satu bulan per tanggal dan petugas</p>
+            </div>
+            <div class="matrix-actions">
+              <input type="text" id="matrix-search" class="form-input-sm" placeholder="🔍 Cari nama petugas...">
+              <button class="btn btn-outline btn-sm" id="btn-refresh-matrix">🔄 Refresh</button>
+            </div>
+          </div>
+          <div class="matrix-table-wrapper">
+            <table class="matrix-table" id="matrix-table">
+              <thead>
+                <tr id="matrix-head-days"></tr>
+                <tr id="matrix-head-dates"></tr>
+              </thead>
+              <tbody id="matrix-tbody">
+                <tr><td colspan="35" class="text-center py-4">Memuat kalender matrix...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- Tab 3: Custom Broadcast -->
+      <section id="tab-broadcast" class="tab-pane">
+        <div class="panel-card max-w-2xl">
+          <h3>📢 Kirim Pesan Manual / Pengumuman ke Grup WA</h3>
+          <p class="text-muted mb-4">Kirimkan pesan kustom atau pengumuman penting langsung ke WhatsApp Group yang terdaftar.</p>
+          
+          <div class="form-group">
+            <label for="custom-broadcast-text">Isi Pesan WhatsApp:</label>
+            <textarea id="custom-broadcast-text" rows="8" class="form-input" placeholder="Tuliskan pesan Anda di sini... (Mendukung format *bold*, _italic_, ~strike~)"></textarea>
+          </div>
+
+          <div class="form-group">
+            <label>Target Pengiriman:</label>
+            <input type="text" id="broadcast-target" class="form-input" readonly>
+          </div>
+
+          <button id="btn-submit-broadcast" class="btn btn-primary">
+            <span class="btn-icon">📨</span> Kirim Pesan Bebas Sekarang
+          </button>
+        </div>
+      </section>
+
+      <!-- Tab 4: Logs -->
+      <section id="tab-logs" class="tab-pane">
+        <div class="panel-card">
+          <div class="matrix-header">
+            <div>
+              <h3>📜 Riwayat Pengiriman Pesan</h3>
+              <p class="text-muted">Catatan semua pesan otomatis dan manual yang telah diproses</p>
+            </div>
+            <button class="btn btn-outline btn-sm" id="btn-refresh-logs">🔄 Segarkan Log</button>
+          </div>
+          <div class="logs-table-wrapper">
+            <table class="logs-table">
+              <thead>
+                <tr>
+                  <th>Waktu</th>
+                  <th>Tipe</th>
+                  <th>Shift</th>
+                  <th>Status</th>
+                  <th>Target Group</th>
+                  <th>Pesan</th>
+                </tr>
+              </thead>
+              <tbody id="logs-tbody">
+                <tr><td colspan="6" class="text-center py-4">Belum ada riwayat pengiriman.</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- Tab 5: Settings -->
+      <section id="tab-settings" class="tab-pane">
+        <div class="grid-2-cols">
+          <!-- Google Sheet Settings -->
+          <div class="panel-card">
+            <h3>📊 Konfigurasi Google Sheets</h3>
+            <p class="text-muted mb-3">Tautkan dokumen spreadsheet MOD Schedule Anda</p>
+            
+            <div class="form-group">
+              <label for="cfg-sheet-url">URL atau ID Google Sheets (Read-Only):</label>
+              <input type="text" id="cfg-sheet-url" class="form-input" placeholder="https://docs.google.com/spreadsheets/d/.../edit">
+              <small class="text-muted">Status share: <strong>"Anyone with the link can view"</strong>.</small>
+            </div>
+
+            <div class="form-group">
+              <label for="cfg-script-webhook">Google Apps Script Webhook URL (Auto-Create & Update Sheet):</label>
+              <input type="text" id="cfg-script-webhook" class="form-input" placeholder="https://script.google.com/macros/s/.../exec">
+              <small class="text-muted">Untuk otomatis membuat tab baru dan mengupdate sheet saat klik simpan.</small>
+            </div>
+
+            <div class="form-group">
+              <label for="cfg-sheet-name">Nama Tab Sheet Aktif:</label>
+              <input type="text" id="cfg-sheet-name" class="form-input" placeholder="October 2026">
+            </div>
+
+            <button id="btn-test-sheet" class="btn btn-outline btn-sm">
+              🔍 Test Baca Spreadsheet
+            </button>
+          </div>
+
+          <!-- WA Gateway Settings -->
+          <div class="panel-card">
+            <h3>💬 Konfigurasi WhatsApp Gateway</h3>
+            <p class="text-muted mb-3">Pengaturan API pengirim pesan WA ke grup</p>
+
+            <div class="form-group">
+              <label for="cfg-wa-url">API URL Gateway:</label>
+              <input type="text" id="cfg-wa-url" class="form-input">
+            </div>
+
+            <div class="form-group">
+              <label for="cfg-wa-key">API Key:</label>
+              <input type="text" id="cfg-wa-key" class="form-input">
+            </div>
+
+            <div class="form-row">
+              <div class="form-group flex-1">
+                <label for="cfg-wa-session">Session ID:</label>
+                <input type="text" id="cfg-wa-session" class="form-input">
+              </div>
+              <div class="form-group flex-2">
+                <label for="cfg-wa-target">Target WA Group ID / Number:</label>
+                <input type="text" id="cfg-wa-target" class="form-input">
+              </div>
+            </div>
+
+            <div class="form-group checkbox-group">
+              <input type="checkbox" id="cfg-wa-enabled" checked>
+              <label for="cfg-wa-enabled">Aktifkan Pengiriman WhatsApp Otomatis</label>
+            </div>
+          </div>
+
+          <!-- Schedule & Cron Times -->
+          <div class="panel-card">
+            <h3>⏰ Jam Pengiriman Otomatis (Cron)</h3>
+            <p class="text-muted mb-3">Waktu otomatis pesan dikirimkan setiap hari (Zona Waktu: WIB)</p>
+
+            <div class="form-group">
+              <label for="cfg-time-mod1">Jadwal Pagi (MOD 1):</label>
+              <input type="time" id="cfg-time-mod1" class="form-input" value="09:00">
+            </div>
+
+            <div class="form-group">
+              <label for="cfg-time-mod2">Jadwal Sore (MOD 2):</label>
+              <input type="time" id="cfg-time-mod2" class="form-input" value="16:00">
+            </div>
+
+            <div class="form-group">
+              <label for="cfg-time-mod">Jadwal Malam / Umum (MOD):</label>
+              <input type="time" id="cfg-time-mod" class="form-input" value="18:00">
+            </div>
+          </div>
+
+          <!-- Message Template Editor -->
+          <div class="panel-card">
+            <h3>📝 Template Pesan WhatsApp</h3>
+            <p class="text-muted mb-3">Sesuaikan format kata-kata pemberitahuan.</p>
+            
+            <div class="form-group">
+              <label for="cfg-template-select">Pilih Template:</label>
+              <select id="cfg-template-select" class="form-input">
+                <option value="MOD1">Template MOD 1 (Pagi - 09:00)</option>
+                <option value="MOD2">Template MOD 2 (Sore - 16:00)</option>
+                <option value="MOD">Template MOD (Malam - 18:00)</option>
+                <option value="ALL">Template Ringkasan Semua Shift</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <textarea id="cfg-template-text" rows="6" class="form-input font-mono text-sm"></textarea>
+              <small class="text-muted">Tag yang dapat digunakan: <code>{hari}</code>, <code>{tanggal}</code>, <code>{bulan}</code>, <code>{tahun}</code>, <code>{daftar_petugas}</code></small>
+            </div>
+          </div>
+        </div>
+
+        <div class="settings-save-bar">
+          <button id="btn-save-settings" class="btn btn-primary btn-lg">
+            💾 Simpan Semua Pengaturan
+          </button>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <!-- Modal Add Officer -->
+  <div id="modal-officer" class="modal-backdrop hidden">
+    <div class="modal-box">
+      <div class="modal-header">
+        <h3>➕ Tambah Petugas MOD</h3>
+        <button class="modal-close" onclick="app.closeOfficerModal()">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label for="new-officer-name">Nama Petugas:</label>
+          <input type="text" id="new-officer-name" class="form-input" placeholder="Contoh: Budi Santoso">
+        </div>
+        <div class="form-group">
+          <label for="new-officer-role">Jabatan / Posisi:</label>
+          <input type="text" id="new-officer-role" class="form-input" placeholder="Contoh: Duty Manager / FO Manager">
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-outline" onclick="app.closeOfficerModal()">Batal</button>
+        <button class="btn btn-primary" id="btn-save-new-officer">Tambahkan ke Daftar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal Send Confirmation -->
+  <div id="modal-send" class="modal-backdrop hidden">
+    <div class="modal-box">
+      <div class="modal-header">
+        <h3 id="modal-send-title">Konfirmasi Pengiriman Pesan</h3>
+        <button class="modal-close" onclick="app.closeModal()">&times;</button>
+      </div>
+      <div class="modal-body">
+        <p class="text-muted mb-2">Pesan berikut akan segera dikirimkan ke WhatsApp Group target:</p>
+        <div class="modal-preview-box">
+          <pre id="modal-preview-text" class="wa-text-content"></pre>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-outline" onclick="app.closeModal()">Batal</button>
+        <button class="btn btn-primary" id="btn-modal-confirm-send">Kirim Sekarang 🚀</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Notification -->
+  <div id="toast" class="toast hidden"></div>
+
+  <script src="app.js"></script>
+</body>
+</html>

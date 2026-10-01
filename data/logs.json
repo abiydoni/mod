@@ -1,0 +1,101 @@
+[
+  {
+    "id": "1790820007700",
+    "timestamp": "2026-10-01T02:00:07.700Z",
+    "type": "AUTO",
+    "shift": "MOD1",
+    "status": "SUCCESS",
+    "target": "120363398680818900@g.us",
+    "messageText": "🏨 *PEMBERITAHUAN JADWAL MOD (PAGI)*\n━━━━━━━━━━━━━━━━━━━━━━━━━━\n📅 *Kamis, 01 Oktober 2026*\n⏰ *Waktu Tugas:* Shift Pagi (MOD 1)\n\n👥 *Petugas MOD Pagi Hari Ini:*\n_Tidak ada petugas yang dijadwalkan._\n\n⚠️ *Catatan:* \nMohon bertugas tepat waktu dan lakukan koordinasi operasional.\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━\n_Sistem Notifikasi Otomatis MOD_",
+    "statusCode": 200,
+    "response": {
+      "status": true,
+      "message": "Message sent successfully!",
+      "jid": "120363398680818900@g.us",
+      "result": {
+        "key": {
+          "remoteJid": "120363398680818900@g.us",
+          "fromMe": true,
+          "id": "3EB0B459D8F5039C65EEC5"
+        },
+        "message": {
+          "extendedTextMessage": {
+            "text": "🏨 *PEMBERITAHUAN JADWAL MOD (PAGI)*\n━━━━━━━━━━━━━━━━━━━━━━━━━━\n📅 *Kamis, 01 Oktober 2026*\n⏰ *Waktu Tugas:* Shift Pagi (MOD 1)\n\n👥 *Petugas MOD Pagi Hari Ini:*\n_Tidak ada petugas yang dijadwalkan._\n\n⚠️ *Catatan:* \nMohon bertugas tepat waktu dan lakukan koordinasi operasional.\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━\n_Sistem Notifikasi Otomatis MOD_"
+          },
+          "messageContextInfo": {
+            "messageSecret": "UwU+XJumw14ZRIypUUDDFzepvjWk6fAdxP6Etklea7U="
+          }
+        },
+        "messageTimestamp": "1790820004",
+        "status": "PENDING",
+        "participant": "6285183214612:84@s.whatsapp.net"
+      }
+    }
+  },
+  {
+    "id": "1790817681467",
+    "timestamp": "2026-10-01T01:21:21.467Z",
+    "type": "MANUAL",
+    "shift": "MOD",
+    "status": "SUCCESS",
+    "target": "120363398680818900@g.us",
+    "messageText": "🏨 *PEMBERITAHUAN JADWAL MANAGER ON DUTY (MOD)*\n━━━━━━━━━━━━━━━━━━━━━━━━━━\n📅 *Kamis, 01 Oktober 2026*\n⏰ *Waktu Tugas:* Shift MOD (Malam / Umum)\n\n👥 *Petugas MOD Hari Ini:*\n1. *Iqbal* - Junior Sous Chef [MOD]\n\n⚠️ *Catatan:* \nMohon bertugas dan menjaga kelancaran operasional malam.\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━\n_Sistem Notifikasi Otomatis MOD_",
+    "statusCode": 200,
+    "response": {
+      "status": true,
+      "message": "Message sent successfully!",
+      "jid": "120363398680818900@g.us",
+      "result": {
+        "key": {
+          "remoteJid": "120363398680818900@g.us",
+          "fromMe": true,
+          "id": "3EB0D63BC64DB72B41AE71"
+        },
+        "message": {
+          "extendedTextMessage": {
+            "text": "🏨 *PEMBERITAHUAN JADWAL MANAGER ON DUTY (MOD)*\n━━━━━━━━━━━━━━━━━━━━━━━━━━\n📅 *Kamis, 01 Oktober 2026*\n⏰ *Waktu Tugas:* Shift MOD (Malam / Umum)\n\n👥 *Petugas MOD Hari Ini:*\n1. *Iqbal* - Junior Sous Chef [MOD]\n\n⚠️ *Catatan:* \nMohon bertugas dan menjaga kelancaran operasional malam.\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━\n_Sistem Notifikasi Otomatis MOD_"
+          },
+          "messageContextInfo": {
+            "messageSecret": "IDI/Ezu2BR2ITu5CvBPpGROA7UGajwx9ZjoCxEu/lL4="
+          }
+        },
+        "messageTimestamp": "1790817679",
+        "status": "PENDING",
+        "participant": "6285183214612:84@s.whatsapp.net"
+      }
+    }
+  },
+  {
+    "id": "1790817641264",
+    "timestamp": "2026-10-01T01:20:41.264Z",
+    "type": "MANUAL",
+    "shift": "CUSTOM",
+    "status": "SUCCESS",
+    "target": "120363398680818900@g.us",
+    "messageText": "test",
+    "statusCode": 200,
+    "response": {
+      "status": true,
+      "message": "Message sent successfully!",
+      "jid": "120363398680818900@g.us",
+      "result": {
+        "key": {
+          "remoteJid": "120363398680818900@g.us",
+          "fromMe": true,
+          "id": "3EB0A077D7FA665A48D068"
+        },
+        "message": {
+          "extendedTextMessage": {
+            "text": "test"
+          },
+          "messageContextInfo": {
+            "messageSecret": "pRErFSuAYbC/IecX6G4d64k6GJT5EE0t3pJGXg5eWrI="
+          }
+        },
+        "messageTimestamp": "1790817638",
+        "status": "PENDING",
+        "participant": "6285183214612:84@s.whatsapp.net"
+      }
+    }
+  }
+]

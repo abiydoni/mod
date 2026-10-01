@@ -1,0 +1,861 @@
+const app = {
+  currentDate: new Date(),
+  selectedShift: 'ALL',
+  pendingModalShift: 'ALL',
+  cachedDuty: null,
+  cachedMatrix: null,
+  config: null,
+  editorOfficers: [],
+  editorMonth: 'October',
+  editorYear: 2026,
+
+  async init() {
+    this.setupEventListeners();
+    this.startClock();
+    await this.loadConfig();
+    this.initDateSelector();
+    await this.loadDutyData();
+    await this.loadMatrixData();
+    await this.loadEditorData();
+    await this.loadLogs();
+  },
+
+  setupEventListeners() {
+    // Tab Switching
+    document.querySelectorAll('.nav-item').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const tabId = btn.getAttribute('data-tab');
+        this.switchTab(tabId);
+        if (tabId === 'tab-editor') {
+          this.loadEditorData();
+        }
+      });
+    });
+
+    // Date selector
+    const dateInput = document.getElementById('date-selector');
+    if (dateInput) {
+      dateInput.addEventListener('change', (e) => {
+        if (e.target.value) {
+          this.currentDate = new Date(e.target.value);
+          this.loadDutyData();
+        }
+      });
+    }
+
+    document.getElementById('btn-today').addEventListener('click', () => {
+      this.currentDate = new Date();
+      this.initDateSelector();
+      this.loadDutyData();
+    });
+
+    document.getElementById('btn-tomorrow').addEventListener('click', () => {
+      const tomorrow = new Date();
+      tomorrow.setDate(tomorrow.getDate() + 1);
+      this.currentDate = tomorrow;
+      this.initDateSelector();
+      this.loadDutyData();
+    });
+
+    // Sync button
+    document.getElementById('btn-sync-sheet').addEventListener('click', () => {
+      this.syncGoogleSheets();
+    });
+
+    // Refresh Matrix
+    document.getElementById('btn-refresh-matrix').addEventListener('click', () => {
+      this.loadMatrixData();
+    });
+
+    // Search Matrix
+    document.getElementById('matrix-search').addEventListener('input', (e) => {
+      this.filterMatrixTable(e.target.value);
+    });
+
+    // Refresh Logs
+    document.getElementById('btn-refresh-logs').addEventListener('click', () => {
+      this.loadLogs();
+    });
+
+    // Send Preview Button
+    document.getElementById('btn-send-preview').addEventListener('click', () => {
+      this.openSendModal(this.selectedShift);
+    });
+
+    // Confirm Send in Modal
+    document.getElementById('btn-modal-confirm-send').addEventListener('click', () => {
+      this.executeSendShift(this.pendingModalShift);
+    });
+
+    // Broadcast Submit
+    document.getElementById('btn-submit-broadcast').addEventListener('click', () => {
+      this.sendCustomBroadcast();
+    });
+
+    // Settings Save
+    document.getElementById('btn-save-settings').addEventListener('click', () => {
+      this.saveConfig();
+    });
+
+    // Editor: Load month
+    document.getElementById('btn-editor-load').addEventListener('click', () => {
+      this.editorMonth = document.getElementById('editor-month').value;
+      this.editorYear = parseInt(document.getElementById('editor-year').value, 10);
+      this.loadEditorData();
+    });
+
+    // Editor: Add officer modal
+    document.getElementById('btn-add-officer-modal').addEventListener('click', () => {
+      this.openOfficerModal();
+    });
+
+    document.getElementById('btn-save-new-officer').addEventListener('click', () => {
+      this.addNewOfficer();
+    });
+
+    // Editor: Auto generate
+    document.getElementById('btn-auto-generate-schedule').addEventListener('click', () => {
+      this.autoGenerateSchedule();
+    });
+
+    // Editor: Save schedule
+    document.getElementById('btn-save-editor-schedule').addEventListener('click', () => {
+      this.saveEditorSchedule();
+    });
+
+    // Editor: Export CSV
+    document.getElementById('btn-export-csv').addEventListener('click', () => {
+      this.exportCsv();
+    });
+
+    // Template selector change
+    document.getElementById('cfg-template-select').addEventListener('change', (e) => {
+      this.populateTemplateText(e.target.value);
+    });
+
+    // Template text change
+    document.getElementById('cfg-template-text').addEventListener('input', (e) => {
+      const selected = document.getElementById('cfg-template-select').value;
+      if (!this.config.messageTemplates) {
+        this.config.messageTemplates = {};
+      }
+      this.config.messageTemplates[selected] = e.target.value;
+      this.updateWhatsAppPreview();
+    });
+
+    // Test Sheet Button
+    document.getElementById('btn-test-sheet').addEventListener('click', () => {
+      this.testGoogleSheetConnection();
+    });
+  },
+
+  startClock() {
+    const update = () => {
+      const now = new Date();
+      const options = { 
+        weekday: 'long', 
+        year: 'numeric', 
+        month: 'long', 
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit',
+        timeZone: 'Asia/Jakarta'
+      };
+      const formatted = new Intl.DateTimeFormat('id-ID', options).format(now);
+      document.getElementById('current-datetime-display').innerText = `🕒 ${formatted} WIB`;
+    };
+    update();
+    setInterval(update, 1000);
+  },
+
+  initDateSelector() {
+    const yyyy = this.currentDate.getFullYear();
+    const mm = String(this.currentDate.getMonth() + 1).padStart(2, '0');
+    const dd = String(this.currentDate.getDate()).padStart(2, '0');
+    document.getElementById('date-selector').value = `${yyyy}-${mm}-${dd}`;
+  },
+
+  switchTab(tabId) {
+    document.querySelectorAll('.nav-item').forEach(btn => {
+      btn.classList.toggle('active', btn.getAttribute('data-tab') === tabId);
+    });
+    document.querySelectorAll('.tab-pane').forEach(pane => {
+      pane.classList.toggle('active', pane.id === tabId);
+    });
+
+    const titles = {
+      'tab-today': 'Jadwal Hari Ini & Pengiriman WA',
+      'tab-matrix': 'Kalender Matrix Jadwal MOD',
+      'tab-broadcast': 'Kirim Pesan Manual / Pengumuman',
+      'tab-logs': 'Riwayat Log Pengiriman',
+      'tab-settings': 'Pengaturan Sistem & Cron'
+    };
+    document.getElementById('page-title').innerText = titles[tabId] || 'MOD Dispatcher';
+  },
+
+  async loadConfig() {
+    try {
+      const res = await fetch('/api/config');
+      this.config = await res.json();
+      
+      // Populate fields in Settings tab
+      if (this.config.spreadsheet) {
+        document.getElementById('cfg-sheet-url').value = this.config.spreadsheet.sheetUrl || this.config.spreadsheet.spreadsheetId || '';
+        document.getElementById('cfg-script-webhook').value = this.config.spreadsheet.scriptWebhookUrl || '';
+        document.getElementById('cfg-sheet-name').value = this.config.spreadsheet.activeSheetName || 'October 2026';
+      }
+      if (this.config.waGateway) {
+        document.getElementById('cfg-wa-url').value = this.config.waGateway.apiUrl || '';
+        document.getElementById('cfg-wa-key').value = this.config.waGateway.apiKey || '';
+        document.getElementById('cfg-wa-session').value = this.config.waGateway.sessionId || '';
+        document.getElementById('cfg-wa-target').value = this.config.waGateway.targetNumber || '';
+        document.getElementById('cfg-wa-enabled').checked = !!this.config.waGateway.enabled;
+
+        document.getElementById('broadcast-target').value = this.config.waGateway.targetNumber || 'Belum diatur';
+      }
+      if (this.config.schedules) {
+        document.getElementById('cfg-time-mod1').value = this.config.schedules.MOD1?.time || '09:00';
+        document.getElementById('cfg-time-mod2').value = this.config.schedules.MOD2?.time || '16:00';
+        document.getElementById('cfg-time-mod').value = this.config.schedules.MOD?.time || '18:00';
+
+        document.getElementById('cron-time-mod1').innerText = `${this.config.schedules.MOD1?.time || '09:00'} WIB`;
+        document.getElementById('cron-time-mod2').innerText = `${this.config.schedules.MOD2?.time || '16:00'} WIB`;
+        document.getElementById('cron-time-mod').innerText = `${this.config.schedules.MOD?.time || '18:00'} WIB`;
+      }
+      
+      const currentSelectedTemplate = document.getElementById('cfg-template-select').value || 'MOD1';
+      this.populateTemplateText(currentSelectedTemplate);
+    } catch (e) {
+      console.error('Failed to load config:', e);
+    }
+  },
+
+  populateTemplateText(shiftKey) {
+    const templates = (this.config && this.config.messageTemplates) || {};
+    document.getElementById('cfg-template-text').value = templates[shiftKey] || '';
+  },
+
+  async loadDutyData() {
+    try {
+      const dateStr = this.currentDate.toISOString().split('T')[0];
+      const res = await fetch(`/api/schedule/duty?date=${dateStr}`);
+      const data = await res.json();
+      this.cachedDuty = data.duty;
+
+      // Source label
+      document.getElementById('sheet-source-label').innerText = data.source === 'live_google_sheet' ? '🟢 Google Sheets (Live)' : '🟡 Data Cache / Fallback';
+
+      // Alert if sync warning
+      const alertBanner = document.getElementById('alert-banner');
+      if (data.syncWarning) {
+        alertBanner.innerText = `ℹ️ ${data.syncWarning}`;
+        alertBanner.classList.remove('hidden');
+      } else {
+        alertBanner.classList.add('hidden');
+      }
+
+      this.renderDutyCards(data.duty);
+      this.updateWhatsAppPreview();
+    } catch (e) {
+      console.error('Failed to load duty data:', e);
+      this.showToast('Gagal memuat data jadwal', 'error');
+    }
+  },
+
+  renderDutyCards(duty) {
+    const renderList = (elementId, officers, emptyText) => {
+      const container = document.getElementById(elementId);
+      if (!officers || officers.length === 0) {
+        container.innerHTML = `<div class="no-officer">${emptyText}</div>`;
+        return;
+      }
+      container.innerHTML = officers.map(o => `
+        <div class="officer-item">
+          <div class="officer-avatar">${o.name.charAt(0).toUpperCase()}</div>
+          <div class="officer-details">
+            <h4>${o.name}</h4>
+            <p>${o.role}</p>
+          </div>
+        </div>
+      `).join('');
+    };
+
+    renderList('list-mod1', duty.MOD1, 'Tidak ada petugas MOD 1 pada tanggal ini');
+    renderList('list-mod2', duty.MOD2, 'Tidak ada petugas MOD 2 pada tanggal ini');
+    renderList('list-mod', duty.MOD, 'Tidak ada petugas MOD pada tanggal ini');
+  },
+
+  switchPreviewShift(shiftKey) {
+    this.selectedShift = shiftKey;
+    document.querySelectorAll('.preview-toggle-group .btn-chip').forEach(chip => {
+      chip.classList.toggle('active', chip.innerText.includes(shiftKey) || (shiftKey === 'ALL' && chip.innerText.includes('Semua')));
+    });
+    this.updateWhatsAppPreview();
+  },
+
+  async updateWhatsAppPreview() {
+    if (!this.cachedDuty) return;
+    try {
+      const dateStr = this.currentDate.toISOString().split('T')[0];
+      const res = await fetch('/api/preview', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ shift: this.selectedShift, date: dateStr })
+      });
+      const data = await res.json();
+      document.getElementById('wa-preview-text').innerText = data.message || 'Pesan kosong';
+      
+      const timeMap = { 'MOD1': '09:00', 'MOD2': '16:00', 'MOD': '18:00', 'ALL': '08:00' };
+      document.getElementById('wa-preview-time').innerText = timeMap[this.selectedShift] || '09:00';
+    } catch (e) {
+      console.error('Failed to preview message:', e);
+    }
+  },
+
+  async syncGoogleSheets() {
+    const btn = document.getElementById('btn-sync-sheet');
+    const originalText = btn.innerHTML;
+    btn.innerHTML = '⏳ Menyinkronkan...';
+    btn.disabled = true;
+
+    try {
+      const sheetName = document.getElementById('cfg-sheet-name') ? document.getElementById('cfg-sheet-name').value.trim() : '';
+      const res = await fetch('/api/schedule/sync', { 
+        method: 'POST', 
+        headers: { 'Content-Type': 'application/json' }, 
+        body: JSON.stringify({ sheetName }) 
+      });
+      const data = await res.json();
+      if (data.success) {
+        this.showToast(`Berhasil disinkronkan! Ditemukan ${data.officersCount} data petugas.`, 'success');
+        await this.loadDutyData();
+        await this.loadMatrixData();
+      } else {
+        this.showToast(`Gagal sinkron: ${data.error}`, 'error');
+      }
+    } catch (e) {
+      this.showToast(`Error sinkronisasi: ${e.message}`, 'error');
+    } finally {
+      btn.innerHTML = originalText;
+      btn.disabled = false;
+    }
+  },
+
+  async loadMatrixData() {
+    try {
+      const res = await fetch('/api/schedule/current');
+      const data = await res.json();
+      this.cachedMatrix = data;
+      this.renderMatrixTable(data);
+    } catch (e) {
+      console.error('Failed to load matrix:', e);
+    }
+  },
+
+  renderMatrixTable(data) {
+    const officers = data.officers || [];
+    const daysTr = document.getElementById('matrix-head-days');
+    const datesTr = document.getElementById('matrix-head-dates');
+    const tbody = document.getElementById('matrix-tbody');
+
+    // Headers
+    let daysHtml = `<th rowspan="2">Nama Petugas</th><th rowspan="2">Jabatan</th>`;
+    let datesHtml = '';
+
+    for (let d = 1; d <= 31; d++) {
+      const dStr = String(d).padStart(2, '0');
+      datesHtml += `<th>${dStr}</th>`;
+    }
+    daysHtml += `<th colspan="31" class="text-center">Tanggal</th><th rowspan="2">Total</th>`;
+
+    daysTr.innerHTML = daysHtml;
+    datesTr.innerHTML = datesHtml;
+
+    // Body
+    if (officers.length === 0) {
+      tbody.innerHTML = `<tr><td colspan="35" class="text-center py-4">Tidak ada data jadwal tersedia.</td></tr>`;
+      return;
+    }
+
+    tbody.innerHTML = officers.map(o => {
+      let shiftCells = '';
+      let totalCount = 0;
+      for (let d = 1; d <= 31; d++) {
+        const s = o.shifts ? o.shifts[d] : null;
+        if (s) {
+          totalCount++;
+          let badgeClass = 'matrix-badge-mod';
+          if (s === 'MOD1') badgeClass = 'matrix-badge-mod1';
+          if (s === 'MOD2') badgeClass = 'matrix-badge-mod2';
+          shiftCells += `<td><span class="${badgeClass}">${s}</span></td>`;
+        } else {
+          shiftCells += `<td></td>`;
+        }
+      }
+
+      return `
+        <tr data-name="${o.name.toLowerCase()}">
+          <td><strong>${o.name}</strong></td>
+          <td>${o.role}</td>
+          ${shiftCells}
+          <td><strong>${totalCount}</strong></td>
+        </tr>
+      `;
+    }).join('');
+  },
+
+  filterMatrixTable(query) {
+    const q = (query || '').toLowerCase().trim();
+    document.querySelectorAll('#matrix-tbody tr').forEach(tr => {
+      const name = tr.getAttribute('data-name') || '';
+      tr.style.display = name.includes(q) ? '' : 'none';
+    });
+  },
+
+  openSendModal(shiftKey) {
+    this.pendingModalShift = shiftKey;
+    const titles = {
+      'MOD1': 'Kirim Notifikasi Shift Pagi (MOD 1)',
+      'MOD2': 'Kirim Notifikasi Shift Sore (MOD 2)',
+      'MOD': 'Kirim Notifikasi Shift Malam (MOD)',
+      'ALL': 'Kirim Ringkasan Semua Shift Hari Ini'
+    };
+    document.getElementById('modal-send-title').innerText = titles[shiftKey] || 'Konfirmasi Pengiriman';
+    
+    // Preview inside modal
+    const dateStr = this.currentDate.toISOString().split('T')[0];
+    fetch('/api/preview', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ shift: shiftKey, date: dateStr })
+    }).then(r => r.json()).then(d => {
+      document.getElementById('modal-preview-text').innerText = d.message;
+      document.getElementById('modal-send').classList.remove('hidden');
+    });
+  },
+
+  closeModal() {
+    document.getElementById('modal-send').classList.add('hidden');
+  },
+
+  async executeSendShift(shiftKey) {
+    const btn = document.getElementById('btn-modal-confirm-send');
+    btn.innerHTML = '⏳ Mengirim...';
+    btn.disabled = true;
+
+    try {
+      const dateStr = this.currentDate.toISOString().split('T')[0];
+      const res = await fetch('/api/send/shift', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ shift: shiftKey, date: dateStr })
+      });
+      const data = await res.json();
+      this.closeModal();
+
+      if (data.success) {
+        this.showToast('✅ Pesan berhasil dikirim ke WhatsApp Group!', 'success');
+      } else {
+        this.showToast(`❌ Gagal kirim: ${data.error || 'Periksa koneksi gateway WA'}`, 'error');
+      }
+      await this.loadLogs();
+    } catch (e) {
+      this.showToast(`Error: ${e.message}`, 'error');
+    } finally {
+      btn.innerHTML = 'Kirim Sekarang 🚀';
+      btn.disabled = false;
+    }
+  },
+
+  async sendCustomBroadcast() {
+    const text = document.getElementById('custom-broadcast-text').value;
+    if (!text.trim()) {
+      this.showToast('Isi pesan tidak boleh kosong!', 'error');
+      return;
+    }
+
+    const btn = document.getElementById('btn-submit-broadcast');
+    btn.innerHTML = '⏳ Mengirim...';
+    btn.disabled = true;
+
+    try {
+      const res = await fetch('/api/send/custom', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ message: text })
+      });
+      const data = await res.json();
+      if (data.success) {
+        this.showToast('✅ Pesan pengumuman berhasil dikirim!', 'success');
+        document.getElementById('custom-broadcast-text').value = '';
+      } else {
+        this.showToast(`❌ Gagal: ${data.error || 'Respon error dari gateway'}`, 'error');
+      }
+      await this.loadLogs();
+    } catch (e) {
+      this.showToast(`Error: ${e.message}`, 'error');
+    } finally {
+      btn.innerHTML = '<span class="btn-icon">📨</span> Kirim Pesan Bebas Sekarang';
+      btn.disabled = false;
+    }
+  },
+
+  async loadLogs() {
+    try {
+      const res = await fetch('/api/logs?limit=50');
+      const data = await res.json();
+      const logs = data.logs || [];
+      document.getElementById('logs-count').innerText = logs.length;
+      
+      const tbody = document.getElementById('logs-tbody');
+      if (logs.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="6" class="text-center py-4">Belum ada riwayat pengiriman.</td></tr>`;
+        return;
+      }
+
+      tbody.innerHTML = logs.map(l => {
+        const time = new Date(l.timestamp).toLocaleString('id-ID', { timeZone: 'Asia/Jakarta' });
+        const isOk = l.status === 'SUCCESS';
+        const badgeClass = isOk ? 'status-badge-success' : 'status-badge-failed';
+        const msgSnippet = (l.messageText || l.message || '').substring(0, 45) + '...';
+
+        return `
+          <tr>
+            <td>${time}</td>
+            <td><span class="badge">${l.type || 'AUTO'}</span></td>
+            <td><strong>${l.shift || 'N/A'}</strong></td>
+            <td><span class="${badgeClass}">${l.status}</span></td>
+            <td><code>${l.target || '-'}</code></td>
+            <td title="${(l.messageText || '').replace(/"/g, '&quot;')}">${msgSnippet}</td>
+          </tr>
+        `;
+      }).join('');
+    } catch (e) {
+      console.error('Failed to load logs:', e);
+    }
+  },
+
+  timeToCron(timeStr) {
+    if (!timeStr) return '0 9 * * *';
+    const parts = timeStr.split(':');
+    const h = parseInt(parts[0], 10) || 0;
+    const m = parseInt(parts[1], 10) || 0;
+    return `${m} ${h} * * *`;
+  },
+
+  async saveConfig() {
+    const activeTemplate = document.getElementById('cfg-template-select').value;
+    const templateText = document.getElementById('cfg-template-text').value;
+
+    const templates = {
+      ...(this.config && this.config.messageTemplates),
+      [activeTemplate]: templateText
+    };
+
+    const timeMod1 = document.getElementById('cfg-time-mod1').value || '09:00';
+    const timeMod2 = document.getElementById('cfg-time-mod2').value || '16:00';
+    const timeMod = document.getElementById('cfg-time-mod').value || '18:00';
+
+    const newConfig = {
+      ...this.config,
+      spreadsheet: {
+        spreadsheetId: document.getElementById('cfg-sheet-url').value.trim(),
+        sheetUrl: document.getElementById('cfg-sheet-url').value.trim(),
+        scriptWebhookUrl: document.getElementById('cfg-script-webhook').value.trim(),
+        activeSheetName: document.getElementById('cfg-sheet-name').value.trim() || 'October 2026',
+        autoSyncMinutes: 30
+      },
+      waGateway: {
+        apiUrl: document.getElementById('cfg-wa-url').value.trim(),
+        apiKey: document.getElementById('cfg-wa-key').value.trim(),
+        sessionId: document.getElementById('cfg-wa-session').value.trim(),
+        targetNumber: document.getElementById('cfg-wa-target').value.trim(),
+        enabled: document.getElementById('cfg-wa-enabled').checked
+      },
+      schedules: {
+        MOD1: {
+          time: timeMod1,
+          cron: this.timeToCron(timeMod1),
+          label: 'Pagi (MOD 1)',
+          enabled: true
+        },
+        MOD2: {
+          time: timeMod2,
+          cron: this.timeToCron(timeMod2),
+          label: 'Sore (MOD 2)',
+          enabled: true
+        },
+        MOD: {
+          time: timeMod,
+          cron: this.timeToCron(timeMod),
+          label: 'Malam / Umum (MOD)',
+          enabled: true
+        }
+      },
+      messageTemplates: templates
+    };
+
+    try {
+      const res = await fetch('/api/config', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(newConfig)
+      });
+      const data = await res.json();
+      if (data.success) {
+        this.showToast('✅ Pengaturan berhasil disimpan & Jadwal Cron diperbarui!', 'success');
+        await this.loadConfig();
+        await this.loadDutyData();
+        await this.loadMatrixData();
+      } else {
+        this.showToast(`❌ Gagal: ${data.error}`, 'error');
+      }
+    } catch (e) {
+      this.showToast(`Error: ${e.message}`, 'error');
+    }
+  },
+
+  async testGoogleSheetConnection() {
+    this.showToast('Menguji koneksi ke Google Sheets...', 'success');
+    await this.syncGoogleSheets();
+  },
+
+  async loadEditorData() {
+    try {
+      const sheetName = `${this.editorMonth} ${this.editorYear}`;
+      const res = await fetch(`/api/schedule/current?sheet=${encodeURIComponent(sheetName)}`);
+      const data = await res.json();
+      this.editorOfficers = JSON.parse(JSON.stringify(data.officers || []));
+      this.renderEditorTable();
+    } catch (e) {
+      console.error('Failed to load editor data:', e);
+    }
+  },
+
+  renderEditorTable() {
+    const daysTr = document.getElementById('editor-head-days');
+    const datesTr = document.getElementById('editor-head-dates');
+    const tbody = document.getElementById('editor-tbody');
+
+    const monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+    const monthIdx = monthNames.indexOf(this.editorMonth) !== -1 ? monthNames.indexOf(this.editorMonth) : 9;
+    const daysInMonth = new Date(this.editorYear, monthIdx + 1, 0).getDate();
+
+    let daysHtml = `<th rowspan="2">Aksi</th><th rowspan="2">Nama Petugas</th><th rowspan="2">Jabatan</th>`;
+    let datesHtml = '';
+
+    const dayNames = ['Min', 'Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab'];
+
+    for (let d = 1; d <= 31; d++) {
+      if (d <= daysInMonth) {
+        const dateObj = new Date(this.editorYear, monthIdx, d);
+        const dayStr = dayNames[dateObj.getDay()];
+        const isWeekend = (dateObj.getDay() === 0 || dateObj.getDay() === 6);
+        const style = isWeekend ? 'style="color:#f43f5e;"' : '';
+        datesHtml += `<th ${style} title="${dayStr}">${String(d).padStart(2, '0')}<br><small>${dayStr}</small></th>`;
+      } else {
+        datesHtml += `<th style="opacity:0.3">-</th>`;
+      }
+    }
+    daysHtml += `<th colspan="31" class="text-center">Tanggal (${this.editorMonth} ${this.editorYear})</th><th rowspan="2">Total</th>`;
+
+    daysTr.innerHTML = daysHtml;
+    datesTr.innerHTML = datesHtml;
+
+    if (this.editorOfficers.length === 0) {
+      tbody.innerHTML = `<tr><td colspan="35" class="text-center py-4">Belum ada petugas di jadwal ini. Klik "➕ Tambah Petugas" atau "⚡ Generate Otomatis".</td></tr>`;
+      return;
+    }
+
+    tbody.innerHTML = this.editorOfficers.map((o, oIdx) => {
+      let shiftCells = '';
+      let totalCount = 0;
+
+      for (let d = 1; d <= 31; d++) {
+        if (d <= daysInMonth) {
+          const s = (o.shifts && o.shifts[d]) || '';
+          let badge = '';
+          if (s === 'MOD1') {
+            totalCount++;
+            badge = '<span class="matrix-badge-mod1">MOD1</span>';
+          } else if (s === 'MOD2') {
+            totalCount++;
+            badge = '<span class="matrix-badge-mod2">MOD2</span>';
+          } else if (s === 'MOD') {
+            totalCount++;
+            badge = '<span class="matrix-badge-mod">MOD</span>';
+          }
+
+          shiftCells += `
+            <td class="clickable-shift" onclick="app.cycleShift(${oIdx}, ${d})" title="Klik untuk ubah shift (Day ${d})">
+              ${badge}
+            </td>
+          `;
+        } else {
+          shiftCells += `<td style="opacity:0.2">-</td>`;
+        }
+      }
+
+      return `
+        <tr>
+          <td class="text-center">
+            <button class="btn-remove-officer" onclick="app.removeOfficer(${oIdx})" title="Hapus Petugas">🗑️</button>
+          </td>
+          <td><strong>${o.name}</strong></td>
+          <td>${o.role}</td>
+          ${shiftCells}
+          <td class="text-center"><strong>${totalCount}</strong></td>
+        </tr>
+      `;
+    }).join('');
+  },
+
+  cycleShift(officerIdx, day) {
+    if (!this.editorOfficers[officerIdx]) return;
+    if (!this.editorOfficers[officerIdx].shifts) {
+      this.editorOfficers[officerIdx].shifts = {};
+    }
+
+    const current = this.editorOfficers[officerIdx].shifts[day] || '';
+    let next = '';
+    if (current === '') next = 'MOD1';
+    else if (current === 'MOD1') next = 'MOD2';
+    else if (current === 'MOD2') next = 'MOD';
+    else if (current === 'MOD') next = '';
+
+    if (next) {
+      this.editorOfficers[officerIdx].shifts[day] = next;
+    } else {
+      delete this.editorOfficers[officerIdx].shifts[day];
+    }
+
+    this.renderEditorTable();
+  },
+
+  openOfficerModal() {
+    document.getElementById('new-officer-name').value = '';
+    document.getElementById('new-officer-role').value = '';
+    document.getElementById('modal-officer').classList.remove('hidden');
+    document.getElementById('new-officer-name').focus();
+  },
+
+  closeOfficerModal() {
+    document.getElementById('modal-officer').classList.add('hidden');
+  },
+
+  addNewOfficer() {
+    const name = document.getElementById('new-officer-name').value.trim();
+    const role = document.getElementById('new-officer-role').value.trim() || 'Staff / Officer';
+
+    if (!name) {
+      this.showToast('Nama petugas tidak boleh kosong!', 'error');
+      return;
+    }
+
+    this.editorOfficers.push({
+      name,
+      role,
+      shifts: {}
+    });
+
+    this.closeOfficerModal();
+    this.renderEditorTable();
+    this.showToast(`Petugas "${name}" berhasil ditambahkan!`, 'success');
+  },
+
+  removeOfficer(idx) {
+    if (!this.editorOfficers[idx]) return;
+    const name = this.editorOfficers[idx].name;
+    if (confirm(`Apakah Anda yakin ingin menghapus "${name}" dari jadwal ini?`)) {
+      this.editorOfficers.splice(idx, 1);
+      this.renderEditorTable();
+      this.showToast(`Petugas "${name}" dihapus.`, 'success');
+    }
+  },
+
+  async autoGenerateSchedule() {
+    if (this.editorOfficers.length === 0) {
+      this.showToast('Tambahkan minimal 1 petugas terlebih dahulu!', 'error');
+      return;
+    }
+
+    if (!confirm(`Generate rotasi jadwal otomatis untuk ${this.editorOfficers.length} petugas di ${this.editorMonth} ${this.editorYear}? (Jadwal weekend akan diisi MOD1 & MOD2, weekday akan diisi MOD)`)) {
+      return;
+    }
+
+    try {
+      const res = await fetch('/api/schedule/generate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          month: this.editorMonth,
+          year: this.editorYear,
+          officers: this.editorOfficers
+        })
+      });
+      const data = await res.json();
+      if (data.success) {
+        this.editorOfficers = data.schedule.officers;
+        this.renderEditorTable();
+        this.showToast('⚡ Jadwal otomatis berhasil dibuat!', 'success');
+      } else {
+        this.showToast(`Gagal generate: ${data.error}`, 'error');
+      }
+    } catch (e) {
+      this.showToast(`Error: ${e.message}`, 'error');
+    }
+  },
+
+  async saveEditorSchedule() {
+    const sheetName = `${this.editorMonth} ${this.editorYear}`;
+    const btn = document.getElementById('btn-save-editor-schedule');
+    btn.innerHTML = '⏳ Menyimpan...';
+    btn.disabled = true;
+
+    try {
+      const res = await fetch('/api/schedule/save', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          sheetName,
+          officers: this.editorOfficers
+        })
+      });
+      const data = await res.json();
+      if (data.success) {
+        this.showToast('✅ Jadwal berhasil disimpan ke sistem!', 'success');
+        await this.loadDutyData();
+        await this.loadMatrixData();
+      } else {
+        this.showToast(`❌ Gagal simpan: ${data.error}`, 'error');
+      }
+    } catch (e) {
+      this.showToast(`Error: ${e.message}`, 'error');
+    } finally {
+      btn.innerHTML = '💾 Simpan Jadwal ke Sistem';
+      btn.disabled = false;
+    }
+  },
+
+  exportCsv() {
+    const sheetName = `${this.editorMonth} ${this.editorYear}`;
+    window.open(`/api/schedule/export?sheet=${encodeURIComponent(sheetName)}`, '_blank');
+  },
+
+  showToast(message, type = 'success') {
+    const toast = document.getElementById('toast');
+    toast.className = `toast ${type}`;
+    toast.innerText = message;
+    toast.classList.remove('hidden');
+
+    setTimeout(() => {
+      toast.classList.add('hidden');
+    }, 4000);
+  }
+};
+
+document.addEventListener('DOMContentLoaded', () => {
+  app.init();
+});
+
