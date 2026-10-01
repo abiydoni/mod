@@ -96,9 +96,9 @@ function fetchUrl(url) {
       res.on('end', () => resolve(data));
     });
     req.on('error', reject);
-    req.setTimeout(2500, () => {
+    req.setTimeout(8000, () => {
       req.destroy();
-      reject(new Error('Request timeout'));
+      reject(new Error('Request timeout (8s)'));
     });
   });
 }
