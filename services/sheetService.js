@@ -371,38 +371,15 @@ async function fetchScheduleFromGoogle(sheetName = null, forceLive = false) {
         if (csv && csv.length > 50 && !csv.includes('<!DOCTYPE html>')) {
           const rows = parseCsv(csv);
           const parsed = parseSpreadsheetRows(rows, targetSheet);
-          parsed.source = 'live_google_sheet';
-          saveLocalMonthSchedule(targetSheet, parsed);
-          return parsed;
+          if (parsed && parsed.officers && parsed.officers.length > 0) {
+            parsed.source = 'live_google_sheet';
+            saveLocalMonthSchedule(targetSheet, parsed);
+            return parsed;
+          }
         }
       } catch (err) {
         errorMsg = err.message;
       }
-    }
-  }
-
-  // 3. Coba via Google Apps Script Webhook jika ada
-  const scriptUrl = config.spreadsheet && config.spreadsheet.scriptWebhookUrl;
-  if (scriptUrl) {
-    try {
-      const webhookRes = await sendHttpsPost(scriptUrl, { action: 'get_schedule', sheetName: targetSheet });
-      const body = webhookRes.body;
-      let rows = null;
-      if (body && Array.isArray(body.data)) {
-        rows = body.data;
-      } else if (body && Array.isArray(body)) {
-        rows = body;
-      } else if (typeof body === 'string' && body.includes(',')) {
-        rows = parseCsv(body);
-      }
-      if (rows && rows.length > 0) {
-        const parsed = parseSpreadsheetRows(rows, targetSheet);
-        parsed.source = 'google_apps_script';
-        saveLocalMonthSchedule(targetSheet, parsed);
-        return parsed;
-      }
-    } catch (err) {
-      console.warn('Webhook fetch failed:', err.message);
     }
   }
 
@@ -603,29 +580,8 @@ async function testSheetConnection({ sheetUrl, scriptWebhookUrl, sheetName = 'Oc
   const webhook = scriptWebhookUrl || (storage.getConfig().spreadsheet && storage.getConfig().spreadsheet.scriptWebhookUrl);
   if (webhook) {
     try {
-      const res = await sendHttpsPost(webhook, { action: 'get_schedule', sheetName });
-      const body = res.body;
-      let rows = null;
-      if (body && Array.isArray(body.data)) {
-        rows = body.data;
-      } else if (body && Array.isArray(body)) {
-        rows = body;
-      } else if (typeof body === 'string' && body.includes(',')) {
-        rows = parseCsv(body);
-      }
-      if (rows && rows.length > 0) {
-        const parsed = parseSpreadsheetRows(rows, sheetName);
-        parsed.source = 'google_apps_script';
-        saveLocalMonthSchedule(sheetName, parsed);
-        return {
-          success: true,
-          connected: true,
-          method: 'Google Apps Script Webhook (Spreadsheet Privat)',
-          sheetName,
-          officersCount: parsed.officers.length,
-          message: `Koneksi Webhook Berhasil! Terbaca ${parsed.officers.length} petugas dinas.`
-        };
-      } else if (res && (res.statusCode === 200 || res.statusCode === 302)) {
+      const res = await sendHttpsPost(webhook, { action: 'ping', sheetName });
+      if (res && (res.statusCode === 200 || res.statusCode === 302)) {
         return {
           success: true,
           connected: true,
