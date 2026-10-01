@@ -102,8 +102,18 @@ app.post('/api/schedule/save', async (req, res) => {
       source: 'app_database'
     };
     const ok = sheetService.saveLocalMonthSchedule(sheetName, data);
+    
+    // Sync to Google Apps Script
+    let syncResult = null;
+    try {
+      syncResult = await sheetService.syncToGoogleAppsScript(sheetName, officers);
+    } catch (e) {
+      console.warn('Google Sheet Webhook sync:', e.message);
+    }
+
     if (ok) {
-      res.json({ success: true, message: `Jadwal ${sheetName} berhasil disimpan ke database lokal!` });
+      const gDriveMsg = (syncResult && syncResult.success) ? ' dan berhasil disinkronkan ke Google Spreadsheet!' : '';
+      res.json({ success: true, message: `Jadwal ${sheetName} berhasil disimpan${gDriveMsg}` });
     } else {
       res.status(500).json({ success: false, error: 'Gagal menyimpan jadwal.' });
     }
