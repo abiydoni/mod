@@ -96,7 +96,7 @@ function fetchUrl(url) {
       res.on('end', () => resolve(data));
     });
     req.on('error', reject);
-    req.setTimeout(15000, () => {
+    req.setTimeout(2500, () => {
       req.destroy();
       reject(new Error('Request timeout'));
     });
@@ -314,24 +314,32 @@ function saveLocalMonthSchedule(sheetName, data) {
   }
 }
 
-async function fetchScheduleFromGoogle(sheetName = null) {
+async function fetchScheduleFromGoogle(sheetName = null, forceLive = false) {
   const config = storage.getConfig();
   const rawInput = (config.spreadsheet && (config.spreadsheet.sheetUrl || config.spreadsheet.spreadsheetId)) || '';
   const spreadsheetId = extractSpreadsheetId(rawInput);
   const targetSheet = sheetName || (config.spreadsheet && config.spreadsheet.activeSheetName) || 'October 2026';
   const gid = extractGid(rawInput);
 
+  // 1. Jika TIDAK forceLive dan sudah ada data di database SQLite, kembalikan INSTAN (0 ms)
+  const localSaved = loadLocalMonthSchedule(targetSheet);
+  if (!forceLive && localSaved && localSaved.officers && localSaved.officers.length > 0) {
+    return {
+      ...localSaved,
+      source: localSaved.source || 'sqlite_db',
+      sheetName: targetSheet
+    };
+  }
+
   let errorMsg = null;
 
-  // 1. UTAMAKAN SELALU BACA LIVE DARI GOOGLE SPREADSHEET (GDRIVE)
+  // 2. Baca Live dari Google Sheets
   if (spreadsheetId) {
     const urlsToTry = [];
     if (gid) {
       urlsToTry.push(`https://docs.google.com/spreadsheets/d/${spreadsheetId}/export?format=csv&gid=${gid}`);
-      urlsToTry.push(`https://docs.google.com/spreadsheets/d/${spreadsheetId}/gviz/tq?tqx=out:csv&gid=${gid}`);
     }
     urlsToTry.push(`https://docs.google.com/spreadsheets/d/${spreadsheetId}/gviz/tq?tqx=out:csv&sheet=${encodeURIComponent(targetSheet)}`);
-    urlsToTry.push(`https://docs.google.com/spreadsheets/d/${spreadsheetId}/export?format=csv&sheet=${encodeURIComponent(targetSheet)}`);
 
     for (const url of urlsToTry) {
       try {
@@ -349,8 +357,7 @@ async function fetchScheduleFromGoogle(sheetName = null) {
     }
   }
 
-  // 2. Jika Google Sheet belum dapat dijangkau, gunakan jadwal lokal yang tersimpan
-  const localSaved = loadLocalMonthSchedule(targetSheet);
+  // 3. Jika live gagal tapi ada cache lokal, gunakan cache
   if (localSaved && localSaved.officers && localSaved.officers.length > 0) {
     return {
       ...localSaved,
@@ -360,7 +367,7 @@ async function fetchScheduleFromGoogle(sheetName = null) {
     };
   }
 
-  // 3. Fallback default awal
+  // 4. Fallback bawaan
   const seedData = {
     sheetName: targetSheet,
     officers: SEED_OFFICERS,

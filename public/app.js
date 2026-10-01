@@ -11,15 +11,18 @@ const app = {
   editorYear: 2026,
 
   async init() {
-    this.setupEventListeners();
     this.startClock();
-    await this.loadConfig();
     this.initDateSelector();
-    await this.loadDutyData();
-    await this.loadMatrixData();
-    await this.loadMasterOfficers();
-    await this.loadEditorData();
-    await this.loadLogs();
+    this.setupEventListeners();
+    
+    // Load all data in parallel for instant page render (<50ms)
+    await Promise.allSettled([
+      this.loadConfig(),
+      this.loadDutyData(),
+      this.loadMatrixData(),
+      this.loadMasterOfficers(),
+      this.loadLogs()
+    ]);
   },
 
   setupEventListeners() {
@@ -47,34 +50,49 @@ const app = {
       });
     }
 
-    document.getElementById('btn-today').addEventListener('click', () => {
-      this.currentDate = new Date();
-      this.initDateSelector();
-      this.loadDutyData();
-    });
+    const btnToday = document.getElementById('btn-today');
+    if (btnToday) {
+      btnToday.addEventListener('click', () => {
+        this.currentDate = new Date();
+        this.initDateSelector();
+        this.loadDutyData();
+      });
+    }
 
-    document.getElementById('btn-tomorrow').addEventListener('click', () => {
-      const tomorrow = new Date();
-      tomorrow.setDate(tomorrow.getDate() + 1);
-      this.currentDate = tomorrow;
-      this.initDateSelector();
-      this.loadDutyData();
-    });
+    const btnTomorrow = document.getElementById('btn-tomorrow');
+    if (btnTomorrow) {
+      btnTomorrow.addEventListener('click', () => {
+        const tomorrow = new Date();
+        tomorrow.setDate(tomorrow.getDate() + 1);
+        this.currentDate = tomorrow;
+        this.initDateSelector();
+        this.loadDutyData();
+      });
+    }
 
     // Sync button
-    document.getElementById('btn-sync-sheet').addEventListener('click', () => {
-      this.syncGoogleSheets();
-    });
+    const btnSync = document.getElementById('btn-sync-sheet');
+    if (btnSync) {
+      btnSync.addEventListener('click', () => {
+        this.syncGoogleSheets();
+      });
+    }
 
     // Refresh Matrix
-    document.getElementById('btn-refresh-matrix').addEventListener('click', () => {
-      this.loadMatrixData();
-    });
+    const btnRefreshMatrix = document.getElementById('btn-refresh-matrix');
+    if (btnRefreshMatrix) {
+      btnRefreshMatrix.addEventListener('click', () => {
+        this.loadMatrixData();
+      });
+    }
 
     // Search Matrix
-    document.getElementById('matrix-search').addEventListener('input', (e) => {
-      this.filterMatrixTable(e.target.value);
-    });
+    const matrixSearch = document.getElementById('matrix-search');
+    if (matrixSearch) {
+      matrixSearch.addEventListener('input', (e) => {
+        this.filterMatrixTable(e.target.value);
+      });
+    }
 
     // Search Master Officers
     const offSearch = document.getElementById('officer-search');
@@ -85,29 +103,44 @@ const app = {
     }
 
     // Refresh Logs
-    document.getElementById('btn-refresh-logs').addEventListener('click', () => {
-      this.loadLogs();
-    });
+    const btnRefreshLogs = document.getElementById('btn-refresh-logs');
+    if (btnRefreshLogs) {
+      btnRefreshLogs.addEventListener('click', () => {
+        this.loadLogs();
+      });
+    }
 
     // Send Preview Button
-    document.getElementById('btn-send-preview').addEventListener('click', () => {
-      this.openSendModal(this.selectedShift);
-    });
+    const btnSendPreview = document.getElementById('btn-send-preview');
+    if (btnSendPreview) {
+      btnSendPreview.addEventListener('click', () => {
+        this.openSendModal(this.selectedShift);
+      });
+    }
 
     // Confirm Send in Modal
-    document.getElementById('btn-modal-confirm-send').addEventListener('click', () => {
-      this.executeSendShift(this.pendingModalShift);
-    });
+    const btnModalConfirm = document.getElementById('btn-modal-confirm-send');
+    if (btnModalConfirm) {
+      btnModalConfirm.addEventListener('click', () => {
+        this.executeSendShift(this.pendingModalShift);
+      });
+    }
 
     // Broadcast Submit
-    document.getElementById('btn-submit-broadcast').addEventListener('click', () => {
-      this.sendCustomBroadcast();
-    });
+    const btnBroadcast = document.getElementById('btn-submit-broadcast');
+    if (btnBroadcast) {
+      btnBroadcast.addEventListener('click', () => {
+        this.sendCustomBroadcast();
+      });
+    }
 
     // Settings Save
-    document.getElementById('btn-save-settings').addEventListener('click', () => {
-      this.saveConfig();
-    });
+    const btnSaveSettings = document.getElementById('btn-save-settings');
+    if (btnSaveSettings) {
+      btnSaveSettings.addEventListener('click', () => {
+        this.saveConfig();
+      });
+    }
 
     // Master Officers: Open Add Modal
     const btnOpenAddOfficer = document.getElementById('btn-open-add-officer');
@@ -118,55 +151,82 @@ const app = {
     }
 
     // Editor: Load month
-    document.getElementById('btn-editor-load').addEventListener('click', () => {
-      this.editorMonth = document.getElementById('editor-month').value;
-      this.editorYear = parseInt(document.getElementById('editor-year').value, 10);
-      this.loadEditorData();
-    });
+    const btnEditorLoad = document.getElementById('btn-editor-load');
+    if (btnEditorLoad) {
+      btnEditorLoad.addEventListener('click', () => {
+        this.editorMonth = document.getElementById('editor-month').value;
+        this.editorYear = parseInt(document.getElementById('editor-year').value, 10);
+        this.loadEditorData();
+      });
+    }
 
-    // Editor: Add officer modal
-    document.getElementById('btn-add-officer-modal').addEventListener('click', () => {
-      this.openAddOfficerModal();
-    });
+    // Editor: Add officer modal button
+    const btnAddOffModal = document.getElementById('btn-add-officer-modal');
+    if (btnAddOffModal) {
+      btnAddOffModal.addEventListener('click', () => {
+        this.openAddOfficerModal();
+      });
+    }
 
-    document.getElementById('btn-save-new-officer').addEventListener('click', () => {
-      this.saveOfficerMaster();
-    });
+    // Modal Officer: Save button
+    const btnSaveOff = document.getElementById('btn-save-new-officer');
+    if (btnSaveOff) {
+      btnSaveOff.addEventListener('click', () => {
+        this.saveOfficerMaster();
+      });
+    }
 
     // Editor: Auto generate
-    document.getElementById('btn-auto-generate-schedule').addEventListener('click', () => {
-      this.autoGenerateSchedule();
-    });
+    const btnAutoGen = document.getElementById('btn-auto-generate-schedule');
+    if (btnAutoGen) {
+      btnAutoGen.addEventListener('click', () => {
+        this.autoGenerateSchedule();
+      });
+    }
 
     // Editor: Save schedule
-    document.getElementById('btn-save-editor-schedule').addEventListener('click', () => {
-      this.saveEditorSchedule();
-    });
+    const btnSaveEditor = document.getElementById('btn-save-editor-schedule');
+    if (btnSaveEditor) {
+      btnSaveEditor.addEventListener('click', () => {
+        this.saveEditorSchedule();
+      });
+    }
 
     // Editor: Export CSV
-    document.getElementById('btn-export-csv').addEventListener('click', () => {
-      this.exportCsv();
-    });
+    const btnExportCsv = document.getElementById('btn-export-csv');
+    if (btnExportCsv) {
+      btnExportCsv.addEventListener('click', () => {
+        this.exportCsv();
+      });
+    }
 
     // Template selector change
-    document.getElementById('cfg-template-select').addEventListener('change', (e) => {
-      this.populateTemplateText(e.target.value);
-    });
+    const tmplSelect = document.getElementById('cfg-template-select');
+    if (tmplSelect) {
+      tmplSelect.addEventListener('change', (e) => {
+        this.populateTemplateText(e.target.value);
+      });
+    }
 
     // Template text change
-    document.getElementById('cfg-template-text').addEventListener('input', (e) => {
-      const selected = document.getElementById('cfg-template-select').value;
-      if (!this.config.messageTemplates) {
-        this.config.messageTemplates = {};
-      }
-      this.config.messageTemplates[selected] = e.target.value;
-      this.updateWhatsAppPreview();
-    });
+    const tmplText = document.getElementById('cfg-template-text');
+    if (tmplText) {
+      tmplText.addEventListener('input', (e) => {
+        const selected = document.getElementById('cfg-template-select').value;
+        if (!this.config) this.config = {};
+        if (!this.config.messageTemplates) this.config.messageTemplates = {};
+        this.config.messageTemplates[selected] = e.target.value;
+        this.updateWhatsAppPreview();
+      });
+    }
 
     // Test Sheet Button
-    document.getElementById('btn-test-sheet').addEventListener('click', () => {
-      this.testGoogleSheetConnection();
-    });
+    const btnTestSheet = document.getElementById('btn-test-sheet');
+    if (btnTestSheet) {
+      btnTestSheet.addEventListener('click', () => {
+        this.testGoogleSheetConnection();
+      });
+    }
   },
 
   startClock() {
@@ -183,7 +243,10 @@ const app = {
         timeZone: 'Asia/Jakarta'
       };
       const formatted = new Intl.DateTimeFormat('id-ID', options).format(now);
-      document.getElementById('current-datetime-display').innerText = `🕒 ${formatted} WIB`;
+      const clockEl = document.getElementById('current-datetime-display');
+      if (clockEl) {
+        clockEl.innerText = `🕒 ${formatted} WIB`;
+      }
     };
     update();
     setInterval(update, 1000);
@@ -193,7 +256,10 @@ const app = {
     const yyyy = this.currentDate.getFullYear();
     const mm = String(this.currentDate.getMonth() + 1).padStart(2, '0');
     const dd = String(this.currentDate.getDate()).padStart(2, '0');
-    document.getElementById('date-selector').value = `${yyyy}-${mm}-${dd}`;
+    const input = document.getElementById('date-selector');
+    if (input) {
+      input.value = `${yyyy}-${mm}-${dd}`;
+    }
   },
 
   switchTab(tabId) {
@@ -206,12 +272,17 @@ const app = {
 
     const titles = {
       'tab-today': 'Jadwal Hari Ini & Pengiriman WA',
+      'tab-editor': 'Buat & Edit Jadwal MOD',
+      'tab-officers': 'Data Master Karyawan',
       'tab-matrix': 'Kalender Matrix Jadwal MOD',
       'tab-broadcast': 'Kirim Pesan Manual / Pengumuman',
       'tab-logs': 'Riwayat Log Pengiriman',
       'tab-settings': 'Pengaturan Sistem & Cron'
     };
-    document.getElementById('page-title').innerText = titles[tabId] || 'MOD Dispatcher';
+    const titleEl = document.getElementById('page-title');
+    if (titleEl) {
+      titleEl.innerText = titles[tabId] || 'MOD Dispatcher';
+    }
   },
 
   async loadConfig() {
@@ -221,30 +292,57 @@ const app = {
       
       // Populate fields in Settings tab
       if (this.config.spreadsheet) {
-        document.getElementById('cfg-sheet-url').value = this.config.spreadsheet.sheetUrl || this.config.spreadsheet.spreadsheetId || '';
-        document.getElementById('cfg-script-webhook').value = this.config.spreadsheet.scriptWebhookUrl || '';
-        document.getElementById('cfg-sheet-name').value = this.config.spreadsheet.activeSheetName || 'October 2026';
+        const sheetUrlEl = document.getElementById('cfg-sheet-url');
+        if (sheetUrlEl) sheetUrlEl.value = this.config.spreadsheet.sheetUrl || this.config.spreadsheet.spreadsheetId || '';
+        
+        const webhookEl = document.getElementById('cfg-script-webhook');
+        if (webhookEl) webhookEl.value = this.config.spreadsheet.scriptWebhookUrl || '';
+        
+        const sheetNameEl = document.getElementById('cfg-sheet-name');
+        if (sheetNameEl) sheetNameEl.value = this.config.spreadsheet.activeSheetName || 'October 2026';
       }
+
       if (this.config.waGateway) {
-        document.getElementById('cfg-wa-url').value = this.config.waGateway.apiUrl || '';
-        document.getElementById('cfg-wa-key').value = this.config.waGateway.apiKey || '';
-        document.getElementById('cfg-wa-session').value = this.config.waGateway.sessionId || '';
-        document.getElementById('cfg-wa-target').value = this.config.waGateway.targetNumber || '';
-        document.getElementById('cfg-wa-enabled').checked = !!this.config.waGateway.enabled;
+        const waUrlEl = document.getElementById('cfg-wa-url');
+        if (waUrlEl) waUrlEl.value = this.config.waGateway.apiUrl || '';
 
-        document.getElementById('broadcast-target').value = this.config.waGateway.targetNumber || 'Belum diatur';
+        const waKeyEl = document.getElementById('cfg-wa-key');
+        if (waKeyEl) waKeyEl.value = this.config.waGateway.apiKey || '';
+
+        const waSessionEl = document.getElementById('cfg-wa-session');
+        if (waSessionEl) waSessionEl.value = this.config.waGateway.sessionId || '';
+
+        const waTargetEl = document.getElementById('cfg-wa-target');
+        if (waTargetEl) waTargetEl.value = this.config.waGateway.targetNumber || '';
+
+        const waEnabledEl = document.getElementById('cfg-wa-enabled');
+        if (waEnabledEl) waEnabledEl.checked = !!this.config.waGateway.enabled;
+
+        const broadcastTargetEl = document.getElementById('broadcast-target');
+        if (broadcastTargetEl) broadcastTargetEl.value = this.config.waGateway.targetNumber || 'Belum diatur';
       }
-      if (this.config.schedules) {
-        document.getElementById('cfg-time-mod1').value = this.config.schedules.MOD1?.time || '09:00';
-        document.getElementById('cfg-time-mod2').value = this.config.schedules.MOD2?.time || '16:00';
-        document.getElementById('cfg-time-mod').value = this.config.schedules.MOD?.time || '18:00';
 
-        document.getElementById('cron-time-mod1').innerText = `${this.config.schedules.MOD1?.time || '09:00'} WIB`;
-        document.getElementById('cron-time-mod2').innerText = `${this.config.schedules.MOD2?.time || '16:00'} WIB`;
-        document.getElementById('cron-time-mod').innerText = `${this.config.schedules.MOD?.time || '18:00'} WIB`;
+      if (this.config.schedules) {
+        const tMod1 = document.getElementById('cfg-time-mod1');
+        if (tMod1) tMod1.value = this.config.schedules.MOD1?.time || '09:00';
+
+        const tMod2 = document.getElementById('cfg-time-mod2');
+        if (tMod2) tMod2.value = this.config.schedules.MOD2?.time || '16:00';
+
+        const tMod = document.getElementById('cfg-time-mod');
+        if (tMod) tMod.value = this.config.schedules.MOD?.time || '18:00';
+
+        const cMod1 = document.getElementById('cron-time-mod1');
+        if (cMod1) cMod1.innerText = `${this.config.schedules.MOD1?.time || '09:00'} WIB`;
+
+        const cMod2 = document.getElementById('cron-time-mod2');
+        if (cMod2) cMod2.innerText = `${this.config.schedules.MOD2?.time || '16:00'} WIB`;
+
+        const cMod = document.getElementById('cron-time-mod');
+        if (cMod) cMod.innerText = `${this.config.schedules.MOD?.time || '18:00'} WIB`;
       }
       
-      const currentSelectedTemplate = document.getElementById('cfg-template-select').value || 'MOD1';
+      const currentSelectedTemplate = document.getElementById('cfg-template-select')?.value || 'MOD1';
       this.populateTemplateText(currentSelectedTemplate);
     } catch (e) {
       console.error('Failed to load config:', e);
@@ -253,7 +351,10 @@ const app = {
 
   populateTemplateText(shiftKey) {
     const templates = (this.config && this.config.messageTemplates) || {};
-    document.getElementById('cfg-template-text').value = templates[shiftKey] || '';
+    const textEl = document.getElementById('cfg-template-text');
+    if (textEl) {
+      textEl.value = templates[shiftKey] || '';
+    }
   },
 
   async loadDutyData() {
@@ -263,36 +364,39 @@ const app = {
       const data = await res.json();
       this.cachedDuty = data.duty;
 
-      // Source label
-      document.getElementById('sheet-source-label').innerText = data.source === 'live_google_sheet' ? '🟢 Google Sheets (Live)' : '🟡 Data Cache / Fallback';
+      const sourceLabel = document.getElementById('sheet-source-label');
+      if (sourceLabel) {
+        sourceLabel.innerText = data.source === 'live_google_sheet' ? '🟢 Google Sheets (Live)' : '🟡 Data SQLite Aktif';
+      }
 
-      // Alert if sync warning
       const alertBanner = document.getElementById('alert-banner');
-      if (data.syncWarning) {
-        alertBanner.innerText = `ℹ️ ${data.syncWarning}`;
-        alertBanner.classList.remove('hidden');
-      } else {
-        alertBanner.classList.add('hidden');
+      if (alertBanner) {
+        if (data.syncWarning) {
+          alertBanner.innerText = `ℹ️ ${data.syncWarning}`;
+          alertBanner.classList.remove('hidden');
+        } else {
+          alertBanner.classList.add('hidden');
+        }
       }
 
       this.renderDutyCards(data.duty);
       this.updateWhatsAppPreview();
     } catch (e) {
       console.error('Failed to load duty data:', e);
-      this.showToast('Gagal memuat data jadwal', 'error');
     }
   },
 
   renderDutyCards(duty) {
     const renderList = (elementId, officers, emptyText) => {
       const container = document.getElementById(elementId);
+      if (!container) return;
       if (!officers || officers.length === 0) {
         container.innerHTML = `<div class="no-officer">${emptyText}</div>`;
         return;
       }
       container.innerHTML = officers.map(o => `
         <div class="officer-item">
-          <div class="officer-avatar">${o.name.charAt(0).toUpperCase()}</div>
+          <div class="officer-avatar">${(o.name || 'P').charAt(0).toUpperCase()}</div>
           <div class="officer-details">
             <h4>${o.name}</h4>
             <p>${o.role}</p>
@@ -301,9 +405,9 @@ const app = {
       `).join('');
     };
 
-    renderList('list-mod1', duty.MOD1, 'Tidak ada petugas MOD 1 pada tanggal ini');
-    renderList('list-mod2', duty.MOD2, 'Tidak ada petugas MOD 2 pada tanggal ini');
-    renderList('list-mod', duty.MOD, 'Tidak ada petugas MOD pada tanggal ini');
+    renderList('list-mod1', duty?.MOD1, 'Tidak ada petugas MOD 1 pada tanggal ini');
+    renderList('list-mod2', duty?.MOD2, 'Tidak ada petugas MOD 2 pada tanggal ini');
+    renderList('list-mod', duty?.MOD, 'Tidak ada petugas MOD pada tanggal ini');
   },
 
   switchPreviewShift(shiftKey) {
@@ -324,10 +428,16 @@ const app = {
         body: JSON.stringify({ shift: this.selectedShift, date: dateStr })
       });
       const data = await res.json();
-      document.getElementById('wa-preview-text').innerText = data.message || 'Pesan kosong';
+      const previewText = document.getElementById('wa-preview-text');
+      if (previewText) {
+        previewText.innerText = data.message || 'Pesan kosong';
+      }
       
       const timeMap = { 'MOD1': '09:00', 'MOD2': '16:00', 'MOD': '18:00', 'ALL': '08:00' };
-      document.getElementById('wa-preview-time').innerText = timeMap[this.selectedShift] || '09:00';
+      const previewTime = document.getElementById('wa-preview-time');
+      if (previewTime) {
+        previewTime.innerText = timeMap[this.selectedShift] || '09:00';
+      }
     } catch (e) {
       console.error('Failed to preview message:', e);
     }
@@ -335,12 +445,13 @@ const app = {
 
   async syncGoogleSheets() {
     const btn = document.getElementById('btn-sync-sheet');
+    if (!btn) return;
     const originalText = btn.innerHTML;
     btn.innerHTML = '⏳ Menyinkronkan...';
     btn.disabled = true;
 
     try {
-      const sheetName = document.getElementById('cfg-sheet-name') ? document.getElementById('cfg-sheet-name').value.trim() : '';
+      const sheetName = document.getElementById('cfg-sheet-name')?.value.trim() || '';
       const res = await fetch('/api/schedule/sync', { 
         method: 'POST', 
         headers: { 'Content-Type': 'application/json' }, 
@@ -379,6 +490,8 @@ const app = {
     const datesTr = document.getElementById('matrix-head-dates');
     const tbody = document.getElementById('matrix-tbody');
 
+    if (!daysTr || !datesTr || !tbody) return;
+
     // Headers
     let daysHtml = `<th rowspan="2">Nama Petugas</th><th rowspan="2">Jabatan</th>`;
     let datesHtml = '';
@@ -392,7 +505,6 @@ const app = {
     daysTr.innerHTML = daysHtml;
     datesTr.innerHTML = datesHtml;
 
-    // Body
     if (officers.length === 0) {
       tbody.innerHTML = `<tr><td colspan="35" class="text-center py-4">Tidak ada data jadwal tersedia.</td></tr>`;
       return;
@@ -415,7 +527,7 @@ const app = {
       }
 
       return `
-        <tr data-name="${o.name.toLowerCase()}">
+        <tr data-name="${(o.name || '').toLowerCase()}">
           <td><strong>${o.name}</strong></td>
           <td>${o.role}</td>
           ${shiftCells}
@@ -441,28 +553,33 @@ const app = {
       'MOD': 'Kirim Notifikasi Shift Malam (MOD)',
       'ALL': 'Kirim Ringkasan Semua Shift Hari Ini'
     };
-    document.getElementById('modal-send-title').innerText = titles[shiftKey] || 'Konfirmasi Pengiriman';
+    const modalTitle = document.getElementById('modal-send-title');
+    if (modalTitle) {
+      modalTitle.innerText = titles[shiftKey] || 'Konfirmasi Pengiriman';
+    }
     
-    // Preview inside modal
     const dateStr = this.currentDate.toISOString().split('T')[0];
     fetch('/api/preview', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ shift: shiftKey, date: dateStr })
     }).then(r => r.json()).then(d => {
-      document.getElementById('modal-preview-text').innerText = d.message;
-      document.getElementById('modal-send').classList.remove('hidden');
+      const modalText = document.getElementById('modal-preview-text');
+      if (modalText) modalText.innerText = d.message;
+      document.getElementById('modal-send')?.classList.remove('hidden');
     });
   },
 
   closeModal() {
-    document.getElementById('modal-send').classList.add('hidden');
+    document.getElementById('modal-send')?.classList.add('hidden');
   },
 
   async executeSendShift(shiftKey) {
     const btn = document.getElementById('btn-modal-confirm-send');
-    btn.innerHTML = '⏳ Mengirim...';
-    btn.disabled = true;
+    if (btn) {
+      btn.innerHTML = '⏳ Mengirim...';
+      btn.disabled = true;
+    }
 
     try {
       const dateStr = this.currentDate.toISOString().split('T')[0];
@@ -477,27 +594,31 @@ const app = {
       if (data.success) {
         this.showToast('✅ Pesan berhasil dikirim ke WhatsApp Group!', 'success');
       } else {
-        this.showToast(`❌ Gagal kirim: ${data.error || 'Periksa koneksi gateway WA'}`, 'error');
+        this.showToast(`❌ Gagal kirim: ${data.error || 'Periksa gateway WA'}`, 'error');
       }
       await this.loadLogs();
     } catch (e) {
       this.showToast(`Error: ${e.message}`, 'error');
     } finally {
-      btn.innerHTML = 'Kirim Sekarang 🚀';
-      btn.disabled = false;
+      if (btn) {
+        btn.innerHTML = 'Kirim Sekarang 🚀';
+        btn.disabled = false;
+      }
     }
   },
 
   async sendCustomBroadcast() {
-    const text = document.getElementById('custom-broadcast-text').value;
+    const text = document.getElementById('custom-broadcast-text')?.value || '';
     if (!text.trim()) {
       this.showToast('Isi pesan tidak boleh kosong!', 'error');
       return;
     }
 
     const btn = document.getElementById('btn-submit-broadcast');
-    btn.innerHTML = '⏳ Mengirim...';
-    btn.disabled = true;
+    if (btn) {
+      btn.innerHTML = '⏳ Mengirim...';
+      btn.disabled = true;
+    }
 
     try {
       const res = await fetch('/api/send/custom', {
@@ -516,8 +637,10 @@ const app = {
     } catch (e) {
       this.showToast(`Error: ${e.message}`, 'error');
     } finally {
-      btn.innerHTML = '<span class="btn-icon">📨</span> Kirim Pesan Bebas Sekarang';
-      btn.disabled = false;
+      if (btn) {
+        btn.innerHTML = '<span class="btn-icon">📨</span> Kirim Pesan Bebas Sekarang';
+        btn.disabled = false;
+      }
     }
   },
 
@@ -526,9 +649,12 @@ const app = {
       const res = await fetch('/api/logs?limit=50');
       const data = await res.json();
       const logs = data.logs || [];
-      document.getElementById('logs-count').innerText = logs.length;
+      const logCountEl = document.getElementById('logs-count');
+      if (logCountEl) logCountEl.innerText = logs.length;
       
       const tbody = document.getElementById('logs-tbody');
+      if (!tbody) return;
+
       if (logs.length === 0) {
         tbody.innerHTML = `<tr><td colspan="6" class="text-center py-4">Belum ada riwayat pengiriman.</td></tr>`;
         return;
@@ -565,33 +691,33 @@ const app = {
   },
 
   async saveConfig() {
-    const activeTemplate = document.getElementById('cfg-template-select').value;
-    const templateText = document.getElementById('cfg-template-text').value;
+    const activeTemplate = document.getElementById('cfg-template-select')?.value || 'MOD1';
+    const templateText = document.getElementById('cfg-template-text')?.value || '';
 
     const templates = {
       ...(this.config && this.config.messageTemplates),
       [activeTemplate]: templateText
     };
 
-    const timeMod1 = document.getElementById('cfg-time-mod1').value || '09:00';
-    const timeMod2 = document.getElementById('cfg-time-mod2').value || '16:00';
-    const timeMod = document.getElementById('cfg-time-mod').value || '18:00';
+    const timeMod1 = document.getElementById('cfg-time-mod1')?.value || '09:00';
+    const timeMod2 = document.getElementById('cfg-time-mod2')?.value || '16:00';
+    const timeMod = document.getElementById('cfg-time-mod')?.value || '18:00';
 
     const newConfig = {
       ...this.config,
       spreadsheet: {
-        spreadsheetId: document.getElementById('cfg-sheet-url').value.trim(),
-        sheetUrl: document.getElementById('cfg-sheet-url').value.trim(),
-        scriptWebhookUrl: document.getElementById('cfg-script-webhook').value.trim(),
-        activeSheetName: document.getElementById('cfg-sheet-name').value.trim() || 'October 2026',
+        spreadsheetId: document.getElementById('cfg-sheet-url')?.value.trim() || '',
+        sheetUrl: document.getElementById('cfg-sheet-url')?.value.trim() || '',
+        scriptWebhookUrl: document.getElementById('cfg-script-webhook')?.value.trim() || '',
+        activeSheetName: document.getElementById('cfg-sheet-name')?.value.trim() || 'October 2026',
         autoSyncMinutes: 30
       },
       waGateway: {
-        apiUrl: document.getElementById('cfg-wa-url').value.trim(),
-        apiKey: document.getElementById('cfg-wa-key').value.trim(),
-        sessionId: document.getElementById('cfg-wa-session').value.trim(),
-        targetNumber: document.getElementById('cfg-wa-target').value.trim(),
-        enabled: document.getElementById('cfg-wa-enabled').checked
+        apiUrl: document.getElementById('cfg-wa-url')?.value.trim() || '',
+        apiKey: document.getElementById('cfg-wa-key')?.value.trim() || '',
+        sessionId: document.getElementById('cfg-wa-session')?.value.trim() || '',
+        targetNumber: document.getElementById('cfg-wa-target')?.value.trim() || '',
+        enabled: !!document.getElementById('cfg-wa-enabled')?.checked
       },
       schedules: {
         MOD1: {
@@ -641,12 +767,190 @@ const app = {
     await this.syncGoogleSheets();
   },
 
+  async loadMasterOfficers() {
+    try {
+      const res = await fetch('/api/officers');
+      const data = await res.json();
+      this.masterOfficers = data.officers || [];
+      this.renderMasterOfficersTable(this.masterOfficers);
+    } catch (e) {
+      console.error('Failed to load master officers:', e);
+    }
+  },
+
+  renderMasterOfficersTable(list) {
+    const tbody = document.getElementById('officers-master-tbody');
+    if (!tbody) return;
+
+    if (!list || list.length === 0) {
+      tbody.innerHTML = `<tr><td colspan="6" class="text-center py-4">Belum ada data master karyawan. Klik "➕ Tambah Karyawan" untuk memulai.</td></tr>`;
+      return;
+    }
+
+    tbody.innerHTML = list.map((o, idx) => {
+      const isActive = o.isActive === 1 || o.isActive === true;
+      const statusBadge = isActive
+        ? '<span class="status-badge-success">Aktif</span>'
+        : '<span class="status-badge-failed">Nonaktif</span>';
+      
+      const toggleBtnText = isActive ? 'Nonaktifkan' : 'Aktifkan';
+      const phoneDisplay = o.phone ? `<code>${o.phone}</code>` : '<span class="text-muted">-</span>';
+
+      return `
+        <tr data-name="${(o.name || '').toLowerCase()}" data-role="${(o.role || '').toLowerCase()}">
+          <td class="text-center">${idx + 1}</td>
+          <td><strong>${o.name}</strong></td>
+          <td>${o.role}</td>
+          <td>${phoneDisplay}</td>
+          <td>${statusBadge}</td>
+          <td class="text-center">
+            <button class="btn btn-sm btn-outline" onclick="app.openEditOfficerModal(${o.id})" title="Edit Karyawan">✏️</button>
+            <button class="btn btn-sm btn-secondary" onclick="app.toggleOfficerStatus(${o.id}, ${isActive ? 0 : 1})" title="${toggleBtnText}">${isActive ? '⏸️' : '▶️'}</button>
+            <button class="btn btn-sm btn-remove-officer" onclick="app.deleteOfficerMaster(${o.id}, '${(o.name || '').replace(/'/g, "\\'")}')" title="Hapus Permanen">🗑️</button>
+          </td>
+        </tr>
+      `;
+    }).join('');
+  },
+
+  filterMasterOfficers(query) {
+    const q = (query || '').toLowerCase().trim();
+    document.querySelectorAll('#officers-master-tbody tr').forEach(tr => {
+      const name = tr.getAttribute('data-name') || '';
+      const role = tr.getAttribute('data-role') || '';
+      tr.style.display = (name.includes(q) || role.includes(q)) ? '' : 'none';
+    });
+  },
+
+  openAddOfficerModal() {
+    const titleEl = document.getElementById('modal-officer-title');
+    if (titleEl) titleEl.innerText = '➕ Tambah Karyawan Baru';
+    document.getElementById('edit-officer-id').value = '';
+    document.getElementById('new-officer-name').value = '';
+    document.getElementById('new-officer-role').value = '';
+    document.getElementById('new-officer-phone').value = '';
+    document.getElementById('new-officer-active').checked = true;
+    document.getElementById('modal-officer')?.classList.remove('hidden');
+    document.getElementById('new-officer-name')?.focus();
+  },
+
+  openEditOfficerModal(id) {
+    const officer = this.masterOfficers.find(o => o.id === id);
+    if (!officer) return;
+
+    const titleEl = document.getElementById('modal-officer-title');
+    if (titleEl) titleEl.innerText = '✏️ Edit Data Karyawan';
+    document.getElementById('edit-officer-id').value = officer.id;
+    document.getElementById('new-officer-name').value = officer.name;
+    document.getElementById('new-officer-role').value = officer.role;
+    document.getElementById('new-officer-phone').value = officer.phone || '';
+    document.getElementById('new-officer-active').checked = (officer.isActive === 1 || officer.isActive === true);
+    document.getElementById('modal-officer')?.classList.remove('hidden');
+    document.getElementById('new-officer-name')?.focus();
+  },
+
+  closeOfficerModal() {
+    document.getElementById('modal-officer')?.classList.add('hidden');
+  },
+
+  async saveOfficerMaster() {
+    const id = document.getElementById('edit-officer-id')?.value;
+    const name = document.getElementById('new-officer-name')?.value.trim();
+    const role = document.getElementById('new-officer-role')?.value.trim();
+    const phone = document.getElementById('new-officer-phone')?.value.trim();
+    const isActive = document.getElementById('new-officer-active')?.checked ? 1 : 0;
+
+    if (!name || !role) {
+      this.showToast('Nama dan Jabatan wajib diisi!', 'error');
+      return;
+    }
+
+    const payload = { name, role, phone, isActive };
+    const url = id ? `/api/officers/${id}` : '/api/officers';
+    const method = id ? 'PUT' : 'POST';
+
+    try {
+      const res = await fetch(url, {
+        method,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      const data = await res.json();
+      if (data.success) {
+        this.showToast(data.message || 'Data karyawan berhasil disimpan!', 'success');
+        this.closeOfficerModal();
+        await this.loadMasterOfficers();
+      } else {
+        this.showToast(`❌ Gagal: ${data.error}`, 'error');
+      }
+    } catch (e) {
+      this.showToast(`Error: ${e.message}`, 'error');
+    }
+  },
+
+  async toggleOfficerStatus(id, newStatus) {
+    const officer = this.masterOfficers.find(o => o.id === id);
+    if (!officer) return;
+
+    try {
+      const res = await fetch(`/api/officers/${id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: officer.name,
+          role: officer.role,
+          phone: officer.phone,
+          isActive: newStatus
+        })
+      });
+      const data = await res.json();
+      if (data.success) {
+        this.showToast(`Status karyawan "${officer.name}" diperbarui!`, 'success');
+        await this.loadMasterOfficers();
+      } else {
+        this.showToast(`Gagal: ${data.error}`, 'error');
+      }
+    } catch (e) {
+      this.showToast(`Error: ${e.message}`, 'error');
+    }
+  },
+
+  async deleteOfficerMaster(id, name) {
+    if (!confirm(`Apakah Anda yakin ingin menghapus "${name}" dari master data karyawan?`)) {
+      return;
+    }
+
+    try {
+      const res = await fetch(`/api/officers/${id}`, { method: 'DELETE' });
+      const data = await res.json();
+      if (data.success) {
+        this.showToast(`Karyawan "${name}" berhasil dihapus.`, 'success');
+        await this.loadMasterOfficers();
+      } else {
+        this.showToast(`Gagal: ${data.error}`, 'error');
+      }
+    } catch (e) {
+      this.showToast(`Error: ${e.message}`, 'error');
+    }
+  },
+
   async loadEditorData() {
     try {
       const sheetName = `${this.editorMonth} ${this.editorYear}`;
       const res = await fetch(`/api/schedule/current?sheet=${encodeURIComponent(sheetName)}`);
       const data = await res.json();
-      this.editorOfficers = JSON.parse(JSON.stringify(data.officers || []));
+      
+      if (data.officers && data.officers.length > 0) {
+        this.editorOfficers = JSON.parse(JSON.stringify(data.officers));
+      } else {
+        const activeMasters = this.masterOfficers.filter(o => o.isActive === 1 || o.isActive === true);
+        this.editorOfficers = activeMasters.map(o => ({
+          name: o.name,
+          role: o.role,
+          shifts: {}
+        }));
+      }
+
       this.renderEditorTable();
     } catch (e) {
       console.error('Failed to load editor data:', e);
@@ -657,6 +961,8 @@ const app = {
     const daysTr = document.getElementById('editor-head-days');
     const datesTr = document.getElementById('editor-head-dates');
     const tbody = document.getElementById('editor-tbody');
+
+    if (!daysTr || !datesTr || !tbody) return;
 
     const monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
     const monthIdx = monthNames.indexOf(this.editorMonth) !== -1 ? monthNames.indexOf(this.editorMonth) : 9;
@@ -753,192 +1059,102 @@ const app = {
     this.renderEditorTable();
   },
 
-  async loadMasterOfficers() {
-    try {
-      const res = await fetch('/api/officers');
-      const data = await res.json();
-      this.masterOfficers = data.officers || [];
-      this.renderMasterOfficersTable(this.masterOfficers);
-    } catch (e) {
-      console.error('Failed to load master officers:', e);
+  removeOfficer(idx) {
+    if (!this.editorOfficers[idx]) return;
+    const name = this.editorOfficers[idx].name;
+    if (confirm(`Apakah Anda yakin ingin menghapus "${name}" dari jadwal ini?`)) {
+      this.editorOfficers.splice(idx, 1);
+      this.renderEditorTable();
+      this.showToast(`Petugas "${name}" dihapus.`, 'success');
     }
   },
 
-  renderMasterOfficersTable(list) {
-    const tbody = document.getElementById('officers-master-tbody');
-    if (!tbody) return;
-
-    if (!list || list.length === 0) {
-      tbody.innerHTML = `<tr><td colspan="6" class="text-center py-4">Belum ada data master karyawan. Klik "➕ Tambah Karyawan" untuk memulai.</td></tr>`;
+  async autoGenerateSchedule() {
+    if (this.editorOfficers.length === 0) {
+      this.showToast('Tambahkan minimal 1 petugas terlebih dahulu!', 'error');
       return;
     }
 
-    tbody.innerHTML = list.map((o, idx) => {
-      const isActive = o.isActive === 1 || o.isActive === true;
-      const statusBadge = isActive
-        ? '<span class="status-badge-success">Aktif</span>'
-        : '<span class="status-badge-failed">Nonaktif</span>';
-      
-      const toggleBtnText = isActive ? 'Nonaktifkan' : 'Aktifkan';
-      const phoneDisplay = o.phone ? `<code>${o.phone}</code>` : '<span class="text-muted">-</span>';
-
-      return `
-        <tr data-name="${o.name.toLowerCase()}" data-role="${o.role.toLowerCase()}">
-          <td class="text-center">${idx + 1}</td>
-          <td><strong>${o.name}</strong></td>
-          <td>${o.role}</td>
-          <td>${phoneDisplay}</td>
-          <td>${statusBadge}</td>
-          <td class="text-center">
-            <button class="btn btn-sm btn-outline" onclick="app.openEditOfficerModal(${o.id})" title="Edit Karyawan">✏️</button>
-            <button class="btn btn-sm btn-secondary" onclick="app.toggleOfficerStatus(${o.id}, ${isActive ? 0 : 1})" title="${toggleBtnText}">${isActive ? '⏸️' : '▶️'}</button>
-            <button class="btn btn-sm btn-remove-officer" onclick="app.deleteOfficerMaster(${o.id}, '${o.name.replace(/'/g, "\\'")}')" title="Hapus Permanen">🗑️</button>
-          </td>
-        </tr>
-      `;
-    }).join('');
-  },
-
-  filterMasterOfficers(query) {
-    const q = (query || '').toLowerCase().trim();
-    document.querySelectorAll('#officers-master-tbody tr').forEach(tr => {
-      const name = tr.getAttribute('data-name') || '';
-      const role = tr.getAttribute('data-role') || '';
-      tr.style.display = (name.includes(q) || role.includes(q)) ? '' : 'none';
-    });
-  },
-
-  openAddOfficerModal() {
-    document.getElementById('modal-officer-title').innerText = '➕ Tambah Karyawan Baru';
-    document.getElementById('edit-officer-id').value = '';
-    document.getElementById('new-officer-name').value = '';
-    document.getElementById('new-officer-role').value = '';
-    document.getElementById('new-officer-phone').value = '';
-    document.getElementById('new-officer-active').checked = true;
-    document.getElementById('modal-officer').classList.remove('hidden');
-    document.getElementById('new-officer-name').focus();
-  },
-
-  openEditOfficerModal(id) {
-    const officer = this.masterOfficers.find(o => o.id === id);
-    if (!officer) return;
-
-    document.getElementById('modal-officer-title').innerText = '✏️ Edit Data Karyawan';
-    document.getElementById('edit-officer-id').value = officer.id;
-    document.getElementById('new-officer-name').value = officer.name;
-    document.getElementById('new-officer-role').value = officer.role;
-    document.getElementById('new-officer-phone').value = officer.phone || '';
-    document.getElementById('new-officer-active').checked = (officer.isActive === 1 || officer.isActive === true);
-    document.getElementById('modal-officer').classList.remove('hidden');
-    document.getElementById('new-officer-name').focus();
-  },
-
-  closeOfficerModal() {
-    document.getElementById('modal-officer').classList.add('hidden');
-  },
-
-  async saveOfficerMaster() {
-    const id = document.getElementById('edit-officer-id').value;
-    const name = document.getElementById('new-officer-name').value.trim();
-    const role = document.getElementById('new-officer-role').value.trim();
-    const phone = document.getElementById('new-officer-phone').value.trim();
-    const isActive = document.getElementById('new-officer-active').checked ? 1 : 0;
-
-    if (!name || !role) {
-      this.showToast('Nama dan Jabatan wajib diisi!', 'error');
+    if (!confirm(`Generate rotasi jadwal otomatis untuk ${this.editorOfficers.length} petugas di ${this.editorMonth} ${this.editorYear}?`)) {
       return;
     }
 
-    const payload = { name, role, phone, isActive };
-    const url = id ? `/api/officers/${id}` : '/api/officers';
-    const method = id ? 'PUT' : 'POST';
-
     try {
-      const res = await fetch(url, {
-        method,
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
-      });
-      const data = await res.json();
-      if (data.success) {
-        this.showToast(data.message || 'Data karyawan berhasil disimpan!', 'success');
-        this.closeOfficerModal();
-        await this.loadMasterOfficers();
-      } else {
-        this.showToast(`❌ Gagal: ${data.error}`, 'error');
-      }
-    } catch (e) {
-      this.showToast(`Error: ${e.message}`, 'error');
-    }
-  },
-
-  async toggleOfficerStatus(id, newStatus) {
-    const officer = this.masterOfficers.find(o => o.id === id);
-    if (!officer) return;
-
-    try {
-      const res = await fetch(`/api/officers/${id}`, {
-        method: 'PUT',
+      const res = await fetch('/api/schedule/generate', {
+        method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          name: officer.name,
-          role: officer.role,
-          phone: officer.phone,
-          isActive: newStatus
+          month: this.editorMonth,
+          year: this.editorYear,
+          officers: this.editorOfficers
         })
       });
       const data = await res.json();
       if (data.success) {
-        this.showToast(`Status karyawan "${officer.name}" diperbarui!`, 'success');
-        await this.loadMasterOfficers();
+        this.editorOfficers = data.schedule.officers;
+        this.renderEditorTable();
+        this.showToast('⚡ Jadwal otomatis berhasil dibuat!', 'success');
       } else {
-        this.showToast(`Gagal: ${data.error}`, 'error');
+        this.showToast(`Gagal generate: ${data.error}`, 'error');
       }
     } catch (e) {
       this.showToast(`Error: ${e.message}`, 'error');
     }
   },
 
-  async deleteOfficerMaster(id, name) {
-    if (!confirm(`Apakah Anda yakin ingin menghapus "${name}" dari master data karyawan?`)) {
-      return;
+  async saveEditorSchedule() {
+    const sheetName = `${this.editorMonth} ${this.editorYear}`;
+    const btn = document.getElementById('btn-save-editor-schedule');
+    if (btn) {
+      btn.innerHTML = '⏳ Menyimpan...';
+      btn.disabled = true;
     }
 
     try {
-      const res = await fetch(`/api/officers/${id}`, { method: 'DELETE' });
+      const res = await fetch('/api/schedule/save', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          sheetName,
+          officers: this.editorOfficers
+        })
+      });
       const data = await res.json();
       if (data.success) {
-        this.showToast(`Karyawan "${name}" berhasil dihapus.`, 'success');
-        await this.loadMasterOfficers();
+        this.showToast('✅ Jadwal berhasil disimpan ke sistem!', 'success');
+        await this.loadDutyData();
+        await this.loadMatrixData();
       } else {
-        this.showToast(`Gagal: ${data.error}`, 'error');
+        this.showToast(`❌ Gagal simpan: ${data.error}`, 'error');
       }
     } catch (e) {
       this.showToast(`Error: ${e.message}`, 'error');
-    }
-  },
-
-  async loadEditorData() {
-    try {
-      const sheetName = `${this.editorMonth} ${this.editorYear}`;
-      const res = await fetch(`/api/schedule/current?sheet=${encodeURIComponent(sheetName)}`);
-      const data = await res.json();
-      
-      if (data.officers && data.officers.length > 0) {
-        this.editorOfficers = JSON.parse(JSON.stringify(data.officers));
-      } else {
-        // Populate from active master officers
-        const activeMasters = this.masterOfficers.filter(o => o.isActive === 1 || o.isActive === true);
-        this.editorOfficers = activeMasters.map(o => ({
-          name: o.name,
-          role: o.role,
-          shifts: {}
-        }));
+    } finally {
+      if (btn) {
+        btn.innerHTML = '💾 Simpan Jadwal ke Sistem';
+        btn.disabled = false;
       }
-
-      this.renderEditorTable();
-    } catch (e) {
-      console.error('Failed to load editor data:', e);
     }
   },
 
+  exportCsv() {
+    const sheetName = `${this.editorMonth} ${this.editorYear}`;
+    window.open(`/api/schedule/export?sheet=${encodeURIComponent(sheetName)}`, '_blank');
+  },
+
+  showToast(message, type = 'success') {
+    const toast = document.getElementById('toast');
+    if (!toast) return;
+    toast.className = `toast ${type}`;
+    toast.innerText = message;
+    toast.classList.remove('hidden');
+
+    setTimeout(() => {
+      toast.classList.add('hidden');
+    }, 4000);
+  }
+};
+
+document.addEventListener('DOMContentLoaded', () => {
+  app.init();
+});
