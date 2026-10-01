@@ -22,9 +22,9 @@
       "name": "Fajar F",
       "role": "Chief Engineer",
       "shifts": {
-        "3": "MOD2",
         "11": "MOD1",
-        "18": "MOD2"
+        "18": "MOD2",
+        "30": "MOD"
       }
     },
     {
@@ -45,10 +45,10 @@
     },
     {
       "name": "Sugiartono",
-      "role": "Bookkeeper",
+      "role": "Bookeeper",
       "shifts": {
-        "17": "MOD2",
-        "30": "MOD"
+        "3": "MOD2",
+        "17": "MOD2"
       }
     },
     {
@@ -156,7 +156,6 @@
       }
     }
   ],
-  "lastUpdated": "2026-10-01T00:50:03.400Z",
-  "source": "seed_initial",
-  "syncWarning": "Google Sheet belum dapat dijangkau (HTTP Status 404: Not Found). Menggunakan data jadwal default."
+  "lastUpdated": "2026-10-01T08:00:59.010Z",
+  "source": "live_google_sheet"
 }
