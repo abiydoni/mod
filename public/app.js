@@ -63,15 +63,25 @@ const app = {
     const waPill = document.getElementById('pill-wa-status');
     const cronPill = document.getElementById('pill-cron-status');
     
+    const setGSheetBadge = document.getElementById('settings-badge-gsheet');
+    const setWaBadge = document.getElementById('settings-badge-wa');
+    const setCronBadge = document.getElementById('settings-badge-cron');
+
     if (sheetPill && this.config && this.config.spreadsheet) {
-      sheetPill.innerText = `📊 GSheet: ${this.config.spreadsheet.activeSheetName || 'Aktif'}`;
+      const sheetTxt = `📊 GSheet: ${this.config.spreadsheet.activeSheetName || 'Aktif'}`;
+      sheetPill.innerText = sheetTxt;
+      if (setGSheetBadge) setGSheetBadge.innerText = sheetTxt;
     }
     if (waPill && this.config && this.config.waGateway) {
       const target = (this.config.waGateway.targetNumber || '').split('@')[0];
-      waPill.innerText = `🤖 WA: ${this.config.waGateway.enabled ? 'Aktif' : 'Nonaktif'} (${target || 'Grup'})`;
+      const waTxt = `🤖 WA: ${this.config.waGateway.enabled ? 'Aktif' : 'Nonaktif'} (${target || 'Grup'})`;
+      waPill.innerText = waTxt;
+      if (setWaBadge) setWaBadge.innerText = waTxt;
     }
     if (cronPill && this.config && this.config.schedules) {
-      cronPill.innerText = `⏰ Cron: ${this.config.schedules.MOD1?.time || '09:00'}, ${this.config.schedules.MOD2?.time || '16:00'}, ${this.config.schedules.MOD?.time || '18:00'} WIB`;
+      const cronTxt = `⏰ Cron: ${this.config.schedules.MOD1?.time || '09:00'}, ${this.config.schedules.MOD2?.time || '16:00'}, ${this.config.schedules.MOD?.time || '18:00'} WIB`;
+      cronPill.innerText = cronTxt;
+      if (setCronBadge) setCronBadge.innerText = cronTxt;
     }
   },
 

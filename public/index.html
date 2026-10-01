@@ -424,31 +424,50 @@
         </div>
       </section>
 
-      <!-- Tab 5: Settings -->
+      <!-- Tab 5: Settings (Restructured & Highly Informative) -->
       <section id="tab-settings" class="tab-pane">
-        <div class="grid-2-cols">
-          <!-- Google Sheet Settings & Email Integration -->
-          <div class="panel-card">
-            <div class="matrix-header mb-2">
+        <!-- Settings Header Overview -->
+        <div class="settings-overview-card">
+          <div>
+            <h3>⚙️ Pengaturan Sistem & Integrasi</h3>
+            <p class="text-muted">Konfigurasikan koneksi Google Drive, WhatsApp Gateway, Jadwal Cron WIB, dan Template Pesan.</p>
+          </div>
+          <div class="settings-quick-badges">
+            <span class="status-pill" id="settings-badge-gsheet">📊 GSheet: Terhubung</span>
+            <span class="status-pill" id="settings-badge-wa">🤖 WA Gateway: Aktif</span>
+            <span class="status-pill" id="settings-badge-cron">⏰ Cron: 3 Shift Aktif</span>
+          </div>
+        </div>
+
+        <div class="settings-layout-grid">
+          <!-- 1. Google Sheets & Drive Integration (Main Focus Card) -->
+          <div class="panel-card settings-section-card">
+            <div class="settings-card-header">
+              <div class="header-icon-box bg-indigo">📊</div>
               <div>
-                <h3>📊 Integrasi Google Sheets & Google Drive</h3>
-                <p class="text-muted">Hubungkan spreadsheet via link atau bagikan akses via email Google</p>
+                <h4>1. Integrasi Google Sheets & Google Drive</h4>
+                <p class="text-muted text-xs">Pilih metode pembacaan data spreadsheet jadwal MOD Anda</p>
               </div>
-              <span class="status-pill" id="badge-sheet-conn-status">⚪ Belum Diuji</span>
-            </div>
-            
-            <div class="form-group">
-              <label for="cfg-sheet-url">URL atau ID Google Sheets:</label>
-              <input type="text" id="cfg-sheet-url" class="form-input" placeholder="https://docs.google.com/spreadsheets/d/1whXqz.../edit">
             </div>
 
-            <!-- Email Sharing Instruction Card -->
+            <div class="form-row mt-3">
+              <div class="form-group flex-2">
+                <label for="cfg-sheet-url">URL Spreadsheet Google Drive:</label>
+                <input type="text" id="cfg-sheet-url" class="form-input" placeholder="https://docs.google.com/spreadsheets/d/1whXqz.../edit">
+              </div>
+              <div class="form-group flex-1">
+                <label for="cfg-sheet-name">Nama Tab Aktif:</label>
+                <input type="text" id="cfg-sheet-name" class="form-input" placeholder="October 2026">
+              </div>
+            </div>
+
+            <!-- Email Share Guide Box -->
             <div class="email-sharing-card">
               <div class="email-sharing-header">
                 <span class="email-icon">📧</span>
                 <div>
-                  <strong>Bagi Akses via Email (Spreadsheet Privat)</strong>
-                  <p class="text-muted text-xs">Jika spreadsheet tidak dibuka untuk umum, bagikan akses ke email sistem ini:</p>
+                  <strong>Opsi A: Bagi Akses via Email (Spreadsheet Privat)</strong>
+                  <p class="text-muted text-xs">Jika dokumen dibatasi / privat, bagikan akses dokumen ke email sistem ini:</p>
                 </div>
               </div>
               <div class="copy-email-box">
@@ -457,26 +476,24 @@
                   📋 Salin Email
                 </button>
               </div>
-              <ol class="email-steps-list">
-                <li>Buka Google Sheet Anda > Klik tombol <strong>Bagikan (Share)</strong> di pojok kanan atas.</li>
-                <li>Tempelkan (Paste) email di atas, pilih peran <strong>Pelihat (Viewer)</strong> atau <strong>Editor</strong>, lalu klik Kirim.</li>
-                <li>Klik tombol <strong>"🔍 Uji & Hubungkan Sekarang"</strong> di bawah untuk memverifikasi.</li>
-              </ol>
+              <div class="email-guide-pills">
+                <span class="guide-step-pill">1. Salin Email</span>
+                <span class="guide-arrow">➔</span>
+                <span class="guide-step-pill">2. Buka Google Sheet > Klik "Bagikan" > Tempelkan Email</span>
+                <span class="guide-arrow">➔</span>
+                <span class="guide-step-pill">3. Klik "Uji Sambungan" di Bawah</span>
+              </div>
             </div>
 
+            <!-- Webhook Options -->
             <div class="form-group mt-3">
-              <label for="cfg-script-webhook">Google Apps Script Webhook (Opsional untuk Buat/Edit Tab Otomatis):</label>
+              <label for="cfg-script-webhook">Opsi B: Google Apps Script Webhook (Untuk Otomasi Buat/Update Tab Baru dari Web):</label>
               <input type="text" id="cfg-script-webhook" class="form-input" placeholder="https://script.google.com/macros/s/.../exec">
-            </div>
-
-            <div class="form-group">
-              <label for="cfg-sheet-name">Nama Tab Sheet Aktif:</label>
-              <input type="text" id="cfg-sheet-name" class="form-input" placeholder="October 2026">
             </div>
 
             <div class="sheet-actions-bar">
               <button id="btn-test-sheet" type="button" class="btn btn-primary btn-sm">
-                🔍 Uji & Hubungkan Sekarang
+                🔍 Uji Sambungan & Cek Akses Google Drive
               </button>
             </div>
 
@@ -484,82 +501,129 @@
             <div id="sheet-test-result-box" class="sheet-test-result-box hidden"></div>
           </div>
 
-          <!-- WA Gateway Settings -->
-          <div class="panel-card">
-            <h3>💬 Konfigurasi WhatsApp Gateway</h3>
-            <p class="text-muted mb-3">Pengaturan API pengirim pesan WA ke grup</p>
-
-            <div class="form-group">
-              <label for="cfg-wa-url">API URL Gateway:</label>
-              <input type="text" id="cfg-wa-url" class="form-input">
+          <!-- 2. WhatsApp Gateway Configuration -->
+          <div class="panel-card settings-section-card">
+            <div class="settings-card-header">
+              <div class="header-icon-box bg-emerald">💬</div>
+              <div>
+                <h4>2. Konfigurasi WhatsApp Gateway</h4>
+                <p class="text-muted text-xs">Pengaturan API pengiriman notifikasi ke grup WhatsApp</p>
+              </div>
             </div>
 
-            <div class="form-group">
-              <label for="cfg-wa-key">API Key:</label>
-              <input type="text" id="cfg-wa-key" class="form-input">
+            <div class="form-group mt-3">
+              <label for="cfg-wa-url">API URL Endpoint Gateway:</label>
+              <input type="text" id="cfg-wa-url" class="form-input" placeholder="https://wa-ab.appsbee.my.id/api/send-message">
             </div>
 
             <div class="form-row">
               <div class="form-group flex-1">
+                <label for="cfg-wa-key">API Key:</label>
+                <input type="text" id="cfg-wa-key" class="form-input" placeholder="wa-69aa3dbf...">
+              </div>
+              <div class="form-group flex-1">
                 <label for="cfg-wa-session">Session ID:</label>
-                <input type="text" id="cfg-wa-session" class="form-input">
-              </div>
-              <div class="form-group flex-2">
-                <label for="cfg-wa-target">Target WA Group ID / Number:</label>
-                <input type="text" id="cfg-wa-target" class="form-input">
+                <input type="text" id="cfg-wa-session" class="form-input" placeholder="appsbee">
               </div>
             </div>
 
-            <div class="form-group checkbox-group">
+            <div class="form-group">
+              <label for="cfg-wa-target">Target Nomor / Group ID WhatsApp:</label>
+              <input type="text" id="cfg-wa-target" class="form-input" placeholder="120363398680818900@g.us">
+            </div>
+
+            <div class="checkbox-toggle-card">
               <input type="checkbox" id="cfg-wa-enabled" checked>
-              <label for="cfg-wa-enabled">Aktifkan Pengiriman WhatsApp Otomatis</label>
+              <div>
+                <label for="cfg-wa-enabled"><strong>Status Gateway Aktif</strong></label>
+                <p class="text-muted text-xs">Izinkan sistem mengirimkan pesan WhatsApp otomatis pada jam yang dijadwalkan.</p>
+              </div>
             </div>
           </div>
 
-          <!-- Schedule & Cron Times -->
-          <div class="panel-card">
-            <h3>⏰ Jam Pengiriman Otomatis (Cron)</h3>
-            <p class="text-muted mb-3">Waktu otomatis pesan dikirimkan setiap hari (Zona Waktu: WIB)</p>
-
-            <div class="form-group">
-              <label for="cfg-time-mod1">Jadwal Pagi (MOD 1):</label>
-              <input type="time" id="cfg-time-mod1" class="form-input" value="09:00">
+          <!-- 3. Scheduled Dispatch Times (Cron WIB) -->
+          <div class="panel-card settings-section-card">
+            <div class="settings-card-header">
+              <div class="header-icon-box bg-amber">⏰</div>
+              <div>
+                <h4>3. Jam Pengiriman Otomatis (Cron Engine WIB)</h4>
+                <p class="text-muted text-xs">Zona Waktu: <strong>WIB (Asia/Jakarta, GMT+7)</strong></p>
+              </div>
             </div>
 
-            <div class="form-group">
-              <label for="cfg-time-mod2">Jadwal Sore (MOD 2):</label>
-              <input type="time" id="cfg-time-mod2" class="form-input" value="16:00">
-            </div>
+            <div class="cron-shifts-grid mt-3">
+              <div class="cron-shift-box">
+                <div class="cron-box-title">
+                  <span class="matrix-badge-mod1">MOD 1</span>
+                  <strong>Shift Pagi</strong>
+                </div>
+                <input type="time" id="cfg-time-mod1" class="form-input" value="09:00">
+                <span class="text-muted text-xs">Pengiriman pagi</span>
+              </div>
 
-            <div class="form-group">
-              <label for="cfg-time-mod">Jadwal Malam / Umum (MOD):</label>
-              <input type="time" id="cfg-time-mod" class="form-input" value="18:00">
+              <div class="cron-shift-box">
+                <div class="cron-box-title">
+                  <span class="matrix-badge-mod2">MOD 2</span>
+                  <strong>Shift Sore</strong>
+                </div>
+                <input type="time" id="cfg-time-mod2" class="form-input" value="16:00">
+                <span class="text-muted text-xs">Pengiriman sore</span>
+              </div>
+
+              <div class="cron-shift-box">
+                <div class="cron-box-title">
+                  <span class="matrix-badge-mod">MOD</span>
+                  <strong>Shift Malam</strong>
+                </div>
+                <input type="time" id="cfg-time-mod" class="form-input" value="18:00">
+                <span class="text-muted text-xs">Pengiriman malam</span>
+              </div>
             </div>
           </div>
 
-          <!-- Message Template Editor -->
-          <div class="panel-card">
-            <h3>📝 Template Pesan WhatsApp</h3>
-            <p class="text-muted mb-3">Sesuaikan format kata-kata pemberitahuan.</p>
-            
-            <div class="form-group">
-              <label for="cfg-template-select">Pilih Template:</label>
-              <select id="cfg-template-select" class="form-input">
-                <option value="MOD1">Template MOD 1 (Pagi - 09:00)</option>
-                <option value="MOD2">Template MOD 2 (Sore - 16:00)</option>
-                <option value="MOD">Template MOD (Malam - 18:00)</option>
-                <option value="ALL">Template Ringkasan Semua Shift</option>
-              </select>
+          <!-- 4. Message Templates Editor (Full Width Card) -->
+          <div class="panel-card settings-section-card full-width-card">
+            <div class="settings-card-header">
+              <div class="header-icon-box bg-purple">📝</div>
+              <div>
+                <h4>4. Kustomisasi Template Pesan WhatsApp</h4>
+                <p class="text-muted text-xs">Sesuaikan format kata-kata pemberitahuan untuk setiap shift dinas</p>
+              </div>
             </div>
 
-            <div class="form-group">
-              <textarea id="cfg-template-text" rows="6" class="form-input font-mono text-sm"></textarea>
-              <small class="text-muted">Tag yang dapat digunakan: <code>{hari}</code>, <code>{tanggal}</code>, <code>{bulan}</code>, <code>{tahun}</code>, <code>{daftar_petugas}</code></small>
+            <div class="template-editor-wrapper mt-3">
+              <div class="template-tab-bar">
+                <label for="cfg-template-select">Pilih Shift Template:</label>
+                <select id="cfg-template-select" class="form-input-sm">
+                  <option value="MOD1">Template MOD 1 (Pagi - 09:00)</option>
+                  <option value="MOD2">Template MOD 2 (Sore - 16:00)</option>
+                  <option value="MOD">Template MOD (Malam - 18:00)</option>
+                  <option value="ALL">Template Ringkasan Semua Shift</option>
+                </select>
+              </div>
+
+              <div class="template-content-box mt-2">
+                <textarea id="cfg-template-text" rows="7" class="form-input font-mono text-sm"></textarea>
+                <div class="tags-hint-bar">
+                  <span class="text-muted text-xs">Tag variabel dinamis yang dapat digunakan:</span>
+                  <div class="tags-pill-list">
+                    <code>{hari}</code>
+                    <code>{tanggal}</code>
+                    <code>{bulan}</code>
+                    <code>{tahun}</code>
+                    <code>{daftar_petugas}</code>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         </div>
 
+        <!-- Sticky Settings Save Bar -->
         <div class="settings-save-bar">
+          <div class="save-status-info text-muted text-xs">
+            💡 Perubahan pengaturan akan langsung disimpan ke database dan jadwal cron diperbarui.
+          </div>
           <button id="btn-save-settings" class="btn btn-primary btn-lg">
             💾 Simpan Semua Pengaturan
           </button>
