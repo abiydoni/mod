@@ -1396,7 +1396,7 @@ const app = {
     const sheetName = `${this.editorMonth} ${this.editorYear}`;
     const btn = document.getElementById('btn-save-editor-schedule');
     if (btn) {
-      btn.innerHTML = '⏳ Menyimpan...';
+      btn.innerHTML = '⏳ Menyimpan ke Google Drive...';
       btn.disabled = true;
     }
 
@@ -1411,7 +1411,7 @@ const app = {
       });
       const data = await res.json();
       if (data.success) {
-        this.showToast('✅ Jadwal berhasil disimpan ke sistem!', 'success');
+        this.showToast(data.message || '✅ Jadwal berhasil disimpan & disinkronkan ke Google Spreadsheet!', 'success');
         await this.loadDutyData();
         await this.loadMatrixData();
       } else {
