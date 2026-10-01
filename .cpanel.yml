@@ -2,7 +2,8 @@
 deployment:
   tasks:
     - export DEPLOYPATH=/home2/appsbeem/mod.appsbee.my.id
-    - rsync -av --exclude='node_modules' --exclude='.git*' ./ $DEPLOYPATH/
+    - /bin/rm -rf node_modules
+    - /bin/cp -Rf * $DEPLOYPATH/
 
 
 
