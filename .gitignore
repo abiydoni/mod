@@ -13,6 +13,9 @@ lerna-debug.log*
 # Logs and runtime data
 *.log
 data/logs.json
+*.sqlite-journal
+*.sqlite-shm
+*.sqlite-wal
 
 # Operating System files
 .DS_Store
