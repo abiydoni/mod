@@ -10,6 +10,9 @@
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
+  <!-- Top Global Progress Indicator -->
+  <div id="global-progress-bar" class="global-progress-bar"></div>
+
   <!-- Ambient background lighting -->
   <div class="glow-sphere glow-1"></div>
   <div class="glow-sphere glow-2"></div>
@@ -97,6 +100,19 @@
           </div>
         </div>
       </header>
+
+      <!-- Realtime Activity & System Status Bar -->
+      <div id="realtime-status-bar" class="realtime-status-bar">
+        <div class="status-bar-left">
+          <span class="status-pulse-dot" id="status-pulse-dot"></span>
+          <span class="status-action-text" id="status-action-text">⚡ Sistem Siap (Memuat data...)</span>
+        </div>
+        <div class="status-bar-right">
+          <span class="status-pill" id="pill-sheet-status">📊 GSheet: Terhubung</span>
+          <span class="status-pill" id="pill-wa-status">🤖 WA: Siap</span>
+          <span class="status-pill" id="pill-cron-status">⏰ Cron: 09:00, 16:00, 18:00 WIB</span>
+        </div>
+      </div>
 
       <!-- Alert / Warning container if any -->
       <div id="alert-banner" class="alert-banner hidden"></div>

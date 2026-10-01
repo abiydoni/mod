@@ -15,6 +15,9 @@ const app = {
     this.initDateSelector();
     this.setupEventListeners();
     
+    this.setStatus('⚡ Memuat dashboard & data jadwal...', 'working');
+    this.setProgress(30);
+
     // Load all data in parallel for instant page render (<50ms)
     await Promise.allSettled([
       this.loadConfig(),
@@ -23,6 +26,53 @@ const app = {
       this.loadMasterOfficers(),
       this.loadLogs()
     ]);
+
+    this.setProgress(100, false);
+    this.updateStatusPills();
+    this.setStatus('🟢 Sistem Siap (Data Terkini & Live)', 'ready');
+  },
+
+  setStatus(text, state = 'ready') {
+    const textEl = document.getElementById('status-action-text');
+    const dotEl = document.getElementById('status-pulse-dot');
+    if (textEl) textEl.innerText = text;
+    if (dotEl) {
+      dotEl.className = 'status-pulse-dot';
+      if (state === 'working') dotEl.classList.add('working');
+      else if (state === 'error') dotEl.classList.add('error');
+    }
+  },
+
+  setProgress(percent, active = true) {
+    const bar = document.getElementById('global-progress-bar');
+    if (!bar) return;
+    if (active) {
+      bar.classList.add('active');
+      bar.style.width = `${percent}%`;
+    } else {
+      bar.style.width = '100%';
+      setTimeout(() => {
+        bar.classList.remove('active');
+        bar.style.width = '0%';
+      }, 300);
+    }
+  },
+
+  updateStatusPills() {
+    const sheetPill = document.getElementById('pill-sheet-status');
+    const waPill = document.getElementById('pill-wa-status');
+    const cronPill = document.getElementById('pill-cron-status');
+    
+    if (sheetPill && this.config && this.config.spreadsheet) {
+      sheetPill.innerText = `📊 GSheet: ${this.config.spreadsheet.activeSheetName || 'Aktif'}`;
+    }
+    if (waPill && this.config && this.config.waGateway) {
+      const target = (this.config.waGateway.targetNumber || '').split('@')[0];
+      waPill.innerText = `🤖 WA: ${this.config.waGateway.enabled ? 'Aktif' : 'Nonaktif'} (${target || 'Grup'})`;
+    }
+    if (cronPill && this.config && this.config.schedules) {
+      cronPill.innerText = `⏰ Cron: ${this.config.schedules.MOD1?.time || '09:00'}, ${this.config.schedules.MOD2?.time || '16:00'}, ${this.config.schedules.MOD?.time || '18:00'} WIB`;
+    }
   },
 
   setupEventListeners() {
@@ -447,8 +497,8 @@ const app = {
     const btn = document.getElementById('btn-sync-sheet');
     if (!btn) return;
     const originalText = btn.innerHTML;
-    btn.innerHTML = '⏳ Menyinkronkan...';
-    btn.disabled = true;
+    this.setStatus('🔄 Menghubungi Google Sheets & menyinkronkan data CSV...', 'working');
+    this.setProgress(40);
 
     try {
       const sheetName = document.getElementById('cfg-sheet-name')?.value.trim() || '';
@@ -460,13 +510,19 @@ const app = {
       const data = await res.json();
       if (data.success) {
         this.showToast(`Berhasil disinkronkan! Ditemukan ${data.officersCount} data petugas.`, 'success');
+        this.setStatus(`✅ Google Sheets berhasil disinkronkan (${data.officersCount} Petugas)`, 'ready');
+        this.setProgress(100, false);
         await this.loadDutyData();
         await this.loadMatrixData();
       } else {
         this.showToast(`Gagal sinkron: ${data.error}`, 'error');
+        this.setStatus(`❌ Gagal sinkronisasi: ${data.error}`, 'error');
+        this.setProgress(100, false);
       }
     } catch (e) {
       this.showToast(`Error sinkronisasi: ${e.message}`, 'error');
+      this.setStatus(`❌ Error sinkronisasi: ${e.message}`, 'error');
+      this.setProgress(100, false);
     } finally {
       btn.innerHTML = originalText;
       btn.disabled = false;
