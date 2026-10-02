@@ -4,132 +4,156 @@
     "name": "Doni Abiyantoro",
     "role": "Chief Accountant",
     "phone": "",
-    "isActive": 1
+    "isActive": 1,
+    "level": "Manager"
   },
   {
     "id": 2,
     "name": "Bekti Utami",
     "role": "Asst. Sales Marketing Manager",
     "phone": "",
-    "isActive": 1
+    "isActive": 1,
+    "level": "Asst Manager"
   },
   {
     "id": 3,
     "name": "Fajar F",
     "role": "Chief Engineer",
     "phone": "",
-    "isActive": 1
+    "isActive": 1,
+    "level": "Manager"
   },
   {
     "id": 4,
     "name": "Ardhiny",
     "role": "HR Manager",
     "phone": "",
-    "isActive": 1
+    "isActive": 1,
+    "updatedAt": "2026-10-02T04:10:24.261Z",
+    "level": "Manager"
   },
   {
     "id": 5,
     "name": "Rama",
     "role": "FO Manager",
     "phone": "",
-    "isActive": 1
+    "isActive": 1,
+    "level": "Manager"
   },
   {
     "id": 6,
     "name": "Sugiartono",
     "role": "Bookkeeper",
     "phone": "",
-    "isActive": 1
+    "isActive": 1,
+    "level": "Asst Manager",
+    "updatedAt": "2026-10-02T06:04:59.708Z"
   },
   {
     "id": 7,
     "name": "Iqbal",
     "role": "Junior Sous Chef",
     "phone": "",
-    "isActive": 1
+    "isActive": 1,
+    "level": "Asst Manager",
+    "updatedAt": "2026-10-02T06:04:44.754Z"
   },
   {
     "id": 8,
     "name": "Agus Budiono Prastyo",
     "role": "IT Asst Manager",
     "phone": "",
-    "isActive": 1
+    "isActive": 1,
+    "updatedAt": "2026-10-02T06:03:44.054Z",
+    "level": "Asst Manager"
   },
   {
     "id": 9,
     "name": "Lukman Prayogo",
     "role": "R&B Asst. Manager",
     "phone": "",
-    "isActive": 1
+    "isActive": 1,
+    "level": "Asst Manager"
   },
   {
     "id": 10,
     "name": "Ota Setiawan",
     "role": "Asst EHK",
     "phone": "",
-    "isActive": 1
+    "isActive": 1,
+    "level": "Asst Manager"
   },
   {
     "id": 11,
     "name": "Dian Nurkhasanah",
     "role": "Sales Executive",
     "phone": "",
-    "isActive": 1
+    "isActive": 1,
+    "level": "Supervisor"
   },
   {
     "id": 12,
     "name": "Ayu",
     "role": "AR/IA",
     "phone": "",
-    "isActive": 1
+    "isActive": 1,
+    "level": "Supervisor"
   },
   {
     "id": 13,
     "name": "Fajar Kuncoro",
     "role": "Purchasing",
     "phone": "",
-    "isActive": 1
+    "isActive": 1,
+    "level": "Supervisor"
   },
   {
     "id": 14,
     "name": "Hendri D Prayogo",
     "role": "AP/GC",
     "phone": "",
-    "isActive": 1
+    "isActive": 1,
+    "level": "Supervisor"
   },
   {
     "id": 15,
     "name": "Septi Fira",
     "role": "Sales Executive",
     "phone": "",
-    "isActive": 1
+    "isActive": 1,
+    "level": "Supervisor"
   },
   {
     "id": 16,
     "name": "Faizin",
     "role": "ENG Supervisor",
     "phone": "",
-    "isActive": 1
+    "isActive": 1,
+    "level": "Supervisor"
   },
   {
     "id": 17,
     "name": "Guntur",
     "role": "HK Shift Leader",
     "phone": "",
-    "isActive": 1
+    "isActive": 1,
+    "level": "Supervisor"
   },
   {
     "id": 18,
     "name": "Hendri",
     "role": "FBP",
     "phone": "",
-    "isActive": 1
+    "isActive": 1,
+    "level": "Supervisor"
   },
   {
     "id": 19,
     "name": "Syahrul",
     "role": "FBP",
     "phone": "",
-    "isActive": 1
+    "isActive": 1,
+    "updatedAt": "2026-10-02T03:53:46.295Z",
+    "level": "Supervisor"
   }
 ]

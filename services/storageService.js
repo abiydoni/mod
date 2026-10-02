@@ -12,6 +12,7 @@ if (!fs.existsSync(SCHEDULES_DIR)) {
 }
 
 const CONFIG_FILE = path.join(__dirname, '..', 'config.json');
+const SETTINGS_FILE = path.join(DATA_DIR, 'settings.json');
 const OFFICERS_FILE = path.join(DATA_DIR, 'officers.json');
 const LOGS_FILE = path.join(DATA_DIR, 'logs.json');
 const USERS_FILE = path.join(DATA_DIR, 'users.json');
@@ -72,27 +73,59 @@ function initUsers() {
 }
 initUsers();
 
+function normalizeLevel(level) {
+  if (!level) return 'Supervisor';
+  const str = String(level).trim().toLowerCase();
+  if (str.includes('asst') || str.includes('ass ') || str.startsWith('ass') || str.includes('assistant')) {
+    return 'Asst Manager';
+  }
+  if (str.includes('manager') || str.includes('chief') || str.includes('mgr')) {
+    return 'Manager';
+  }
+  if (str.includes('supervisor') || str.includes('spv') || str.includes('leader')) {
+    return 'Supervisor';
+  }
+  return 'Supervisor';
+}
+
+function getLevelWeight(level) {
+  const norm = normalizeLevel(level);
+  if (norm === 'Manager') return 1;
+  if (norm === 'Asst Manager') return 2;
+  if (norm === 'Supervisor') return 3;
+  return 4;
+}
+
+function sortOfficersByLevel(officers) {
+  return [...officers].sort((a, b) => {
+    const wA = getLevelWeight(a.level);
+    const wB = getLevelWeight(b.level);
+    if (wA !== wB) return wA - wB;
+    return (a.name || '').localeCompare(b.name || '');
+  });
+}
+
 // Initial Officers Seed
 const INITIAL_OFFICERS = [
-  { id: 1, name: 'Doni Abiyantoro', role: 'Chief Accountant', phone: '', isActive: 1 },
-  { id: 2, name: 'Bekti Utami', role: 'Asst. Sales Marketing Manager', phone: '', isActive: 1 },
-  { id: 3, name: 'Fajar F', role: 'Chief Engineer', phone: '', isActive: 1 },
-  { id: 4, name: 'Ardhiny', role: 'HR Manager', phone: '', isActive: 1 },
-  { id: 5, name: 'Rama', role: 'FO Manager', phone: '', isActive: 1 },
-  { id: 6, name: 'Sugiartono', role: 'Bookkeeper', phone: '', isActive: 1 },
-  { id: 7, name: 'Iqbal', role: 'Junior Sous Chef', phone: '', isActive: 1 },
-  { id: 8, name: 'Agus Budiono Prastyo', role: 'IT Asst Manager', phone: '', isActive: 1 },
-  { id: 9, name: 'Lukman Prayogo', role: 'R&B Asst. Manager', phone: '', isActive: 1 },
-  { id: 10, name: 'Ota Setiawan', role: 'Asst EHK', phone: '', isActive: 1 },
-  { id: 11, name: 'Dian Nurkhasanah', role: 'Sales Executive', phone: '', isActive: 1 },
-  { id: 12, name: 'Ayu', role: 'AR/IA', phone: '', isActive: 1 },
-  { id: 13, name: 'Fajar Kuncoro', role: 'Purchasing', phone: '', isActive: 1 },
-  { id: 14, name: 'Hendri D Prayogo', role: 'AP/GC', phone: '', isActive: 1 },
-  { id: 15, name: 'Septi Fira', role: 'Sales Executive', phone: '', isActive: 1 },
-  { id: 16, name: 'Faizin', role: 'ENG Supervisor', phone: '', isActive: 1 },
-  { id: 17, name: 'Guntur', role: 'HK Shift Leader', phone: '', isActive: 1 },
-  { id: 18, name: 'Hendri', role: 'FBP', phone: '', isActive: 1 },
-  { id: 19, name: 'Syahrul', role: 'FBP', phone: '', isActive: 1 }
+  { id: 1, name: 'Doni Abiyantoro', role: 'Chief Accountant', level: 'Manager', phone: '', isActive: 1 },
+  { id: 2, name: 'Bekti Utami', role: 'Asst. Sales Marketing Manager', level: 'Asst Manager', phone: '', isActive: 1 },
+  { id: 3, name: 'Fajar F', role: 'Chief Engineer', level: 'Manager', phone: '', isActive: 1 },
+  { id: 4, name: 'Ardhiny', role: 'HR Manager', level: 'Manager', phone: '', isActive: 1 },
+  { id: 5, name: 'Rama', role: 'FO Manager', level: 'Manager', phone: '', isActive: 1 },
+  { id: 6, name: 'Sugiartono', role: 'Bookkeeper', level: 'Supervisor', phone: '', isActive: 1 },
+  { id: 7, name: 'Iqbal', role: 'Junior Sous Chef', level: 'Supervisor', phone: '', isActive: 1 },
+  { id: 8, name: 'Agus Budiono Prastyo', role: 'IT Asst Manager', level: 'Asst Manager', phone: '', isActive: 1 },
+  { id: 9, name: 'Lukman Prayogo', role: 'R&B Asst. Manager', level: 'Asst Manager', phone: '', isActive: 1 },
+  { id: 10, name: 'Ota Setiawan', role: 'Asst EHK', level: 'Asst Manager', phone: '', isActive: 1 },
+  { id: 11, name: 'Dian Nurkhasanah', role: 'Sales Executive', level: 'Supervisor', phone: '', isActive: 1 },
+  { id: 12, name: 'Ayu', role: 'AR/IA', level: 'Supervisor', phone: '', isActive: 1 },
+  { id: 13, name: 'Fajar Kuncoro', role: 'Purchasing', level: 'Supervisor', phone: '', isActive: 1 },
+  { id: 14, name: 'Hendri D Prayogo', role: 'AP/GC', level: 'Supervisor', phone: '', isActive: 1 },
+  { id: 15, name: 'Septi Fira', role: 'Sales Executive', level: 'Supervisor', phone: '', isActive: 1 },
+  { id: 16, name: 'Faizin', role: 'ENG Supervisor', level: 'Supervisor', phone: '', isActive: 1 },
+  { id: 17, name: 'Guntur', role: 'HK Shift Leader', level: 'Supervisor', phone: '', isActive: 1 },
+  { id: 18, name: 'Hendri', role: 'FBP', level: 'Supervisor', phone: '', isActive: 1 },
+  { id: 19, name: 'Syahrul', role: 'FBP', level: 'Supervisor', phone: '', isActive: 1 }
 ];
 
 // Initialize Officers file if not exists
@@ -108,6 +141,20 @@ function initOfficers() {
   } else {
     try {
       cachedOfficers = JSON.parse(fs.readFileSync(OFFICERS_FILE, 'utf8'));
+      // Auto migrate missing level field if any
+      let modified = false;
+      cachedOfficers.forEach(o => {
+        if (!o.level) {
+          const rLower = (o.role || '').toLowerCase();
+          if (rLower.includes('asst') || rLower.includes('assistant')) o.level = 'Asst Manager';
+          else if (rLower.includes('manager') || rLower.includes('chief')) o.level = 'Manager';
+          else o.level = 'Supervisor';
+          modified = true;
+        }
+      });
+      if (modified) {
+        fs.writeFileSync(OFFICERS_FILE, JSON.stringify(cachedOfficers, null, 2), 'utf8');
+      }
     } catch (e) {
       cachedOfficers = [...INITIAL_OFFICERS];
     }
@@ -122,9 +169,13 @@ function getConfig() {
       const data = JSON.parse(fs.readFileSync(CONFIG_FILE, 'utf8'));
       cachedConfig = data;
       return data;
+    } else if (fs.existsSync(SETTINGS_FILE)) {
+      const data = JSON.parse(fs.readFileSync(SETTINGS_FILE, 'utf8'));
+      cachedConfig = data;
+      return data;
     }
   } catch (err) {
-    console.error('Error reading config.json:', err);
+    console.error('Error reading config:', err);
   }
   return cachedConfig || {};
 }
@@ -133,6 +184,11 @@ function saveConfig(config) {
   try {
     cachedConfig = config;
     fs.writeFileSync(CONFIG_FILE, JSON.stringify(config, null, 2), 'utf8');
+    try {
+      fs.writeFileSync(SETTINGS_FILE, JSON.stringify(config, null, 2), 'utf8');
+    } catch (e) {
+      console.warn('Could not write backup settings.json:', e.message);
+    }
     return true;
   } catch (err) {
     console.error('Error saving config.json:', err);
@@ -213,19 +269,30 @@ function saveCachedSchedule(data) {
 
 // 4. Master Officers
 function getAllOfficers(onlyActive = false) {
+  try {
+    if (fs.existsSync(OFFICERS_FILE)) {
+      cachedOfficers = JSON.parse(fs.readFileSync(OFFICERS_FILE, 'utf8'));
+    }
+  } catch (e) {}
   if (!cachedOfficers) {
     initOfficers();
   }
+  let list = cachedOfficers;
   if (onlyActive) {
-    return cachedOfficers.filter(o => o.isActive === 1 || o.isActive === true);
+    list = list.filter(o => o.isActive === 1 || o.isActive === true);
   }
-  return [...cachedOfficers].sort((a, b) => a.name.localeCompare(b.name));
+  return sortOfficersByLevel(list);
 }
 
-function addOfficer({ name, role, phone = '', isActive = 1 }) {
+function addOfficer({ name, role, level = 'Supervisor', phone = '', isActive = 1 }) {
   if (!name || !role) {
     return { success: false, error: 'Nama dan Jabatan wajib diisi' };
   }
+  try {
+    if (fs.existsSync(OFFICERS_FILE)) {
+      cachedOfficers = JSON.parse(fs.readFileSync(OFFICERS_FILE, 'utf8'));
+    }
+  } catch (e) {}
   if (!cachedOfficers) initOfficers();
 
   const trimmedName = name.trim();
@@ -238,6 +305,7 @@ function addOfficer({ name, role, phone = '', isActive = 1 }) {
     id: nextId,
     name: trimmedName,
     role: role.trim(),
+    level: normalizeLevel(level),
     phone: (phone || '').trim(),
     isActive: isActive ? 1 : 0,
     createdAt: new Date().toISOString(),
@@ -247,13 +315,18 @@ function addOfficer({ name, role, phone = '', isActive = 1 }) {
   cachedOfficers.push(newOfficer);
   try {
     fs.writeFileSync(OFFICERS_FILE, JSON.stringify(cachedOfficers, null, 2), 'utf8');
-    return { success: true, message: `Petugas "${trimmedName}" berhasil ditambahkan!` };
+    return { success: true, message: `Petugas "${trimmedName}" berhasil ditambahkan!`, officer: newOfficer };
   } catch (err) {
     return { success: false, error: err.message };
   }
 }
 
-function updateOfficer(id, { name, role, phone = '', isActive = 1 }) {
+function updateOfficer(id, { name, role, level, phone = '', isActive = 1 }) {
+  try {
+    if (fs.existsSync(OFFICERS_FILE)) {
+      cachedOfficers = JSON.parse(fs.readFileSync(OFFICERS_FILE, 'utf8'));
+    }
+  } catch (e) {}
   if (!cachedOfficers) initOfficers();
   const numId = Number(id);
   const index = cachedOfficers.findIndex(o => o.id === numId);
@@ -261,10 +334,14 @@ function updateOfficer(id, { name, role, phone = '', isActive = 1 }) {
     return { success: false, error: 'Petugas tidak ditemukan' };
   }
 
+  const currentLevel = cachedOfficers[index].level || 'Supervisor';
+  const newLevel = level !== undefined ? normalizeLevel(level) : currentLevel;
+
   cachedOfficers[index] = {
     ...cachedOfficers[index],
     name: name ? name.trim() : cachedOfficers[index].name,
     role: role ? role.trim() : cachedOfficers[index].role,
+    level: newLevel,
     phone: phone !== undefined ? String(phone).trim() : cachedOfficers[index].phone,
     isActive: isActive !== undefined ? (isActive ? 1 : 0) : cachedOfficers[index].isActive,
     updatedAt: new Date().toISOString()
@@ -272,7 +349,7 @@ function updateOfficer(id, { name, role, phone = '', isActive = 1 }) {
 
   try {
     fs.writeFileSync(OFFICERS_FILE, JSON.stringify(cachedOfficers, null, 2), 'utf8');
-    return { success: true, message: 'Data petugas berhasil diperbarui!' };
+    return { success: true, message: 'Data petugas berhasil diperbarui!', officer: cachedOfficers[index] };
   } catch (err) {
     return { success: false, error: err.message };
   }
@@ -481,5 +558,7 @@ module.exports = {
   updateUser,
   changePassword,
   resetUserPassword,
+  sortOfficersByLevel,
+  getLevelWeight,
   deleteUser
 };

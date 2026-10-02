@@ -10,7 +10,7 @@
   <link rel="icon" type="image/x-icon" href="favicon.ico">
   <link rel="icon" type="image/svg+xml" href="favicon.svg">
   <link rel="apple-touch-icon" href="logo.png">
-  <link rel="stylesheet" href="style.css?v=1.2.1">
+  <link rel="stylesheet" href="style.css?v=1.3.0">
 </head>
 <body>
   <!-- Top Global Progress Indicator -->
@@ -78,7 +78,7 @@
             <strong id="cron-time-mod2">16:00 WIB</strong>
           </div>
           <div class="schedule-item">
-            <span>MOD (Malam)</span>
+            <span>MOD (Sore 18:00)</span>
             <strong id="cron-time-mod">18:00 WIB</strong>
           </div>
         </div>
@@ -212,7 +212,7 @@
           <div class="duty-card mod-card">
             <div class="duty-card-header">
               <div>
-                <span class="shift-tag badge-mod">Shift Malam / Umum (MOD)</span>
+                <span class="shift-tag badge-mod">Shift Sore (MOD - Masuk 18:00)</span>
                 <h3 class="duty-time">⏰ Jam Kirim: 18:00 WIB</h3>
               </div>
               <button class="btn-icon-action" title="Preview & Kirim" onclick="app.openSendModal('MOD')">
@@ -239,9 +239,9 @@
             </div>
             <div class="preview-toggle-group">
               <button class="btn-chip active" onclick="app.switchPreviewShift('ALL')">Semua Shift</button>
-              <button class="btn-chip" onclick="app.switchPreviewShift('MOD1')">MOD 1 (Pagi)</button>
-              <button class="btn-chip" onclick="app.switchPreviewShift('MOD2')">MOD 2 (Sore)</button>
-              <button class="btn-chip" onclick="app.switchPreviewShift('MOD')">MOD (Malam)</button>
+              <button class="btn-chip" onclick="app.switchPreviewShift('MOD1')">MOD 1 (Pagi 09:00)</button>
+              <button class="btn-chip" onclick="app.switchPreviewShift('MOD2')">MOD 2 (Sore 16:00)</button>
+              <button class="btn-chip" onclick="app.switchPreviewShift('MOD')">MOD (Sore 18:00)</button>
             </div>
           </div>
           <div class="whatsapp-bubble-container">
@@ -314,9 +314,9 @@
             </div>
             <div class="toolbar-right">
               <div class="legend-box">
-                <span class="legend-item"><span class="matrix-badge-mod1">MOD1</span> = Pagi</span>
-                <span class="legend-item"><span class="matrix-badge-mod2">MOD2</span> = Sore</span>
-                <span class="legend-item"><span class="matrix-badge-mod">MOD</span> = Malam</span>
+                <span class="legend-item"><span class="matrix-badge-mod1">MOD1</span> = Pagi (09:00)</span>
+                <span class="legend-item"><span class="matrix-badge-mod2">MOD2</span> = Sore (16:00)</span>
+                <span class="legend-item"><span class="matrix-badge-mod">MOD</span> = Sore (18:00 / Weekday)</span>
                 <span class="legend-item text-muted">💡 Klik kotak tanggal untuk ganti shift</span>
               </div>
               <button class="btn btn-primary" id="btn-save-editor-schedule">
@@ -335,6 +335,7 @@
               <tbody id="editor-tbody">
                 <tr><td colspan="35" class="text-center py-4">Memuat data editor...</td></tr>
               </tbody>
+              <tfoot id="editor-tfoot"></tfoot>
             </table>
           </div>
         </div>
@@ -360,16 +361,17 @@
             <table class="matrix-table officers-table">
               <thead>
                 <tr>
-                  <th style="width: 60px;">No</th>
+                  <th style="width: 50px;">No</th>
                   <th>Nama Lengkap</th>
                   <th>Jabatan / Posisi</th>
+                  <th style="width: 130px;">Level</th>
                   <th>Nomor WhatsApp (Japri)</th>
-                  <th style="width: 120px;">Status</th>
-                  <th style="width: 150px;" class="text-center">Aksi</th>
+                  <th style="width: 110px;">Status</th>
+                  <th style="width: 140px;" class="text-center">Aksi</th>
                 </tr>
               </thead>
               <tbody id="officers-master-tbody">
-                <tr><td colspan="6" class="text-center py-4">Memuat data master karyawan...</td></tr>
+                <tr><td colspan="7" class="text-center py-4">Memuat data master karyawan...</td></tr>
               </tbody>
             </table>
           </div>
@@ -398,6 +400,7 @@
               <tbody id="matrix-tbody">
                 <tr><td colspan="35" class="text-center py-4">Memuat kalender matrix...</td></tr>
               </tbody>
+              <tfoot id="matrix-tfoot"></tfoot>
             </table>
           </div>
         </div>
@@ -599,10 +602,10 @@
               <div class="cron-shift-box">
                 <div class="cron-box-title">
                   <span class="matrix-badge-mod">MOD</span>
-                  <strong>Shift Malam</strong>
+                  <strong>Shift Sore (18:00)</strong>
                 </div>
                 <input type="time" id="cfg-time-mod" class="form-input" value="18:00">
-                <span class="text-muted text-xs">Pengiriman malam</span>
+                <span class="text-muted text-xs">Pengiriman sore (weekday)</span>
               </div>
             </div>
           </div>
@@ -621,9 +624,9 @@
               <div class="template-tab-bar">
                 <label for="cfg-template-select">Pilih Shift Template:</label>
                 <select id="cfg-template-select" class="form-input-sm">
-                  <option value="MOD1">Template MOD 1 (Pagi - 09:00)</option>
-                  <option value="MOD2">Template MOD 2 (Sore - 16:00)</option>
-                  <option value="MOD">Template MOD (Malam - 18:00)</option>
+                  <option value="MOD1">Template MOD 1 (Pagi - Masuk 09:00)</option>
+                  <option value="MOD2">Template MOD 2 (Sore - Masuk 16:00)</option>
+                  <option value="MOD">Template MOD (Sore - Masuk 18:00 / Weekday)</option>
                   <option value="ALL">Template Ringkasan Semua Shift</option>
                 </select>
               </div>
@@ -674,6 +677,14 @@
         <div class="form-group">
           <label for="new-officer-role">Jabatan / Posisi:</label>
           <input type="text" id="new-officer-role" class="form-input" placeholder="Contoh: Chief Accountant">
+        </div>
+        <div class="form-group">
+          <label for="new-officer-level">Level / Hierarki Petugas:</label>
+          <select id="new-officer-level" class="form-input">
+            <option value="Manager">Manager</option>
+            <option value="Asst Manager">Asst Manager (Assistant Manager)</option>
+            <option value="Supervisor" selected>Supervisor</option>
+          </select>
         </div>
         <div class="form-group">
           <label for="new-officer-phone">Nomor WhatsApp Pribadi (Opsional untuk Japri):</label>
@@ -882,6 +893,6 @@
   <!-- Toast Notification -->
   <div id="toast" class="toast hidden"></div>
 
-  <script src="app.js?v=1.2.2"></script>
+  <script src="app.js?v=1.3.0"></script>
 </body>
 </html>

@@ -20,14 +20,19 @@ function buildMessage(template, dutyData, shiftKey = 'ALL') {
   }
 
   const officerText = formatOfficerList(officers);
+  const config = storage.getConfig();
+  const shiftTime = (config.schedules && config.schedules[shiftKey] && config.schedules[shiftKey].time) || '';
 
-  let msg = template
-    .replace(/{hari}/g, dutyData.hari || '')
-    .replace(/{tanggal}/g, String(dutyData.day || '').padStart(2, '0'))
-    .replace(/{bulan}/g, dutyData.bulan || '')
-    .replace(/{tahun}/g, dutyData.tahun || '')
-    .replace(/{daftar_petugas}/g, officerText)
-    .replace(/{shift}/g, shiftKey);
+  let msg = (template || '')
+    .replace(/{hari}/gi, dutyData.hari || '')
+    .replace(/{tanggal}/gi, String(dutyData.day || '').padStart(2, '0'))
+    .replace(/{bulan}/gi, dutyData.bulan || '')
+    .replace(/{tahun}/gi, dutyData.tahun || '')
+    .replace(/{daftar_petugas}/gi, officerText)
+    .replace(/{petugas}/gi, officerText)
+    .replace(/{shift}/gi, shiftKey)
+    .replace(/{jam}/gi, shiftTime)
+    .replace(/{waktu}/gi, shiftTime);
 
   return msg;
 }

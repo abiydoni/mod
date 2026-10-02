@@ -41,25 +41,25 @@ const BULAN_INDONESIA = {
 
 // Built-in initial sample data from user's October 2026 sheet
 const SEED_OFFICERS = [
-  { name: 'Doni Abiyantoro', role: 'Chief Accountant', shifts: { 17: 'MOD1', 24: 'MOD1', 31: 'MOD2' } },
-  { name: 'Bekti Utami', role: 'Asst. Sales Marketing Manager', shifts: { 3: 'MOD1', 10: 'MOD1' } },
-  { name: 'Fajar F', role: 'Chief Engineer', shifts: { 3: 'MOD2', 11: 'MOD1', 18: 'MOD2' } },
-  { name: 'Ardhiny', role: 'HR Manager', shifts: { 4: 'MOD2', 11: 'MOD2' } },
-  { name: 'Rama', role: 'FO Manager', shifts: { 4: 'MOD1', 25: 'MOD1' } },
-  { name: 'Sugiartono', role: 'Bookkeeper', shifts: { 17: 'MOD2', 30: 'MOD' } },
-  { name: 'Iqbal', role: 'Junior Sous Chef', shifts: { 1: 'MOD', 24: 'MOD2' } },
-  { name: 'Agus Budiono Prastyo', role: 'IT Asst Manager', shifts: { 10: 'MOD2', 29: 'MOD' } },
-  { name: 'Lukman Prayogo', role: 'R&B Asst. Manager', shifts: { 2: 'MOD', 25: 'MOD2' } },
-  { name: 'Ota Setiawan', role: 'Asst EHK', shifts: { 18: 'MOD1', 31: 'MOD1' } },
-  { name: 'Dian Nurkhasanah', role: 'Sales Executive', shifts: { 5: 'MOD', 16: 'MOD' } },
-  { name: 'Ayu', role: 'AR/IA', shifts: { 8: 'MOD', 19: 'MOD' } },
-  { name: 'Fajar Kuncoro', role: 'Purchasing', shifts: { 7: 'MOD', 20: 'MOD' } },
-  { name: 'Hendri D Prayogo', role: 'AP/GC', shifts: { 6: 'MOD', 21: 'MOD' } },
-  { name: 'Septi Fira', role: 'Sales Executive', shifts: { 12: 'MOD', 22: 'MOD' } },
-  { name: 'Faizin', role: 'ENG Supervisor', shifts: { 9: 'MOD', 23: 'MOD' } },
-  { name: 'Guntur', role: 'HK Shift Leader', shifts: { 13: 'MOD', 26: 'MOD' } },
-  { name: 'Hendri', role: 'FBP', shifts: { 14: 'MOD', 27: 'MOD' } },
-  { name: 'Syahrul', role: 'FBP', shifts: { 15: 'MOD', 28: 'MOD' } }
+  { name: 'Doni Abiyantoro', role: 'Chief Accountant', level: 'Manager', shifts: { 17: 'MOD1', 24: 'MOD1', 31: 'MOD2' } },
+  { name: 'Bekti Utami', role: 'Asst. Sales Marketing Manager', level: 'Asst Manager', shifts: { 3: 'MOD1', 10: 'MOD1' } },
+  { name: 'Fajar F', role: 'Chief Engineer', level: 'Manager', shifts: { 3: 'MOD2', 11: 'MOD1', 18: 'MOD2' } },
+  { name: 'Ardhiny', role: 'HR Manager', level: 'Manager', shifts: { 4: 'MOD2', 11: 'MOD2' } },
+  { name: 'Rama', role: 'FO Manager', level: 'Manager', shifts: { 4: 'MOD1', 25: 'MOD1' } },
+  { name: 'Sugiartono', role: 'Bookkeeper', level: 'Supervisor', shifts: { 17: 'MOD2', 30: 'MOD' } },
+  { name: 'Iqbal', role: 'Junior Sous Chef', level: 'Supervisor', shifts: { 1: 'MOD', 24: 'MOD2' } },
+  { name: 'Agus Budiono Prastyo', role: 'IT Asst Manager', level: 'Asst Manager', shifts: { 10: 'MOD2', 29: 'MOD' } },
+  { name: 'Lukman Prayogo', role: 'R&B Asst. Manager', level: 'Asst Manager', shifts: { 2: 'MOD', 25: 'MOD2' } },
+  { name: 'Ota Setiawan', role: 'Asst EHK', level: 'Asst Manager', shifts: { 18: 'MOD1', 31: 'MOD1' } },
+  { name: 'Dian Nurkhasanah', role: 'Sales Executive', level: 'Supervisor', shifts: { 5: 'MOD', 16: 'MOD' } },
+  { name: 'Ayu', role: 'AR/IA', level: 'Supervisor', shifts: { 8: 'MOD', 19: 'MOD' } },
+  { name: 'Fajar Kuncoro', role: 'Purchasing', level: 'Supervisor', shifts: { 7: 'MOD', 20: 'MOD' } },
+  { name: 'Hendri D Prayogo', role: 'AP/GC', level: 'Supervisor', shifts: { 6: 'MOD', 21: 'MOD' } },
+  { name: 'Septi Fira', role: 'Sales Executive', level: 'Supervisor', shifts: { 12: 'MOD', 22: 'MOD' } },
+  { name: 'Faizin', role: 'ENG Supervisor', level: 'Supervisor', shifts: { 9: 'MOD', 23: 'MOD' } },
+  { name: 'Guntur', role: 'HK Shift Leader', level: 'Supervisor', shifts: { 13: 'MOD', 26: 'MOD' } },
+  { name: 'Hendri', role: 'FBP', level: 'Supervisor', shifts: { 14: 'MOD', 27: 'MOD' } },
+  { name: 'Syahrul', role: 'FBP', level: 'Supervisor', shifts: { 15: 'MOD', 28: 'MOD' } }
 ];
 
 function extractSpreadsheetId(input) {
@@ -195,17 +195,26 @@ function parseSpreadsheetRows(rows, sheetName = 'October 2026') {
         }
       });
 
+      const masterMap = {};
+      const allMasters = storage.getAllOfficers();
+      allMasters.forEach(m => {
+        masterMap[m.name.toLowerCase().trim()] = m.level || 'Supervisor';
+      });
+
       officers.push({
         name,
         role,
+        level: masterMap[name.toLowerCase()] || 'Supervisor',
         shifts
       });
     }
   }
 
+  const finalOfficers = officers.length > 0 ? storage.sortOfficersByLevel(officers) : SEED_OFFICERS;
+
   return {
     sheetName,
-    officers: officers.length > 0 ? officers : SEED_OFFICERS,
+    officers: finalOfficers,
     lastUpdated: new Date().toISOString()
   };
 }
@@ -393,15 +402,19 @@ function generateSmartSchedule(officersList, monthName = 'October', year = 2026)
   const monthIdx = MONTH_NAMES.indexOf(monthName) !== -1 ? MONTH_NAMES.indexOf(monthName) : 9;
   const daysInMonth = new Date(year, monthIdx + 1, 0).getDate();
 
-  const officers = (officersList && officersList.length > 0) ? officersList.map(o => ({
+  const baseOfficers = (officersList && officersList.length > 0) ? officersList.map(o => ({
     name: o.name,
     role: o.role || 'Officer',
+    level: o.level || 'Supervisor',
     shifts: {}
   })) : SEED_OFFICERS.map(o => ({
     name: o.name,
     role: o.role,
+    level: o.level || 'Supervisor',
     shifts: {}
   }));
+
+  const officers = storage.sortOfficersByLevel(baseOfficers);
 
   let officerIndex = 0;
 

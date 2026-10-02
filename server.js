@@ -269,7 +269,8 @@ app.post('/api/config', (req, res) => {
     const ok = storage.saveConfig(newConfig);
     if (ok) {
       scheduler.initScheduler(); // Re-init scheduler with new timing
-      res.json({ success: true, message: 'Konfigurasi berhasil disimpan dan Scheduler diperbarui.' });
+      const savedConfig = storage.getConfig();
+      res.json({ success: true, message: 'Konfigurasi berhasil disimpan ke Database dan Scheduler diperbarui.', config: savedConfig });
     } else {
       res.status(500).json({ success: false, error: 'Gagal menyimpan konfigurasi.' });
     }

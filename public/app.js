@@ -10,6 +10,7 @@ const app = {
   editorMonth: 'October',
   editorYear: 2026,
   currentUser: null,
+  currentTemplateKey: 'MOD1',
 
   async init() {
     this.startClock();
@@ -299,7 +300,7 @@ const app = {
     const tmplSelect = document.getElementById('cfg-template-select');
     if (tmplSelect) {
       tmplSelect.addEventListener('change', (e) => {
-        this.populateTemplateText(e.target.value);
+        this.switchTemplate(e.target.value);
       });
     }
 
@@ -307,7 +308,7 @@ const app = {
     const tmplText = document.getElementById('cfg-template-text');
     if (tmplText) {
       tmplText.addEventListener('input', (e) => {
-        const selected = document.getElementById('cfg-template-select').value;
+        const selected = document.getElementById('cfg-template-select')?.value || this.currentTemplateKey || 'MOD1';
         if (!this.config) this.config = {};
         if (!this.config.messageTemplates) this.config.messageTemplates = {};
         this.config.messageTemplates[selected] = e.target.value;
@@ -555,7 +556,24 @@ const app = {
     }
   },
 
+  switchTemplate(newShiftKey) {
+    const textEl = document.getElementById('cfg-template-text');
+    if (this.currentTemplateKey && textEl) {
+      if (!this.config) this.config = {};
+      if (!this.config.messageTemplates) this.config.messageTemplates = {};
+      this.config.messageTemplates[this.currentTemplateKey] = textEl.value;
+    }
+    this.currentTemplateKey = newShiftKey;
+    this.populateTemplateText(newShiftKey);
+    this.updateWhatsAppPreview();
+  },
+
   populateTemplateText(shiftKey) {
+    this.currentTemplateKey = shiftKey;
+    const selectEl = document.getElementById('cfg-template-select');
+    if (selectEl && selectEl.value !== shiftKey) {
+      selectEl.value = shiftKey;
+    }
     const templates = (this.config && this.config.messageTemplates) || {};
     const textEl = document.getElementById('cfg-template-text');
     if (textEl) {
@@ -639,7 +657,13 @@ const app = {
         previewText.innerText = data.message || 'Pesan kosong';
       }
       
-      const timeMap = { 'MOD1': '09:00', 'MOD2': '16:00', 'MOD': '18:00', 'ALL': '08:00' };
+      const schedules = (this.config && this.config.schedules) || {};
+      const timeMap = {
+        'MOD1': schedules.MOD1?.time || '09:00',
+        'MOD2': schedules.MOD2?.time || '16:00',
+        'MOD': schedules.MOD?.time || '18:00',
+        'ALL': '08:00'
+      };
       const previewTime = document.getElementById('wa-preview-time');
       if (previewTime) {
         previewTime.innerText = timeMap[this.selectedShift] || '09:00';
@@ -702,7 +726,8 @@ const app = {
   },
 
   renderMatrixTable(data) {
-    const officers = data.officers || [];
+    const rawOfficers = data.officers || [];
+    const officers = this.sortOfficersByLevel(rawOfficers);
     const daysTr = document.getElementById('matrix-head-days');
     const datesTr = document.getElementById('matrix-head-dates');
     const tbody = document.getElementById('matrix-tbody');
@@ -722,10 +747,16 @@ const app = {
     daysTr.innerHTML = daysHtml;
     datesTr.innerHTML = datesHtml;
 
+    const tfoot = document.getElementById('matrix-tfoot');
+
     if (officers.length === 0) {
       tbody.innerHTML = `<tr><td colspan="35" class="text-center py-4">Tidak ada data jadwal tersedia.</td></tr>`;
+      if (tfoot) tfoot.innerHTML = '';
       return;
     }
+
+    const dailyCounts = Array(32).fill(0);
+    let grandTotal = 0;
 
     tbody.innerHTML = officers.map(o => {
       let shiftCells = '';
@@ -734,6 +765,8 @@ const app = {
         const s = o.shifts ? o.shifts[d] : null;
         if (s) {
           totalCount++;
+          dailyCounts[d]++;
+          grandTotal++;
           let badgeClass = 'matrix-badge-mod';
           if (s === 'MOD1') badgeClass = 'matrix-badge-mod1';
           if (s === 'MOD2') badgeClass = 'matrix-badge-mod2';
@@ -752,6 +785,24 @@ const app = {
         </tr>
       `;
     }).join('');
+
+    if (tfoot) {
+      let summaryDailyCells = '';
+      for (let d = 1; d <= 31; d++) {
+        const c = dailyCounts[d];
+        const badgeClass = c > 1 ? 'matrix-count-badge multi-duty' : (c > 0 ? 'matrix-count-badge has-duty' : 'matrix-count-badge');
+        summaryDailyCells += `<td><span class="${badgeClass}" title="Total ${c} petugas pada tanggal ${d}">${c}</span></td>`;
+      }
+
+      tfoot.innerHTML = `
+        <tr class="matrix-summary-row">
+          <td><strong>JUMLAH MOD</strong></td>
+          <td><span class="text-muted text-xs">Total Harian</span></td>
+          ${summaryDailyCells}
+          <td><strong>${grandTotal}</strong></td>
+        </tr>
+      `;
+    }
   },
 
   filterMatrixTable(query) {
@@ -765,9 +816,9 @@ const app = {
   openSendModal(shiftKey) {
     this.pendingModalShift = shiftKey;
     const titles = {
-      'MOD1': 'Kirim Notifikasi Shift Pagi (MOD 1)',
-      'MOD2': 'Kirim Notifikasi Shift Sore (MOD 2)',
-      'MOD': 'Kirim Notifikasi Shift Malam (MOD)',
+      'MOD1': 'Kirim Notifikasi Shift Pagi (MOD 1 - Masuk 09:00)',
+      'MOD2': 'Kirim Notifikasi Shift Sore (MOD 2 - Masuk 16:00)',
+      'MOD': 'Kirim Notifikasi Shift Sore (MOD - Masuk 18:00 / Weekday)',
       'ALL': 'Kirim Ringkasan Semua Shift Hari Ini'
     };
     const modalTitle = document.getElementById('modal-send-title');
@@ -918,13 +969,12 @@ const app = {
   },
 
   async saveConfig() {
-    const activeTemplate = document.getElementById('cfg-template-select')?.value || 'MOD1';
+    const activeTemplate = document.getElementById('cfg-template-select')?.value || this.currentTemplateKey || 'MOD1';
     const templateText = document.getElementById('cfg-template-text')?.value || '';
 
-    const templates = {
-      ...(this.config && this.config.messageTemplates),
-      [activeTemplate]: templateText
-    };
+    if (!this.config) this.config = {};
+    if (!this.config.messageTemplates) this.config.messageTemplates = {};
+    this.config.messageTemplates[activeTemplate] = templateText;
 
     const timeMod1 = document.getElementById('cfg-time-mod1')?.value || '09:00';
     const timeMod2 = document.getElementById('cfg-time-mod2')?.value || '16:00';
@@ -950,23 +1000,23 @@ const app = {
         MOD1: {
           time: timeMod1,
           cron: this.timeToCron(timeMod1),
-          label: 'Pagi (MOD 1)',
+          label: 'Pagi (MOD 1 - 09:00)',
           enabled: true
         },
         MOD2: {
           time: timeMod2,
           cron: this.timeToCron(timeMod2),
-          label: 'Sore (MOD 2)',
+          label: 'Sore (MOD 2 - 16:00)',
           enabled: true
         },
         MOD: {
           time: timeMod,
           cron: this.timeToCron(timeMod),
-          label: 'Malam / Umum (MOD)',
+          label: 'Sore (MOD - 18:00)',
           enabled: true
         }
       },
-      messageTemplates: templates
+      messageTemplates: { ...this.config.messageTemplates }
     };
 
     try {
@@ -977,10 +1027,13 @@ const app = {
       });
       const data = await res.json();
       if (data.success) {
-        this.showToast('✅ Pengaturan berhasil disimpan & Jadwal Cron diperbarui!', 'success');
+        this.config = data.config || newConfig;
+        this.showToast('✅ Pengaturan berhasil disimpan ke Database & Scheduler diperbarui!', 'success');
+        this.updateStatusPills();
         await this.loadConfig();
         await this.loadDutyData();
         await this.loadMatrixData();
+        this.updateWhatsAppPreview();
       } else {
         this.showToast(`❌ Gagal: ${data.error}`, 'error');
       }
@@ -1075,6 +1128,39 @@ const app = {
     }
   },
 
+  normalizeLevel(level) {
+    if (!level) return 'Supervisor';
+    const str = String(level).trim().toLowerCase();
+    if (str.includes('asst') || str.includes('ass ') || str.startsWith('ass') || str.includes('assistant')) {
+      return 'Asst Manager';
+    }
+    if (str.includes('manager') || str.includes('chief') || str.includes('mgr')) {
+      return 'Manager';
+    }
+    if (str.includes('supervisor') || str.includes('spv') || str.includes('leader')) {
+      return 'Supervisor';
+    }
+    return 'Supervisor';
+  },
+
+  getLevelWeight(level) {
+    const norm = this.normalizeLevel(level);
+    if (norm === 'Manager') return 1;
+    if (norm === 'Asst Manager') return 2;
+    if (norm === 'Supervisor') return 3;
+    return 4;
+  },
+
+  sortOfficersByLevel(officers) {
+    if (!Array.isArray(officers)) return [];
+    return [...officers].sort((a, b) => {
+      const wa = this.getLevelWeight(a.level);
+      const wb = this.getLevelWeight(b.level);
+      if (wa !== wb) return wa - wb;
+      return (a.name || '').localeCompare(b.name || '');
+    });
+  },
+
   async loadMasterOfficers() {
     try {
       const res = await fetch('/api/officers');
@@ -1090,12 +1176,14 @@ const app = {
     const tbody = document.getElementById('officers-master-tbody');
     if (!tbody) return;
 
-    if (!list || list.length === 0) {
-      tbody.innerHTML = `<tr><td colspan="6" class="text-center py-4">Belum ada data master karyawan. Klik "➕ Tambah Karyawan" untuk memulai.</td></tr>`;
+    const sortedList = this.sortOfficersByLevel(list || []);
+
+    if (!sortedList || sortedList.length === 0) {
+      tbody.innerHTML = `<tr><td colspan="7" class="text-center py-4">Belum ada data master karyawan. Klik "➕ Tambah Karyawan" untuk memulai.</td></tr>`;
       return;
     }
 
-    tbody.innerHTML = list.map((o, idx) => {
+    tbody.innerHTML = sortedList.map((o, idx) => {
       const isActive = o.isActive === 1 || o.isActive === true;
       const statusBadge = isActive
         ? '<span class="status-badge-success">Aktif</span>'
@@ -1104,11 +1192,17 @@ const app = {
       const toggleBtnText = isActive ? 'Nonaktifkan' : 'Aktifkan';
       const phoneDisplay = o.phone ? `<code>${o.phone}</code>` : '<span class="text-muted">-</span>';
 
+      const normLevel = this.normalizeLevel(o.level);
+      let levelBadge = '<span class="badge badge-supervisor">Supervisor</span>';
+      if (normLevel === 'Manager') levelBadge = '<span class="badge badge-manager">Manager</span>';
+      else if (normLevel === 'Asst Manager') levelBadge = '<span class="badge badge-asst-manager">Asst Manager</span>';
+
       return `
-        <tr data-name="${(o.name || '').toLowerCase()}" data-role="${(o.role || '').toLowerCase()}">
+        <tr data-name="${(o.name || '').toLowerCase()}" data-role="${(o.role || '').toLowerCase()}" data-level="${(normLevel || '').toLowerCase()}">
           <td class="text-center">${idx + 1}</td>
           <td><strong>${o.name}</strong></td>
           <td>${o.role}</td>
+          <td>${levelBadge}</td>
           <td>${phoneDisplay}</td>
           <td>${statusBadge}</td>
           <td class="text-center" style="white-space:nowrap;">
@@ -1126,7 +1220,8 @@ const app = {
     document.querySelectorAll('#officers-master-tbody tr').forEach(tr => {
       const name = tr.getAttribute('data-name') || '';
       const role = tr.getAttribute('data-role') || '';
-      tr.style.display = (name.includes(q) || role.includes(q)) ? '' : 'none';
+      const level = tr.getAttribute('data-level') || '';
+      tr.style.display = (name.includes(q) || role.includes(q) || level.includes(q)) ? '' : 'none';
     });
   },
 
@@ -1136,6 +1231,8 @@ const app = {
     document.getElementById('edit-officer-id').value = '';
     document.getElementById('new-officer-name').value = '';
     document.getElementById('new-officer-role').value = '';
+    const levelEl = document.getElementById('new-officer-level');
+    if (levelEl) levelEl.value = 'Supervisor';
     document.getElementById('new-officer-phone').value = '';
     document.getElementById('new-officer-active').checked = true;
     document.getElementById('modal-officer')?.classList.remove('hidden');
@@ -1143,7 +1240,8 @@ const app = {
   },
 
   openEditOfficerModal(id) {
-    const officer = this.masterOfficers.find(o => o.id === id);
+    const numId = Number(id);
+    const officer = this.masterOfficers.find(o => o.id === numId || o.id === id);
     if (!officer) return;
 
     const titleEl = document.getElementById('modal-officer-title');
@@ -1151,6 +1249,10 @@ const app = {
     document.getElementById('edit-officer-id').value = officer.id;
     document.getElementById('new-officer-name').value = officer.name;
     document.getElementById('new-officer-role').value = officer.role;
+    const levelEl = document.getElementById('new-officer-level');
+    if (levelEl) {
+      levelEl.value = this.normalizeLevel(officer.level);
+    }
     document.getElementById('new-officer-phone').value = officer.phone || '';
     document.getElementById('new-officer-active').checked = (officer.isActive === 1 || officer.isActive === true);
     document.getElementById('modal-officer')?.classList.remove('hidden');
@@ -1165,6 +1267,7 @@ const app = {
     const id = document.getElementById('edit-officer-id')?.value;
     const name = document.getElementById('new-officer-name')?.value.trim();
     const role = document.getElementById('new-officer-role')?.value.trim();
+    const level = document.getElementById('new-officer-level')?.value || 'Supervisor';
     const phone = document.getElementById('new-officer-phone')?.value.trim();
     const isActive = document.getElementById('new-officer-active')?.checked ? 1 : 0;
 
@@ -1173,7 +1276,7 @@ const app = {
       return;
     }
 
-    const payload = { name, role, phone, isActive };
+    const payload = { name, role, level, phone, isActive };
     const url = id ? `/api/officers/${id}` : '/api/officers';
     const method = id ? 'PUT' : 'POST';
 
@@ -1188,6 +1291,9 @@ const app = {
         this.showToast(data.message || 'Data karyawan berhasil disimpan!', 'success');
         this.closeOfficerModal();
         await this.loadMasterOfficers();
+        if (document.getElementById('tab-editor')?.classList.contains('active')) {
+          await this.loadEditorData();
+        }
       } else {
         this.showToast(`❌ Gagal: ${data.error}`, 'error');
       }
@@ -1207,6 +1313,7 @@ const app = {
         body: JSON.stringify({
           name: officer.name,
           role: officer.role,
+          level: officer.level || 'Supervisor',
           phone: officer.phone,
           isActive: newStatus
         })
@@ -1249,14 +1356,16 @@ const app = {
       const data = await res.json();
       
       if (data.officers && data.officers.length > 0) {
-        this.editorOfficers = JSON.parse(JSON.stringify(data.officers));
+        this.editorOfficers = this.sortOfficersByLevel(JSON.parse(JSON.stringify(data.officers)));
       } else {
         const activeMasters = this.masterOfficers.filter(o => o.isActive === 1 || o.isActive === true);
-        this.editorOfficers = activeMasters.map(o => ({
+        const mapped = activeMasters.map(o => ({
           name: o.name,
           role: o.role,
+          level: o.level || 'Supervisor',
           shifts: {}
         }));
+        this.editorOfficers = this.sortOfficersByLevel(mapped);
       }
 
       this.renderEditorTable();
@@ -1266,6 +1375,7 @@ const app = {
   },
 
   renderEditorTable() {
+    this.editorOfficers = this.sortOfficersByLevel(this.editorOfficers);
     const daysTr = document.getElementById('editor-head-days');
     const datesTr = document.getElementById('editor-head-dates');
     const tbody = document.getElementById('editor-tbody');
@@ -1297,10 +1407,16 @@ const app = {
     daysTr.innerHTML = daysHtml;
     datesTr.innerHTML = datesHtml;
 
+    const tfoot = document.getElementById('editor-tfoot');
+
     if (this.editorOfficers.length === 0) {
       tbody.innerHTML = `<tr><td colspan="35" class="text-center py-4">Belum ada petugas di jadwal ini. Klik "➕ Tambah Petugas" atau "⚡ Generate Otomatis".</td></tr>`;
+      if (tfoot) tfoot.innerHTML = '';
       return;
     }
+
+    const dailyCounts = Array(32).fill(0);
+    let grandTotal = 0;
 
     tbody.innerHTML = this.editorOfficers.map((o, oIdx) => {
       let shiftCells = '';
@@ -1312,12 +1428,18 @@ const app = {
           let badge = '';
           if (s === 'MOD1') {
             totalCount++;
+            dailyCounts[d]++;
+            grandTotal++;
             badge = '<span class="matrix-badge-mod1">MOD1</span>';
           } else if (s === 'MOD2') {
             totalCount++;
+            dailyCounts[d]++;
+            grandTotal++;
             badge = '<span class="matrix-badge-mod2">MOD2</span>';
           } else if (s === 'MOD') {
             totalCount++;
+            dailyCounts[d]++;
+            grandTotal++;
             badge = '<span class="matrix-badge-mod">MOD</span>';
           }
 
@@ -1343,6 +1465,29 @@ const app = {
         </tr>
       `;
     }).join('');
+
+    if (tfoot) {
+      let summaryDailyCells = '';
+      for (let d = 1; d <= 31; d++) {
+        if (d <= daysInMonth) {
+          const c = dailyCounts[d];
+          const badgeClass = c > 1 ? 'matrix-count-badge multi-duty' : (c > 0 ? 'matrix-count-badge has-duty' : 'matrix-count-badge');
+          summaryDailyCells += `<td><span class="${badgeClass}" title="Total ${c} petugas pada tanggal ${d}">${c}</span></td>`;
+        } else {
+          summaryDailyCells += `<td style="opacity:0.2">-</td>`;
+        }
+      }
+
+      tfoot.innerHTML = `
+        <tr class="matrix-summary-row">
+          <td></td>
+          <td><strong>JUMLAH MOD</strong></td>
+          <td><span class="text-muted text-xs">Total Harian</span></td>
+          ${summaryDailyCells}
+          <td class="text-center"><strong>${grandTotal}</strong></td>
+        </tr>
+      `;
+    }
   },
 
   cycleShift(officerIdx, day) {

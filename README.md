@@ -16,9 +16,9 @@ Aplikasi Web & Otomasi Pengiriman Notifikasi Jadwal **Manager On Duty (MOD)** la
    - Membaca live data sheet per bulan (seperti `October 2026`).
    - Otomatis memetakan nama petugas, jabatan, dan jadwal shift (`MOD1`, `MOD2`, `MOD`).
 3. **Jadwal Pengiriman Otomatis (Cron Engine WIB)**:
-   - **MOD 1 (Shift Pagi)** ➔ Otomatis dikirim pukul **09:00 WIB**
-   - **MOD 2 (Shift Sore)** ➔ Otomatis dikirim pukul **16:00 WIB**
-   - **MOD (Shift Malam / Umum)** ➔ Otomatis dikirim pukul **18:00 WIB**
+   - **MOD 1 (Shift Pagi)** ➔ Otomatis dikirim pukul **09:00 WIB** (Masuk jam 09:00)
+   - **MOD 2 (Shift Sore)** ➔ Otomatis dikirim pukul **16:00 WIB** (Masuk jam 16:00)
+   - **MOD (Shift Sore / Weekday)** ➔ Otomatis dikirim pukul **18:00 WIB** (Masuk jam 18:00)
 3. **Integrasi WhatsApp Gateway**:
    - Terintegrasi langsung dengan Appsbee WA Gateway API.
    - Mendukung format markdown WhatsApp (*bold*, _italic_, list nomor).
@@ -53,6 +53,6 @@ Aplikasi Web & Otomasi Pengiriman Notifikasi Jadwal **Manager On Duty (MOD)** la
 
 ## ⚙️ Pengaturan di Menu Settings
 - **Link Google Sheets**: Masukkan URL / ID spreadsheet Anda (pastikan diset ke *"Anyone with the link can view"*).
-- **Target WA Group**: Masukkan nomor ID WhatsApp Group (contoh: `6285729705810-1505093181@g.us`).
-- **Jam Pengiriman**: Sesuaikan jam kirim pagi (09:00), sore (16:00), atau malam (18:00).
+- **Target WA Group**: Masukkan nomor ID WhatsApp Group (contoh: `120363398680818900@g.us`).
+- **Jam Pengiriman**: Sesuaikan jam kirim pagi (09:00), sore 1 (16:00), atau sore 2 / weekday (18:00).
 - **Template Pesan**: Sesuaikan kata-kata sambutan atau format teks sesuai kebutuhan operasional.
