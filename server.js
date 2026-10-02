@@ -13,6 +13,11 @@ app.use(cors());
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
 
+// Public Read-Only Mobile Schedule Routes (No Login Required)
+app.get(['/jadwal', '/mobile', '/public'], (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'jadwal.html'));
+});
+
 // 1. System Status
 app.get('/api/status', (req, res) => {
   const schedulerStatus = scheduler.getSchedulerStatus();
@@ -133,6 +138,111 @@ app.post('/api/schedule/generate', async (req, res) => {
       message: `Jadwal otomatis untuk ${generated.sheetName} berhasil dibuat (Draft)!`,
       schedule: generated
     });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// 4d. Apply Paperless Change Schedule Request (4-Tier E-Signature Approved & Auto-Sent to WA Group)
+app.post('/api/schedule/change-request', async (req, res) => {
+  try {
+    const {
+      sheetName = 'October 2026',
+      applicant,
+      applicantDate,
+      applicantShift = 'MOD',
+      target,
+      targetDate,
+      targetShift = 'MOD',
+      reason = 'Tukar jadwal MOD',
+      signatures = {},
+      waMessage = null
+    } = req.body;
+
+    const result = await sheetService.applyScheduleChangeRequest({
+      sheetName,
+      applicant,
+      applicantDate,
+      applicantShift,
+      target,
+      targetDate,
+      targetShift,
+      reason,
+      signatures,
+      submittedBy: req.headers['x-forwarded-for'] || req.socket.remoteAddress || 'Web/Mobile Client'
+    });
+
+    // Otomatis kirim pemberitahuan ke WhatsApp Group
+    let waSendResult = null;
+    try {
+      const shiftLabels = {
+        'MOD1': 'MOD 1 (Pagi 09:00 - 17:00 WIB)',
+        'MOD2': 'MOD 2 (Sore 16:00 - 00:00 WIB)',
+        'MOD': 'MOD (Sore 18:00 - 02:00 WIB)'
+      };
+
+      const formatIndoDate = (dStr) => {
+        if (!dStr) return '-';
+        if (typeof dStr === 'string' && dStr.includes('-')) {
+          const parts = dStr.split('-');
+          if (parts.length === 3) {
+            const dObj = new Date(parseInt(parts[0], 10), parseInt(parts[1], 10) - 1, parseInt(parts[2], 10));
+            const dayNames = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
+            const monthNames = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
+            return `${dayNames[dObj.getDay()]}, ${dObj.getDate()} ${monthNames[dObj.getMonth()]} ${dObj.getFullYear()}`;
+          }
+        }
+        return dStr;
+      };
+
+      const protocol = req.headers['x-forwarded-proto'] || req.protocol || 'http';
+      const host = req.get('host') || 'localhost:3000';
+      const baseUrl = `${protocol}://${host}`;
+
+      const finalWaMsg = waMessage || (
+        `🏨 *FORM PERUBAHAN JADWAL MOD (CHANGE SCHEDULE)*\n` +
+        `━━━━━━━━━━━━━━━━━━━━━━━━━━\n` +
+        `📌 *DETAIL PERUBAHAN JADWAL:*\n` +
+        `👤 *1. Petugas Pemohon (Pihak 1):* ${applicant}\n` +
+        `📅 *Jadwal Asal:* ${formatIndoDate(applicantDate)}\n` +
+        `⏰ *Shift Asal:* ${shiftLabels[applicantShift] || applicantShift}\n\n` +
+        `🔄 *2. Petugas Pengganti (Pihak 2):* ${target}\n` +
+        `📅 *Jadwal Pengganti:* ${formatIndoDate(targetDate || applicantDate)}\n` +
+        `⏰ *Shift Pengganti:* ${shiftLabels[targetShift] || targetShift}\n\n` +
+        `📝 *Alasan Perubahan:* ${reason}\n` +
+        `━━━━━━━━━━━━━━━━━━━━━━━━━━\n` +
+        `📋 *STATUS PERSETUJUAN DIGITAL (PAPERLESS):*\n` +
+        `✅ *Pihak 1 (Pemohon):* Terverifikasi Digital E-Signature\n` +
+        `✅ *Pihak 2 (Pengganti):* Terverifikasi Digital E-Signature\n` +
+        `✅ *HR Manager (HRM):* Terverifikasi Digital E-Signature\n` +
+        `✅ *General Manager (GM):* Approved & Disahkan Digital\n` +
+        `━━━━━━━━━━━━━━━━━━━━━━━━━━\n` +
+        `⚠️ _Sistem Otomatis: Perubahan jadwal ini telah diverifikasi 4 Pihak dan tersinkronisasi di Web & Google Drive._\n\n` +
+        `🔗 *Portal Jadwal:* ${baseUrl}/jadwal`
+      );
+
+      waSendResult = await waService.sendWhatsAppMessage({
+        customMessage: finalWaMsg,
+        manual: false
+      });
+      console.log(`[WA CHANGE SCHEDULE] Dispatched to group automatically:`, waSendResult.success ? 'SUCCESS' : 'FAILED/DISABLED');
+    } catch (waErr) {
+      console.warn('[WA CHANGE SCHEDULE] Error dispatching WA notification:', waErr.message);
+    }
+
+    result.waNotification = waSendResult;
+    res.json(result);
+  } catch (err) {
+    console.error('Error applying schedule change request:', err);
+    res.status(400).json({ success: false, error: err.message });
+  }
+});
+
+// 4e. Get Change Schedule History / Audit Logs
+app.get('/api/schedule/swaps', (req, res) => {
+  try {
+    const swaps = storage.getScheduleSwaps();
+    res.json(swaps);
   } catch (err) {
     res.status(500).json({ success: false, error: err.message });
   }
@@ -303,8 +413,13 @@ app.post('/api/auth/login', (req, res) => {
 
 app.post('/api/auth/change-password', (req, res) => {
   try {
-    const { userId, currentPassword, newPassword } = req.body;
-    const result = storage.changePassword(userId, currentPassword, newPassword);
+    const { userId, username, currentPassword, newPassword } = req.body;
+    let targetId = userId;
+    if (!targetId && username) {
+      const u = storage.findUserByUsername(username);
+      if (u) targetId = u.id;
+    }
+    const result = storage.changePassword(targetId, currentPassword, newPassword);
     if (result.success) {
       res.json(result);
     } else {

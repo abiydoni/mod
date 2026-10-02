@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>Kalender Matrix Jadwal MOD</title>
+  <meta name="description" content="Kalender Matrix dan Jadwal Petugas Manager on Duty (MOD) Dafam Hotel secara online dan real-time.">
+  <meta name="theme-color" content="#0b0f19">
+  <meta name="color-scheme" content="dark">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="icon" type="image/x-icon" href="favicon.ico">
+  <link rel="icon" type="image/svg+xml" href="favicon.svg">
+  <link rel="apple-touch-icon" href="logo.png">
+  <link rel="stylesheet" href="style.css?v=1.7.0">
+  <link rel="stylesheet" href="jadwal.css?v=1.7.0">
+</head>
+<body class="public-jadwal-body">
+  <!-- Ambient background glow -->
+  <div class="glow-sphere glow-1"></div>
+  <div class="glow-sphere glow-2"></div>
+
+  <!-- Main Content Container: Pure Matrix Card Only -->
+  <main class="public-container">
+    <section class="panel-card matrix-main-card">
+      <div class="matrix-header">
+        <div>
+          <h3>📅 Kalender Matrix Jadwal MOD</h3>
+          <p class="text-muted">Data jadwal shift lengkap satu bulan per tanggal dan petugas</p>
+        </div>
+        <div class="matrix-actions">
+          <div class="form-row-compact">
+            <select id="matrix-month" class="form-input-sm" onchange="jadwalApp.loadMatrix()">
+              <option value="January">Januari</option>
+              <option value="February">Februari</option>
+              <option value="March">Maret</option>
+              <option value="April">April</option>
+              <option value="May">Mei</option>
+              <option value="June">Juni</option>
+              <option value="July">Juli</option>
+              <option value="August">Agustus</option>
+              <option value="September">September</option>
+              <option value="October" selected>Oktober</option>
+              <option value="November">November</option>
+              <option value="December">Desember</option>
+            </select>
+            <select id="matrix-year" class="form-input-sm" onchange="jadwalApp.loadMatrix()">
+              <option value="2026" selected>2026</option>
+              <option value="2027">2027</option>
+              <option value="2028">2028</option>
+            </select>
+            <button class="btn btn-sm btn-outline" id="btn-matrix-load" onclick="jadwalApp.loadMatrix(true)">📂 Buka</button>
+          </div>
+          <input type="text" id="matrix-search" class="form-input-sm" placeholder="🔍 Cari nama petugas..." oninput="jadwalApp.filterMatrix(this.value)">
+          <button class="btn btn-outline btn-sm" id="btn-refresh-matrix" onclick="jadwalApp.loadMatrix(true)">🔄 Refresh</button>
+          <button class="btn btn-warning btn-sm" id="btn-change-schedule" onclick="jadwalApp.openChangeScheduleModal()" title="Form Pengajuan Tukar / Perubahan Jadwal">
+            <span>🔄</span> Change Schedule
+          </button>
+          <button class="btn btn-primary btn-sm" onclick="jadwalApp.shareWhatsAppLink()" title="Bagikan Link Jadwal">
+            <span>📲</span> Bagikan
+          </button>
+        </div>
+      </div>
+
+      <!-- Matrix Legend Bar -->
+      <div class="matrix-legend-bar">
+        <div class="legend-items">
+          <span class="legend-item"><span class="matrix-badge-mod1">MOD1</span> = Shift Pagi (09:00)</span>
+          <span class="legend-item"><span class="matrix-badge-mod2">MOD2</span> = Shift Sore (16:00)</span>
+          <span class="legend-item"><span class="matrix-badge-mod">MOD</span> = Shift Sore (18:00 / Weekday)</span>
+        </div>
+        <div class="source-tag">
+          <span id="txt-matrix-source">📊 Sumber: Google Sheets & Database</span>
+        </div>
+      </div>
+
+      <!-- Matrix Table Scrollable Wrapper -->
+      <div class="matrix-table-wrapper">
+        <table class="matrix-table" id="matrix-table">
+          <thead>
+            <tr id="matrix-head-days"></tr>
+            <tr id="matrix-head-dates" style="display:none;"></tr>
+          </thead>
+          <tbody id="matrix-tbody">
+            <tr><td colspan="36" class="text-center py-4">⏳ Memuat kalender matrix...</td></tr>
+          </tbody>
+          <tfoot id="matrix-tfoot"></tfoot>
+        </table>
+      </div>
+      <div class="matrix-mobile-hint">
+        💡 <em>Geser tabel ke samping untuk melihat seluruh tanggal 1 s/d 31.</em>
+      </div>
+    </section>
+  </main>
+
+  <!-- Modal Form Change Schedule (Paperless Digital E-Signature Approval) -->
+  <div id="modal-change-schedule" class="modal-backdrop hidden">
+    <div class="modal-box modal-box-large">
+      <div class="modal-header">
+        <div>
+          <h3>🔄 Form Perubahan Jadwal (Paperless)</h3>
+          <p class="text-muted text-xs">Persetujuan Digital 4 Pihak langsung terupdate ke Web & Google Drive</p>
+        </div>
+        <button class="modal-close" onclick="jadwalApp.closeChangeScheduleModal()">&times;</button>
+      </div>
+      <div class="modal-body">
+        <!-- Pihak 1 (Pemohon) -->
+        <div class="panel-card form-section-card mb-3">
+          <strong class="form-section-title text-primary">👤 Pihak 1 (Petugas Pemohon):</strong>
+          <div class="form-group mb-2">
+            <label for="cs-applicant">Pilih Nama Petugas Pemohon:</label>
+            <select id="cs-applicant" class="form-input" onchange="jadwalApp.onApplicantChange()">
+              <option value="">-- Pilih Nama Petugas --</option>
+            </select>
+          </div>
+
+          <div class="form-group mb-1">
+            <label for="cs-date-from">📅 Tanggal Shift Asal (Belum Terlaksana):</label>
+            <select id="cs-date-from" class="form-input" onchange="jadwalApp.onDateFromChange()">
+              <option value="">-- Pilih Nama Petugas Dahulu --</option>
+            </select>
+            <input type="hidden" id="cs-shift-from" value="MOD">
+          </div>
+        </div>
+
+        <!-- Pihak 2 (Pengganti) -->
+        <div class="panel-card form-section-card mb-3">
+          <strong class="form-section-title text-warning">🔄 Pihak 2 (Petugas Pengganti / Ditukar):</strong>
+          <div class="form-group mb-2">
+            <label for="cs-target">Pilih Nama Petugas Pengganti:</label>
+            <select id="cs-target" class="form-input" onchange="jadwalApp.onTargetChange()">
+              <option value="">-- Pilih Nama Petugas Pengganti --</option>
+            </select>
+          </div>
+
+          <div class="form-group mb-1">
+            <label for="cs-date-to">📅 Tanggal Shift Pengganti / Ditukar:</label>
+            <select id="cs-date-to" class="form-input" onchange="jadwalApp.onDateToChange()">
+              <option value="">-- Pilih Nama Pengganti Dahulu --</option>
+            </select>
+            <input type="hidden" id="cs-shift-to" value="MOD">
+          </div>
+        </div>
+
+        <div class="form-group mb-3">
+          <label for="cs-reason">📝 Alasan Perubahan / Pertukaran:</label>
+          <input type="text" id="cs-reason" class="form-input" placeholder="Contoh: Keperluan keluarga / keperluan mendesak" value="Tukar jadwal MOD">
+        </div>
+
+        <div class="sig-section sig-locked" id="cs-sig-section">
+          <div class="sig-section-header">
+            <div>
+              <strong style="color:#38bdf8;">✍️ Lembar Tanda Tangan Digital Resmi (Wajib 4 Pihak)</strong>
+              <div class="text-muted text-xs">Goreskan tanda tangan langsung di layar sentuh HP atau dengan mouse</div>
+            </div>
+            <span id="sig-counter-badge" class="sig-counter-badge">0 / 4 Tanda Tangan</span>
+          </div>
+
+          <div id="sig-lock-banner" class="sig-lock-banner">
+            🔒 Lengkapi data Pihak 1 & Pihak 2 terlebih dahulu untuk membuka lembar tanda tangan
+          </div>
+
+          <div class="sig-grid">
+            <!-- 1. Tanda Tangan Pihak 1 (Pemohon) -->
+            <div class="sig-card" id="card-sig-p1">
+              <div class="sig-card-header">
+                <strong>1. Pemohon: <span id="lbl-sig-p1-name" style="color:#60a5fa;">(Pilih Pemohon)</span></strong>
+                <button type="button" class="btn-sig-clear" onclick="jadwalApp.clearSig('p1')">🗑️ Clear</button>
+              </div>
+              <div class="sig-canvas-wrapper">
+                <canvas id="sig-canvas-p1" class="sig-canvas"></canvas>
+                <div class="sig-canvas-guide"></div>
+                <div class="sig-canvas-hint" id="hint-sig-p1">Tanda tangan di sini</div>
+              </div>
+              <div class="sig-card-footer">
+                <span id="status-sig-p1" class="sig-status waiting">❌ Belum Ditandatangani</span>
+                <span class="text-muted text-xs">Pihak 1</span>
+              </div>
+            </div>
+
+            <!-- 2. Tanda Tangan Pihak 2 (Pengganti) -->
+            <div class="sig-card" id="card-sig-p2">
+              <div class="sig-card-header">
+                <strong>2. Pengganti: <span id="lbl-sig-p2-name" style="color:#f59e0b;">(Pilih Pengganti)</span></strong>
+                <button type="button" class="btn-sig-clear" onclick="jadwalApp.clearSig('p2')">🗑️ Clear</button>
+              </div>
+              <div class="sig-canvas-wrapper">
+                <canvas id="sig-canvas-p2" class="sig-canvas"></canvas>
+                <div class="sig-canvas-guide"></div>
+                <div class="sig-canvas-hint" id="hint-sig-p2">Tanda tangan di sini</div>
+              </div>
+              <div class="sig-card-footer">
+                <span id="status-sig-p2" class="sig-status waiting">❌ Belum Ditandatangani</span>
+                <span class="text-muted text-xs">Pihak 2</span>
+              </div>
+            </div>
+
+            <!-- 3. Tanda Tangan HRM -->
+            <div class="sig-card" id="card-sig-hrm">
+              <div class="sig-card-header">
+                <strong>3. HR Manager (HRM)</strong>
+                <button type="button" class="btn-sig-clear" onclick="jadwalApp.clearSig('hrm')">🗑️ Clear</button>
+              </div>
+              <div class="sig-canvas-wrapper">
+                <canvas id="sig-canvas-hrm" class="sig-canvas"></canvas>
+                <div class="sig-canvas-guide"></div>
+                <div class="sig-canvas-hint" id="hint-sig-hrm">Tanda tangan di sini</div>
+              </div>
+              <div class="sig-card-footer">
+                <span id="status-sig-hrm" class="sig-status waiting">❌ Belum Ditandatangani</span>
+                <span class="text-muted text-xs">Verifikasi HR</span>
+              </div>
+            </div>
+
+            <!-- 4. Tanda Tangan GM -->
+            <div class="sig-card" id="card-sig-gm">
+              <div class="sig-card-header">
+                <strong>4. General Manager (GM)</strong>
+                <button type="button" class="btn-sig-clear" onclick="jadwalApp.clearSig('gm')">🗑️ Clear</button>
+              </div>
+              <div class="sig-canvas-wrapper">
+                <canvas id="sig-canvas-gm" class="sig-canvas"></canvas>
+                <div class="sig-canvas-guide"></div>
+                <div class="sig-canvas-hint" id="hint-sig-gm">Tanda tangan di sini</div>
+              </div>
+              <div class="sig-card-footer">
+                <span id="status-sig-gm" class="sig-status waiting">❌ Belum Ditandatangani</span>
+                <span class="text-muted text-xs">Persetujuan Akhir</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Tombol Aksi Form (Ikut Scroll Bersama Konten) -->
+        <div class="modal-footer-scrollable mt-2">
+          <button class="btn btn-outline" onclick="jadwalApp.closeChangeScheduleModal()">Batal</button>
+          <button class="btn btn-primary btn-submit-paperless" id="btn-submit-change-schedule" onclick="jadwalApp.submitPaperlessChangeSchedule()" disabled>
+            🔒 Lengkapi 4 Tanda Tangan
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Notification -->
+  <div id="toast" class="toast hidden"></div>
+
+  <script src="jadwal.js?v=1.7.0"></script>
+</body>
+</html>

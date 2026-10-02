@@ -1,0 +1,1241 @@
+/* ===================================================
+   PORTAL JADWAL PUBLIC & MOBILE RESPONSIVE STYLES
+   ULTRA-COMPACT TYPOGRAPHY & PURE DARK THEME
+   (MAX-DENSITY TABLE ROWS & SCROLLABLE FORM ACTIONS)
+   =================================================== */
+
+:root {
+  color-scheme: dark;
+}
+
+html, body {
+  color-scheme: dark !important;
+}
+
+/* Root & Global Layout */
+body.public-jadwal-body {
+  background-color: #080c14 !important;
+  color: #f8fafc !important;
+  min-height: 100vh;
+  min-height: -webkit-fill-available;
+  padding: 8px 6px;
+  overflow-x: hidden;
+  font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+  font-size: 11.5px;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.public-container {
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+.matrix-main-card {
+  margin-bottom: 0;
+  background: rgba(15, 23, 42, 0.92);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 10px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+  padding: 8px 10px;
+}
+
+/* Header & Action Bar */
+.matrix-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 6px;
+}
+
+.matrix-header h3 {
+  font-size: 0.84rem;
+  font-weight: 700;
+  color: #f8fafc;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  margin: 0;
+}
+
+.matrix-header p {
+  font-size: 0.64rem;
+  color: #94a3b8;
+  margin: 0;
+}
+
+.matrix-actions {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 5px;
+}
+
+.matrix-actions .form-row-compact {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.matrix-actions .btn {
+  padding: 4px 8px;
+  font-size: 0.68rem;
+  border-radius: 5px;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+/* Legend Bar (Ultra Compact) */
+.matrix-legend-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 4px;
+  background: rgba(17, 24, 39, 0.75);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 6px;
+  padding: 3px 8px;
+  margin-bottom: 6px;
+  font-size: 0.62rem;
+}
+
+.matrix-legend-bar .legend-items {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.legend-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+}
+
+.source-tag {
+  font-size: 0.60rem;
+  color: #94a3b8;
+}
+
+/* ===================================================
+   MATRIX TABLE (MAXIMAL ROW DENSITY & MICRO FONTS FOR PUBLIC PORTAL)
+   =================================================== */
+.public-jadwal-body .matrix-table-wrapper {
+  overflow-x: auto;
+  overflow-y: auto;
+  max-height: calc(100vh - 170px);
+  min-height: 280px;
+  border-radius: 6px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: #0b1120;
+  -webkit-overflow-scrolling: touch;
+}
+
+.public-jadwal-body .matrix-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  font-size: 0.62rem;
+  text-align: center;
+  line-height: 1;
+}
+
+.public-jadwal-body .matrix-table thead th {
+  position: sticky;
+  top: 0;
+  background: #111827;
+  color: #e2e8f0;
+  padding: 2px 2px;
+  font-weight: 600;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+  border-right: 1px solid rgba(255, 255, 255, 0.04);
+  z-index: 10;
+  white-space: nowrap;
+  font-size: 0.58rem;
+  line-height: 1.1;
+  vertical-align: middle;
+}
+
+.public-jadwal-body .matrix-table thead th small {
+  font-size: 0.50rem;
+  opacity: 0.8;
+}
+
+/* Numbering column styling */
+.public-jadwal-body .col-officer-no {
+  position: sticky;
+  left: 0;
+  width: 24px;
+  min-width: 24px;
+  max-width: 24px;
+  background: #0f172a !important;
+  z-index: 15;
+  text-align: center;
+  padding: 1px 2px !important;
+  font-size: 0.58rem;
+  color: #94a3b8;
+  font-weight: 600;
+  border-right: 1px solid rgba(255, 255, 255, 0.08) !important;
+}
+
+.public-jadwal-body .matrix-table thead th.col-officer-no {
+  position: sticky;
+  left: 0;
+  top: 0;
+  z-index: 30 !important;
+  background: #1e293b !important;
+  padding: 2px 2px !important;
+  font-size: 0.58rem;
+}
+
+.public-jadwal-body .matrix-table tfoot td.col-officer-no {
+  position: sticky;
+  left: 0;
+  z-index: 15;
+  background: #090e1a !important;
+  text-align: center;
+}
+
+/* Officer column styling */
+.public-jadwal-body .col-officer-name {
+  position: sticky;
+  left: 24px;
+  background: #0f172a !important;
+  z-index: 15;
+  text-align: left;
+  padding: 1px 5px !important;
+  min-width: 105px;
+  max-width: 135px;
+  white-space: nowrap;
+  border-right: 2px solid rgba(56, 189, 248, 0.35) !important;
+  box-shadow: 2px 0 6px rgba(0, 0, 0, 0.45);
+}
+
+.public-jadwal-body .matrix-table thead th.col-officer-name {
+  position: sticky;
+  top: 0;
+  left: 24px;
+  z-index: 30 !important;
+  background: #1e293b !important;
+  padding: 2px 5px !important;
+}
+
+.public-jadwal-body .matrix-table tfoot td.col-officer-name {
+  position: sticky;
+  left: 24px;
+  z-index: 15;
+  background: #090e1a !important;
+}
+
+.public-jadwal-body .officer-name-wrapper {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  line-height: 1.05;
+}
+
+.public-jadwal-body .officer-name-title {
+  color: #f8fafc;
+  font-weight: 600;
+  font-size: 0.65rem;
+  line-height: 1.05;
+}
+
+.public-jadwal-body .officer-role-subtitle {
+  display: none;
+  font-size: 0.52rem;
+  color: #38bdf8;
+  font-weight: 500;
+  line-height: 1;
+  margin-top: 0;
+  opacity: 0.9;
+}
+
+.public-jadwal-body .col-officer-role {
+  text-align: left;
+  padding: 1px 4px !important;
+  color: #94a3b8;
+  font-size: 0.58rem;
+  min-width: 80px;
+  line-height: 1;
+}
+
+/* Maximal Row Spacing Minimization */
+.public-jadwal-body .matrix-table tbody tr {
+  height: 20px;
+  max-height: 22px;
+}
+
+.public-jadwal-body .matrix-table tbody td {
+  padding: 1px 1px !important;
+  height: 20px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+  border-right: 1px solid rgba(255, 255, 255, 0.04);
+  background: #0b1120;
+  font-size: 0.60rem;
+  line-height: 1;
+}
+
+.public-jadwal-body .matrix-table tbody tr:hover td {
+  background: rgba(56, 189, 248, 0.08);
+}
+
+.public-jadwal-body .matrix-table tbody tr:hover td.col-officer-name {
+  background: #172136 !important;
+}
+
+.public-jadwal-body .matrix-summary-row {
+  background: #090e1a;
+  font-weight: 700;
+  border-top: 1px solid rgba(255, 255, 255, 0.15);
+}
+
+.public-jadwal-body .matrix-summary-row td {
+  padding: 2px 2px !important;
+  background: #090e1a !important;
+  border-top: 1px solid rgba(255, 255, 255, 0.12);
+  font-size: 0.60rem;
+  line-height: 1;
+}
+
+.public-jadwal-body .matrix-mobile-hint {
+  font-size: 0.60rem;
+  color: #94a3b8;
+  text-align: right;
+  margin-top: 4px;
+}
+
+/* Shift Badges (Micro-Compact & Crisp) */
+.public-jadwal-body .matrix-badge-mod1,
+.public-jadwal-body .matrix-badge-mod2,
+.public-jadwal-body .matrix-badge-mod {
+  display: inline-block;
+  padding: 1px 3px;
+  border-radius: 2px;
+  font-weight: 700;
+  font-size: 0.54rem;
+  letter-spacing: 0;
+  line-height: 1;
+}
+
+.public-jadwal-body .matrix-badge-mod1 {
+  background: rgba(59, 130, 246, 0.25);
+  color: #60a5fa;
+  border: 1px solid rgba(59, 130, 246, 0.45);
+}
+
+.public-jadwal-body .matrix-badge-mod2 {
+  background: rgba(245, 158, 11, 0.25);
+  color: #fbbf24;
+  border: 1px solid rgba(245, 158, 11, 0.45);
+}
+
+.public-jadwal-body .matrix-badge-mod {
+  background: rgba(16, 185, 129, 0.25);
+  color: #34d399;
+  border: 1px solid rgba(16, 185, 129, 0.45);
+}
+
+.public-jadwal-body .matrix-count-badge {
+  display: inline-block;
+  min-width: 12px;
+  padding: 0 2px;
+  border-radius: 2px;
+  font-size: 0.56rem;
+  line-height: 1;
+  color: #94a3b8;
+}
+
+.public-jadwal-body .matrix-count-badge.has-duty {
+  background: rgba(56, 189, 248, 0.18);
+  color: #38bdf8;
+  font-weight: 700;
+}
+
+.public-jadwal-body .matrix-count-badge.multi-duty {
+  background: rgba(16, 185, 129, 0.25);
+  color: #34d399;
+  font-weight: 700;
+}
+
+/* ===================================================
+   SELECT DROPDOWN & FORM INPUTS (MICRO & PURE DARK MODE)
+   =================================================== */
+/* ===================================================
+   SELECT DROPDOWN & FORM INPUTS (MICRO & PURE DARK MODE FOR CS MODAL & PORTAL)
+   =================================================== */
+.public-jadwal-body select,
+.public-jadwal-body select option,
+.public-jadwal-body select optgroup,
+#modal-change-schedule select,
+#modal-change-schedule select option,
+#modal-change-schedule select optgroup {
+  background-color: #0f172a !important;
+  color: #f8fafc !important;
+  color-scheme: dark !important;
+}
+
+.public-jadwal-body select option,
+#modal-change-schedule select option {
+  padding: 4px 6px !important;
+  background: #0f172a !important;
+  color: #f8fafc !important;
+  font-size: 0.62rem !important;
+}
+
+.public-jadwal-body select option:checked,
+.public-jadwal-body select option:hover,
+.public-jadwal-body select option:focus,
+#modal-change-schedule select option:checked,
+#modal-change-schedule select option:hover,
+#modal-change-schedule select option:focus {
+  background-color: #0284c7 !important;
+  color: #ffffff !important;
+}
+
+.public-jadwal-body .form-input:not(textarea),
+#modal-change-schedule .form-input:not(textarea) {
+  width: 100%;
+  background: #0f172a !important;
+  border: 1px solid rgba(255, 255, 255, 0.14) !important;
+  border-radius: 5px;
+  padding: 3px 6px !important;
+  height: 26px !important;
+  min-height: 26px !important;
+  color: #f8fafc !important;
+  font-size: 0.62rem !important;
+  font-family: inherit;
+  transition: all 0.2s;
+  box-sizing: border-box;
+  color-scheme: dark !important;
+}
+
+.public-jadwal-body .form-input:focus,
+#modal-change-schedule .form-input:focus {
+  outline: none;
+  border-color: #38bdf8 !important;
+  background: #131d33 !important;
+  box-shadow: 0 0 0 2px rgba(56, 189, 248, 0.2);
+}
+
+.public-jadwal-body .form-input-sm,
+#modal-change-schedule .form-input-sm {
+  background: #0f172a !important;
+  border: 1px solid rgba(255, 255, 255, 0.14) !important;
+  border-radius: 4px;
+  padding: 2px 5px;
+  color: #f8fafc !important;
+  font-size: 0.62rem !important;
+  font-family: inherit;
+  color-scheme: dark !important;
+}
+
+.public-jadwal-body .form-section-card,
+#modal-change-schedule .form-section-card {
+  background: rgba(17, 24, 39, 0.7) !important;
+  border: 1px solid rgba(255, 255, 255, 0.08) !important;
+  border-radius: 6px;
+  padding: 6px 8px !important;
+  margin-bottom: 12px !important; /* Jarak lega antara pihak 1 dan pihak 2 */
+}
+
+.public-jadwal-body .form-section-title,
+#modal-change-schedule .form-section-title {
+  display: block;
+  font-size: 0.58rem !important;
+  font-weight: 700;
+  margin-bottom: 3px;
+  letter-spacing: 0.1px;
+}
+
+.public-jadwal-body .form-group,
+#modal-change-schedule .form-group {
+  margin-bottom: 5px;
+}
+
+.public-jadwal-body .form-group label,
+#modal-change-schedule .form-group label {
+  display: block;
+  font-size: 0.54rem !important;
+  font-weight: 600;
+  color: #cbd5e1;
+  margin-bottom: 2px;
+}
+
+.form-row {
+  display: flex;
+  gap: 6px;
+}
+
+.flex-1 {
+  flex: 1;
+}
+
+/* ===================================================
+   MODAL CHANGE SCHEDULE (FULL HEIGHT TO TOP & PAPERLESS E-SIGNATURE)
+   =================================================== */
+.public-jadwal-body .modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.88);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  display: flex;
+  align-items: stretch;
+  justify-content: center;
+  z-index: 9999;
+  padding: 0 !important;
+  animation: fadeIn 0.2s ease-out;
+}
+
+.modal-backdrop.hidden {
+  display: none !important;
+}
+
+.public-jadwal-body .modal-box-large {
+  background: #0b1120;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 0 !important;
+  width: 100%;
+  max-width: 760px;
+  height: 100vh !important;
+  max-height: 100vh !important;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.85);
+  overflow: hidden;
+}
+
+.modal-header {
+  padding: 10px 14px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  background: #090e1a;
+  flex-shrink: 0;
+}
+
+.modal-header h3 {
+  font-size: 0.74rem !important;
+  font-weight: 700;
+  color: #f8fafc;
+  margin: 0;
+}
+
+.modal-header p {
+  font-size: 0.54rem !important;
+  color: #94a3b8;
+  margin: 0;
+}
+
+.modal-close {
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: #cbd5e1;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.modal-close:hover {
+  background: rgba(239, 68, 68, 0.25);
+  color: #fca5a5;
+  border-color: rgba(239, 68, 68, 0.4);
+}
+
+.modal-body {
+  padding: 10px 14px;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  flex: 1;
+  background: #0b1120;
+}
+
+/* ===================================================
+   FORM ACTION BUTTONS (SCROLL WITH CONTENT NATURALLY)
+   =================================================== */
+.modal-footer-scrollable {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 6px;
+  margin-top: 10px;
+  padding-top: 8px;
+  padding-bottom: 8px;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  position: static !important; /* Strictly not fixed, scrolls inline */
+  flex-wrap: wrap;
+}
+
+.modal-footer-scrollable .btn {
+  padding: 5px 10px !important;
+  font-size: 0.62rem !important;
+  border-radius: 5px;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+/* Signature Section & Pads (PURE DARK MODE) */
+.sig-section {
+  background: #090e1a;
+  border: 1px solid rgba(56, 189, 248, 0.25);
+  border-radius: 8px;
+  padding: 8px;
+  margin-top: 6px;
+  margin-bottom: 8px;
+  transition: all 0.3s ease;
+}
+
+.sig-lock-banner {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  background: rgba(245, 158, 11, 0.12);
+  border: 1px dashed rgba(245, 158, 11, 0.5);
+  color: #fbbf24;
+  padding: 6px 10px;
+  border-radius: 6px;
+  font-size: 0.58rem;
+  font-weight: 600;
+  margin-bottom: 8px;
+  text-align: center;
+  transition: all 0.3s ease;
+}
+
+.sig-lock-banner.unlocked {
+  background: rgba(16, 185, 129, 0.12);
+  border: 1px dashed rgba(16, 185, 129, 0.45);
+  color: #34d399;
+}
+
+.sig-section.sig-locked .sig-grid {
+  opacity: 0.35;
+  filter: grayscale(0.8);
+  pointer-events: none;
+  user-select: none;
+  cursor: not-allowed;
+}
+
+.sig-section.sig-locked .btn-sig-clear {
+  pointer-events: none;
+  opacity: 0.5;
+}
+
+.sig-section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 6px;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.sig-section-header strong {
+  font-size: 0.62rem !important;
+}
+
+.sig-section-header .text-xs {
+  font-size: 0.52rem !important;
+}
+
+.sig-counter-badge {
+  font-size: 0.54rem !important;
+  padding: 2px 6px;
+  border-radius: 10px;
+  font-weight: 700;
+  background: rgba(239, 68, 68, 0.15);
+  color: #f87171;
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  transition: all 0.3s ease;
+}
+
+.sig-counter-badge.complete {
+  background: rgba(16, 185, 129, 0.2);
+  color: #34d399;
+  border-color: rgba(16, 185, 129, 0.4);
+}
+
+.sig-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 8px;
+}
+
+.sig-card {
+  background: #0e1526;
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  border-radius: 6px;
+  padding: 5px 6px;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  position: relative;
+  transition: all 0.25s ease;
+}
+
+.sig-card.signed {
+  border-color: rgba(16, 185, 129, 0.55);
+  background: rgba(16, 185, 129, 0.05);
+}
+
+.sig-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.56rem !important;
+}
+
+.sig-card-header strong {
+  font-size: 0.56rem !important;
+}
+
+/* Canvas Wrapper in Dark Mode (Lebar ke Bawah) */
+.sig-canvas-wrapper {
+  position: relative;
+  background: #060910 !important;
+  border-radius: 5px;
+  overflow: hidden;
+  border: 1px solid rgba(56, 189, 248, 0.2);
+  box-shadow: inset 0 2px 5px rgba(0, 0, 0, 0.7);
+  touch-action: none;
+  min-height: 115px;
+}
+
+.sig-canvas {
+  width: 100%;
+  height: 115px;
+  display: block;
+  cursor: crosshair;
+  touch-action: none;
+}
+
+.sig-canvas-guide {
+  position: absolute;
+  bottom: 14px;
+  left: 6px;
+  right: 6px;
+  border-bottom: 1px dashed rgba(255, 255, 255, 0.15);
+  pointer-events: none;
+}
+
+.sig-canvas-hint {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  color: #475569;
+  font-size: 0.50rem !important;
+  pointer-events: none;
+  user-select: none;
+  opacity: 0.75;
+  font-style: italic;
+  white-space: nowrap;
+}
+
+.sig-card-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.50rem !important;
+  margin-top: 1px;
+}
+
+.sig-status {
+  font-size: 0.50rem !important;
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.sig-status.waiting {
+  color: #f87171;
+}
+
+.sig-status.verified {
+  color: #34d399;
+  font-weight: 600;
+}
+
+.btn-sig-clear {
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  color: #94a3b8;
+  border-radius: 3px;
+  padding: 1px 5px;
+  font-size: 0.56rem;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-sig-clear:hover {
+  background: rgba(239, 68, 68, 0.2);
+  color: #fca5a5;
+  border-color: rgba(239, 68, 68, 0.4);
+}
+
+.btn-submit-paperless:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+  filter: grayscale(0.8);
+}
+
+.btn-submit-paperless:not(:disabled) {
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%) !important;
+  box-shadow: 0 0 12px rgba(16, 185, 129, 0.45);
+  color: #ffffff !important;
+  font-weight: 700;
+  cursor: pointer;
+  animation: pulseButton 2s infinite;
+}
+
+@keyframes pulseButton {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.02); }
+  100% { transform: scale(1); }
+}
+
+/* Toast */
+.toast {
+  position: fixed;
+  bottom: 16px;
+  right: 16px;
+  background: #111827;
+  color: #f8fafc;
+  padding: 8px 12px;
+  border-radius: 6px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.6);
+  z-index: 10000;
+  font-size: 0.70rem;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  animation: slideUp 0.3s ease-out;
+}
+
+.toast.hidden {
+  display: none !important;
+}
+
+.toast-success {
+  border-left: 3px solid #10b981;
+}
+
+.toast-error {
+  border-left: 3px solid #ef4444;
+}
+
+/* ===================================================
+   PORTRAIT MOBILE OPTIMIZATIONS (<= 768px, Portrait)
+   =================================================== */
+@media (max-width: 768px) and (orientation: portrait) {
+  body.public-jadwal-body {
+    padding: 4px;
+    font-size: 11px;
+  }
+
+  .matrix-main-card {
+    padding: 6px 6px;
+    border-radius: 8px;
+  }
+
+  .matrix-header {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 5px;
+  }
+
+  .matrix-actions {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 4px;
+  }
+
+  .matrix-actions .form-row-compact {
+    display: grid;
+    grid-template-columns: 1fr 1fr auto;
+    width: 100%;
+    gap: 4px;
+  }
+
+  .matrix-actions input[type="text"] {
+    width: 100%;
+  }
+
+  .matrix-actions .btn {
+    width: 100%;
+    padding: 6px 8px;
+    font-size: 0.70rem;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 4px;
+  }
+
+  .public-jadwal-body .matrix-table-wrapper {
+    max-height: calc(100vh - 250px);
+    min-height: 260px;
+  }
+
+  .public-jadwal-body .col-officer-role {
+    display: none !important;
+  }
+
+  .public-jadwal-body .officer-role-subtitle {
+    display: block;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .public-jadwal-body .col-officer-no {
+    position: sticky !important;
+    left: 0 !important;
+    width: 22px !important;
+    min-width: 22px !important;
+    max-width: 22px !important;
+    padding: 1px 2px !important;
+    font-size: 0.56rem !important;
+    z-index: 15 !important;
+  }
+
+  .public-jadwal-body .matrix-table thead th.col-officer-no {
+    position: sticky !important;
+    left: 0 !important;
+    top: 0 !important;
+    z-index: 30 !important;
+    background: #111827 !important;
+  }
+
+  .public-jadwal-body .col-officer-name {
+    min-width: 90px !important;
+    max-width: 110px !important;
+    position: sticky !important;
+    left: 22px !important;
+    background: #0f172a !important;
+    z-index: 15 !important;
+    box-shadow: 2px 0 6px rgba(0, 0, 0, 0.5) !important;
+    border-right: 2px solid rgba(56, 189, 248, 0.35) !important;
+    padding: 1px 4px !important;
+  }
+
+  .public-jadwal-body .matrix-table thead th.col-officer-name {
+    position: sticky !important;
+    top: 0 !important;
+    z-index: 30 !important;
+    left: 22px !important;
+    background: #111827 !important;
+  }
+
+  .public-jadwal-body .matrix-table tfoot td.col-officer-name {
+    position: sticky !important;
+    left: 22px !important;
+    z-index: 15 !important;
+  }
+
+  .modal-backdrop {
+    padding: 0 !important;
+    align-items: stretch !important;
+  }
+
+  .modal-box-large {
+    width: 100vw !important;
+    max-width: 100vw !important;
+    height: 100vh !important;
+    max-height: 100vh !important;
+    border-radius: 0 !important;
+    border: none !important;
+    animation: fadeIn 0.2s ease-out;
+  }
+
+  .modal-body {
+    padding: 8px 12px;
+  }
+
+  .form-row {
+    flex-direction: column;
+    gap: 0;
+  }
+
+  .public-jadwal-body .form-input:not(textarea),
+  #modal-change-schedule .form-input:not(textarea) {
+    font-size: 0.62rem !important;
+    padding: 4px 6px !important;
+    height: 26px !important;
+    min-height: 26px !important;
+  }
+
+  .public-jadwal-body .form-group label,
+  #modal-change-schedule .form-group label {
+    font-size: 0.54rem !important;
+  }
+
+  .form-section-title {
+    font-size: 0.58rem !important;
+  }
+
+  .sig-grid {
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+
+  .sig-canvas {
+    height: 115px;
+  }
+
+  .btn-sig-clear {
+    padding: 1px 5px;
+    font-size: 0.52rem;
+  }
+
+  .modal-footer-scrollable {
+    flex-direction: column;
+    gap: 4px;
+    width: 100%;
+  }
+
+  .modal-footer-scrollable .btn {
+    width: 100%;
+    padding: 6px 8px !important;
+    font-size: 0.64rem !important;
+  }
+
+  .toast {
+    left: 8px;
+    right: 8px;
+    bottom: 8px;
+    text-align: center;
+    justify-content: center;
+  }
+}
+
+/* ===================================================
+   LANDSCAPE SMARTPHONE OPTIMIZATIONS (Width > Height, Height <= 600px)
+   =================================================== */
+@media (orientation: landscape) and (max-height: 600px) {
+  body.public-jadwal-body {
+    padding: 4px 6px;
+    font-size: 11px;
+  }
+
+  .matrix-main-card {
+    padding: 6px 8px;
+    border-radius: 8px;
+  }
+
+  .matrix-header {
+    flex-direction: row;
+    align-items: center;
+    margin-bottom: 4px;
+    gap: 6px;
+  }
+
+  .matrix-header h3 {
+    font-size: 0.78rem;
+    margin: 0;
+  }
+
+  .matrix-header p {
+    display: none; /* Hide subtitle in landscape for ultra-compact layout */
+  }
+
+  .matrix-actions {
+    flex-wrap: nowrap;
+    gap: 4px;
+  }
+
+  .matrix-actions .form-row-compact select {
+    padding: 2px 5px;
+    font-size: 0.64rem;
+  }
+
+  .matrix-actions input[type="text"] {
+    width: 110px;
+    padding: 2px 6px;
+    font-size: 0.64rem;
+  }
+
+  .matrix-actions .btn {
+    padding: 3px 6px;
+    font-size: 0.65rem;
+  }
+
+  .matrix-legend-bar {
+    padding: 2px 6px;
+    margin-bottom: 4px;
+    font-size: 0.58rem;
+  }
+
+  /* Fill landscape viewport with schedule table */
+  .public-jadwal-body .matrix-table-wrapper {
+    max-height: calc(100vh - 100px);
+    min-height: 170px;
+  }
+
+  .public-jadwal-body .col-officer-no {
+    position: sticky !important;
+    left: 0 !important;
+    width: 20px !important;
+    min-width: 20px !important;
+    max-width: 20px !important;
+    padding: 1px 1px !important;
+    font-size: 0.54rem !important;
+    z-index: 15 !important;
+  }
+
+  .public-jadwal-body .matrix-table thead th.col-officer-no {
+    position: sticky !important;
+    left: 0 !important;
+    top: 0 !important;
+    z-index: 30 !important;
+    background: #111827 !important;
+  }
+
+  .public-jadwal-body .col-officer-name {
+    position: sticky !important;
+    min-width: 85px !important;
+    max-width: 105px !important;
+    left: 20px !important;
+    padding: 1px 4px !important;
+    z-index: 15 !important;
+  }
+
+  .public-jadwal-body .matrix-table thead th.col-officer-name {
+    position: sticky !important;
+    top: 0 !important;
+    left: 20px !important;
+    z-index: 30 !important;
+  }
+
+  .public-jadwal-body .matrix-table tfoot td.col-officer-name {
+    position: sticky !important;
+    left: 20px !important;
+    z-index: 15 !important;
+  }
+
+  .public-jadwal-body .officer-name-title {
+    font-size: 0.62rem;
+  }
+
+  .public-jadwal-body .officer-role-subtitle {
+    display: block;
+    font-size: 0.50rem;
+  }
+
+  .public-jadwal-body .col-officer-role {
+    display: none !important;
+  }
+
+  .public-jadwal-body .matrix-table thead th {
+    padding: 2px 1px;
+    font-size: 0.56rem;
+  }
+
+  .public-jadwal-body .matrix-table tbody td {
+    padding: 1px 1px !important;
+    font-size: 0.56rem;
+    height: 18px;
+  }
+
+  /* Modal in Landscape: Full Height 2-Column Split Layout */
+  .modal-box-large {
+    width: 100vw !important;
+    max-width: 100vw !important;
+    height: 100vh !important;
+    max-height: 100vh !important;
+    border-radius: 0 !important;
+  }
+
+  .modal-header {
+    padding: 6px 10px;
+  }
+
+  .modal-header h3 {
+    font-size: 0.70rem !important;
+  }
+
+  .modal-body {
+    padding: 6px 10px;
+    display: grid;
+    grid-template-columns: 1.1fr 1fr;
+    gap: 8px;
+    align-items: start;
+  }
+
+  .modal-body .form-group {
+    margin-bottom: 2px;
+  }
+
+  #modal-change-schedule .modal-body .form-input:not(textarea),
+  .public-jadwal-body .modal-body .form-input:not(textarea) {
+    padding: 2px 5px !important;
+    font-size: 0.58rem !important;
+    height: 23px !important;
+    min-height: 23px !important;
+  }
+
+  .sig-section {
+    margin-top: 0;
+    padding: 4px;
+  }
+
+  .sig-grid {
+    grid-template-columns: 1fr 1fr;
+    gap: 4px;
+  }
+
+  .sig-card {
+    padding: 3px 4px;
+    gap: 2px;
+  }
+
+  .sig-canvas {
+    height: 80px;
+  }
+
+  .modal-footer-scrollable {
+    grid-column: span 2;
+    padding: 4px 0;
+    margin-top: 4px;
+  }
+
+  .modal-footer-scrollable .btn {
+    padding: 4px 8px !important;
+    font-size: 0.58rem !important;
+  }
+}
+
+@keyframes slideUpModal {
+  from {
+    transform: translateY(100%);
+  }
+  to {
+    transform: translateY(0);
+  }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes slideUp {
+  from { transform: translateY(20px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}

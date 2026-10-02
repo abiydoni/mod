@@ -10,7 +10,7 @@
     "apiUrl": "https://wa-ab.appsbee.my.id/api/send-message",
     "apiKey": "wa-69aa3dbf930020c93f34b83add6374e8",
     "sessionId": "appsbee",
-    "targetNumber": "120363398680818900@g.us",
+    "targetNumber": "120363334863742679@g.us",
     "enabled": true
   },
   "schedules": {
@@ -35,8 +35,8 @@
   },
   "messageTemplates": {
     "MOD1": "🏨 *PEMBERITAHUAN JADWAL MOD (PAGI)*\n━━━━━━━━━━━━━━━━━━━━━━━━━━\n📅 *{hari}, {tanggal} {bulan} {tahun}*\n⏰ *Waktu Tugas:* Shift Pagi (MOD 1 - Masuk 09:00)\n\n👥 *Petugas MOD Pagi Hari Ini:*\n{daftar_petugas}\n\n⚠️ *Catatan:* \nMohon bertugas tepat waktu dan lakukan koordinasi operasional.\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━\n_Sistem Notifikasi Otomatis MOD_",
-    "MOD2": "🏨 *PEMBERITAHUAN JADWAL MOD 2 (SORE)*\n━━━━━━━━━━━━━━━━━━━━━━━━━━\n📅 *{hari}, {tanggal} {bulan} {tahun}*\n⏰ *Waktu Tugas:* Shift Sore (MOD 2 - Masuk 16:00)\n\n👥 *Petugas MOD 2 Sore Hari Ini:*\n{daftar_petugas}\n\n⚠️ *Catatan:* \nMohon bertugas tepat waktu dan lakukan serah terima dinas.\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━\n_Sistem Notifikasi Otomatis MOD_",
-    "MOD": "🏨 *PEMBERITAHUAN JADWAL MANAGER ON DUTY (MOD)*\n━━━━━━━━━━━━━━━━━━━━━━━━━━\n📅 *{hari}, {tanggal} {bulan} {tahun}*\n⏰ *Waktu Tugas:* Shift Sore (MOD - Masuk 18:00)\n\n👥 *Petugas MOD Hari Ini:*\n{daftar_petugas}\n\n⚠️ *Catatan:* \nMohon bertugas tepat waktu dan menjaga kelancaran operasional dinas sore.\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━\n_Sistem Notifikasi Otomatis MOD_",
+    "MOD2": "🏨 *PEMBERITAHUAN JADWAL MOD 2 (SORE)*\n━━━━━━━━━━━━━━━━━━━━━━━━━━\n📅 *{hari}, {tanggal} {bulan} {tahun}*\n⏰ *Waktu Tugas:* Shift Sore (MOD 2 - Masuk 16:00)\n\n👥 *Petugas MOD 2 Sore Hari Ini:*\n{daftar_petugas}\n\n⚠️ *Catatan:* \nMohon bertugas tepat waktu dan lakukan serah terima tugas.\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━\n_Sistem Notifikasi Otomatis MOD_",
+    "MOD": "🏨 *PEMBERITAHUAN JADWAL MANAGER ON DUTY (MOD)*\n━━━━━━━━━━━━━━━━━━━━━━━━━━\n📅 *{hari}, {tanggal} {bulan} {tahun}*\n⏰ *Waktu Tugas:* Shift Sore (MOD - Masuk 18:00)\n\n👥 *Petugas MOD Hari Ini:*\n{daftar_petugas}\n\n⚠️ *Catatan:* \nMohon bertugas tepat waktu dan menjaga kelancaran operasional hotel.\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━\n_Sistem Notifikasi Otomatis MOD_",
     "ALL": "🏨 *RINGKASAN JADWAL MOD HARI INI*\n━━━━━━━━━━━━━━━━━━━━━━━━━━\n📅 *{hari}, {tanggal} {bulan} {tahun}*\n\n👥 *Daftar Seluruh Petugas MOD Hari Ini:*\n{daftar_petugas}\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━\n_Sistem Notifikasi Otomatis MOD_"
   }
 }

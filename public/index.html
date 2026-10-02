@@ -10,7 +10,8 @@
   <link rel="icon" type="image/x-icon" href="favicon.ico">
   <link rel="icon" type="image/svg+xml" href="favicon.svg">
   <link rel="apple-touch-icon" href="logo.png">
-  <link rel="stylesheet" href="style.css?v=1.3.0">
+  <link rel="stylesheet" href="style.css?v=1.8.0">
+  <link rel="stylesheet" href="jadwal.css?v=1.8.0">
 </head>
 <body>
   <!-- Top Global Progress Indicator -->
@@ -94,6 +95,9 @@
           <p class="page-subtitle" id="current-datetime-display">Memuat waktu...</p>
         </div>
         <div class="topbar-right">
+          <a href="/jadwal" target="_blank" class="btn btn-outline btn-sm" title="Buka Portal Jadwal Khusus HP / Publik (Tanpa Login)">
+            <span class="btn-icon">📱</span> Halaman HP
+          </a>
           <button id="btn-sync-sheet" class="btn btn-outline btn-sm">
             <span class="btn-icon">🔄</span> Sync Google Sheets
           </button>
@@ -117,14 +121,14 @@
                 <small class="text-muted" id="menu-user-username">@admin</small>
               </div>
               <hr class="dropdown-divider">
-              <button class="dropdown-item" id="btn-open-change-pwd">
+              <button class="dropdown-item" id="btn-open-change-pwd" type="button">
                 <span>🔑</span> Ganti Password
               </button>
-              <button class="dropdown-item" id="btn-open-user-mgmt">
+              <button class="dropdown-item" id="btn-open-user-mgmt" type="button">
                 <span>👥</span> Kelola Pengguna (User CRUD)
               </button>
               <hr class="dropdown-divider">
-              <button class="dropdown-item text-danger" id="btn-logout">
+              <button class="dropdown-item text-danger" id="btn-logout" type="button">
                 <span>🚪</span> Keluar (Logout)
               </button>
             </div>
@@ -271,7 +275,7 @@
           <div class="editor-header-bar">
             <div>
               <h3>✏️ Buat & Edit Jadwal MOD</h3>
-              <p class="text-muted">Kelola jadwal dinas bulan berjalan, atau klik Generate untuk membuat jadwal baru bulan berikutnya.</p>
+              <p class="text-muted">Kelola jadwal shift bulan berjalan, atau klik Generate untuk membuat jadwal baru bulan berikutnya.</p>
             </div>
             <div class="editor-actions-group">
               <div class="period-switcher-group" id="editor-period-switch">
@@ -295,7 +299,7 @@
               <button class="btn btn-sm btn-secondary" id="btn-add-officer-modal">
                 ➕ Tambah Petugas
               </button>
-              <button class="btn btn-sm btn-primary" id="btn-auto-generate-schedule" title="Buat rotasi jadwal dinas bulan berikutnya secara adil dan merata">
+              <button class="btn btn-sm btn-primary" id="btn-auto-generate-schedule" title="Buat rotasi jadwal MOD bulan berikutnya secara adil dan merata">
                 ⚡ Generate Jadwal Bulan Berikutnya
               </button>
               <button class="btn btn-sm btn-outline" id="btn-export-csv">
@@ -337,7 +341,7 @@
           <div class="matrix-header">
             <div>
               <h3>👥 Data Master Karyawan & Petugas MOD</h3>
-              <p class="text-muted">Kelola daftar seluruh karyawan dinas, jabatan, dan nomor WhatsApp.</p>
+              <p class="text-muted">Kelola daftar seluruh karyawan/petugas MOD, jabatan, dan nomor WhatsApp.</p>
             </div>
             <div class="matrix-actions">
               <input type="text" id="officer-search" class="form-input-sm" placeholder="🔍 Cari nama / jabatan...">
@@ -351,12 +355,12 @@
             <table class="matrix-table officers-table">
               <thead>
                 <tr>
-                  <th style="width: 50px;">No</th>
-                  <th>Nama Lengkap</th>
-                  <th>Jabatan / Posisi</th>
-                  <th style="width: 130px;">Level</th>
-                  <th>Nomor WhatsApp (Japri)</th>
-                  <th style="width: 110px;">Status</th>
+                  <th style="width: 50px;" class="text-center">No</th>
+                  <th style="text-align: left;">Nama Lengkap</th>
+                  <th style="text-align: left;">Jabatan / Posisi</th>
+                  <th style="width: 130px; text-align: left;">Level</th>
+                  <th style="text-align: left;">Nomor WhatsApp (Japri)</th>
+                  <th style="width: 110px;" class="text-center">Status</th>
                   <th style="width: 140px;" class="text-center">Aksi</th>
                 </tr>
               </thead>
@@ -401,6 +405,9 @@
               </div>
               <input type="text" id="matrix-search" class="form-input-sm" placeholder="🔍 Cari nama petugas...">
               <button class="btn btn-outline btn-sm" id="btn-refresh-matrix">🔄 Refresh</button>
+              <button class="btn btn-primary btn-sm" id="btn-share-matrix-link" onclick="app.openShareLinkModal()" title="Bagikan link jadwal HP untuk karyawan">
+                <span>🔗</span> Bagikan Link HP
+              </button>
             </div>
           </div>
           <div class="matrix-table-wrapper">
@@ -628,7 +635,7 @@
               <div class="header-icon-box bg-purple">📝</div>
               <div>
                 <h4>4. Kustomisasi Template Pesan WhatsApp</h4>
-                <p class="text-muted text-xs">Sesuaikan format kata-kata pemberitahuan untuk setiap shift dinas</p>
+                <p class="text-muted text-xs">Sesuaikan format kata-kata pemberitahuan untuk setiap shift tugas</p>
               </div>
             </div>
 
@@ -656,37 +663,6 @@
                   </div>
                 </div>
               </div>
-          <!-- 5. User Management Card (Full Width Card) -->
-          <div class="panel-card settings-section-card full-width-card" id="card-users-management">
-            <div class="settings-card-header" style="display: flex; justify-content: space-between; align-items: center;">
-              <div style="display: flex; align-items: center; gap: 12px;">
-                <div class="header-icon-box bg-blue">👥</div>
-                <div>
-                  <h4>5. Manajemen Pengguna & Hak Akses (Database Users)</h4>
-                  <p class="text-muted text-xs">Kelola akun administrator dan operator yang memiliki akses ke aplikasi (Tersimpan Permanen di Database)</p>
-                </div>
-              </div>
-              <button class="btn btn-sm btn-primary" onclick="app.openCreateUserModal()">
-                ➕ Tambah Pengguna Baru
-              </button>
-            </div>
-
-            <div class="matrix-table-wrapper mt-3">
-              <table class="matrix-table users-table">
-                <thead>
-                  <tr>
-                    <th style="width: 50px;">No</th>
-                    <th>Username</th>
-                    <th>Nama Lengkap</th>
-                    <th style="width: 140px;">Hak Akses (Role)</th>
-                    <th style="width: 140px;">Terdaftar</th>
-                    <th style="width: 160px;" class="text-center">Aksi</th>
-                  </tr>
-                </thead>
-                <tbody id="settings-users-tbody">
-                  <tr><td colspan="6" class="text-center py-4">Memuat data pengguna...</td></tr>
-                </tbody>
-              </table>
             </div>
           </div>
         </div>
@@ -785,6 +761,192 @@
       <div class="modal-footer">
         <button class="btn btn-outline" onclick="app.closeModal('modal-confirm-action')">Batal</button>
         <button class="btn btn-primary" id="btn-modal-action-confirm">Ya, Lanjutkan</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal Share Public Link -->
+  <div id="modal-share-link" class="modal-backdrop hidden">
+    <div class="modal-box">
+      <div class="modal-header">
+        <h3>🔗 Bagikan Link Jadwal (Portal HP)</h3>
+        <button class="modal-close" onclick="app.closeModal('modal-share-link')">&times;</button>
+      </div>
+      <div class="modal-body">
+        <p class="text-muted text-sm mb-3">
+          Bagikan tautan ini ke WhatsApp Group atau karyawan agar mereka dapat melihat jadwal harian dan kalender matrix bulanan secara <strong>live & tanpa perlu login</strong>.
+        </p>
+        
+        <div class="form-group">
+          <label for="inp-share-url">Link Portal Jadwal HP (Readonly):</label>
+          <div style="display: flex; gap: 8px;">
+            <input type="text" id="inp-share-url" class="form-input font-mono text-sm" readonly>
+            <button class="btn btn-secondary btn-sm" onclick="app.copyShareUrl()" style="white-space: nowrap;">
+              📋 Salin Link
+            </button>
+          </div>
+        </div>
+
+        <div class="form-group mt-3">
+          <label for="txt-share-preview">Pratinjau Pesan WhatsApp:</label>
+          <textarea id="txt-share-preview" rows="5" class="form-input text-xs font-mono" readonly></textarea>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-outline" onclick="app.closeModal('modal-share-link')">Tutup</button>
+        <button class="btn btn-secondary" onclick="app.copyShareWhatsAppText()">📋 Salin Pesan WA</button>
+        <button class="btn btn-primary" onclick="app.openShareToWhatsAppDirect()" style="background:#25d366; color:#0b2210; font-weight:700;">
+          💬 Bagikan ke WhatsApp
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal Form Change Schedule (Paperless Digital E-Signature Approval) -->
+  <div id="modal-change-schedule" class="modal-backdrop hidden">
+    <div class="modal-box modal-box-large">
+      <div class="modal-header">
+        <div>
+          <h3>🔄 Form Perubahan Jadwal (Paperless)</h3>
+          <p class="text-muted text-xs">Persetujuan Digital 4 Pihak langsung terupdate ke Web & Google Drive</p>
+        </div>
+        <button class="modal-close" onclick="app.closeModal('modal-change-schedule')">&times;</button>
+      </div>
+      <div class="modal-body">
+        <!-- Pihak 1 (Pemohon) -->
+        <div class="panel-card form-section-card mb-3">
+          <strong class="form-section-title text-primary">👤 Pihak 1 (Petugas Pemohon):</strong>
+          <div class="form-group mb-2">
+            <label for="cs-applicant">Pilih Nama Petugas Pemohon:</label>
+            <select id="cs-applicant" class="form-input" onchange="app.onApplicantChange()">
+              <option value="">-- Pilih Nama Petugas --</option>
+            </select>
+          </div>
+
+          <div class="form-group mb-1">
+            <label for="cs-date-from">📅 Tanggal Shift Asal (Belum Terlaksana):</label>
+            <select id="cs-date-from" class="form-input" onchange="app.onDateFromChange()">
+              <option value="">-- Pilih Nama Petugas Dahulu --</option>
+            </select>
+            <input type="hidden" id="cs-shift-from" value="MOD">
+          </div>
+        </div>
+
+        <!-- Pihak 2 (Pengganti) -->
+        <div class="panel-card form-section-card mb-3">
+          <strong class="form-section-title text-warning">🔄 Pihak 2 (Petugas Pengganti / Ditukar):</strong>
+          <div class="form-group mb-2">
+            <label for="cs-target">Pilih Nama Petugas Pengganti:</label>
+            <select id="cs-target" class="form-input" onchange="app.onTargetChange()">
+              <option value="">-- Pilih Nama Petugas Pengganti --</option>
+            </select>
+          </div>
+
+          <div class="form-group mb-1">
+            <label for="cs-date-to">📅 Tanggal Shift Pengganti / Ditukar:</label>
+            <select id="cs-date-to" class="form-input" onchange="app.onDateToChange()">
+              <option value="">-- Pilih Nama Pengganti Dahulu --</option>
+            </select>
+            <input type="hidden" id="cs-shift-to" value="MOD">
+          </div>
+        </div>
+
+        <div class="form-group mb-2">
+          <label for="cs-reason">📝 Alasan Perubahan / Pertukaran:</label>
+          <input type="text" id="cs-reason" class="form-input" placeholder="Contoh: Keperluan keluarga / keperluan mendesak" value="Tukar jadwal MOD">
+        </div>
+
+        <div class="sig-section sig-locked" id="cs-sig-section">
+          <div class="sig-section-header">
+            <div>
+              <strong style="color:#38bdf8;">✍️ Lembar Tanda Tangan Digital Resmi (Wajib 4 Pihak)</strong>
+              <div class="text-muted text-xs">Goreskan tanda tangan langsung dengan mouse atau touch screen</div>
+            </div>
+            <span id="sig-counter-badge" class="sig-counter-badge">0 / 4 Tanda Tangan</span>
+          </div>
+
+          <div id="sig-lock-banner" class="sig-lock-banner">
+            🔒 Lengkapi data Pihak 1 & Pihak 2 terlebih dahulu untuk membuka lembar tanda tangan
+          </div>
+
+          <div class="sig-grid">
+            <!-- 1. Tanda Tangan Pihak 1 (Pemohon) -->
+            <div class="sig-card" id="card-sig-p1">
+              <div class="sig-card-header">
+                <strong>1. Pemohon: <span id="lbl-sig-p1-name" style="color:#60a5fa;">(Pilih Pemohon)</span></strong>
+                <button type="button" class="btn-sig-clear" onclick="app.clearSig('p1')">🗑️ Clear</button>
+              </div>
+              <div class="sig-canvas-wrapper">
+                <canvas id="sig-canvas-p1" class="sig-canvas"></canvas>
+                <div class="sig-canvas-guide"></div>
+                <div class="sig-canvas-hint" id="hint-sig-p1">Tanda tangan di sini</div>
+              </div>
+              <div class="sig-card-footer">
+                <span id="status-sig-p1" class="sig-status waiting">❌ Belum Ditandatangani</span>
+                <span class="text-muted text-xs">Pihak 1</span>
+              </div>
+            </div>
+
+            <!-- 2. Tanda Tangan Pihak 2 (Pengganti) -->
+            <div class="sig-card" id="card-sig-p2">
+              <div class="sig-card-header">
+                <strong>2. Pengganti: <span id="lbl-sig-p2-name" style="color:#f59e0b;">(Pilih Pengganti)</span></strong>
+                <button type="button" class="btn-sig-clear" onclick="app.clearSig('p2')">🗑️ Clear</button>
+              </div>
+              <div class="sig-canvas-wrapper">
+                <canvas id="sig-canvas-p2" class="sig-canvas"></canvas>
+                <div class="sig-canvas-guide"></div>
+                <div class="sig-canvas-hint" id="hint-sig-p2">Tanda tangan di sini</div>
+              </div>
+              <div class="sig-card-footer">
+                <span id="status-sig-p2" class="sig-status waiting">❌ Belum Ditandatangani</span>
+                <span class="text-muted text-xs">Pihak 2</span>
+              </div>
+            </div>
+
+            <!-- 3. Tanda Tangan HRM -->
+            <div class="sig-card" id="card-sig-hrm">
+              <div class="sig-card-header">
+                <strong>3. HR Manager (HRM)</strong>
+                <button type="button" class="btn-sig-clear" onclick="app.clearSig('hrm')">🗑️ Clear</button>
+              </div>
+              <div class="sig-canvas-wrapper">
+                <canvas id="sig-canvas-hrm" class="sig-canvas"></canvas>
+                <div class="sig-canvas-guide"></div>
+                <div class="sig-canvas-hint" id="hint-sig-hrm">Tanda tangan di sini</div>
+              </div>
+              <div class="sig-card-footer">
+                <span id="status-sig-hrm" class="sig-status waiting">❌ Belum Ditandatangani</span>
+                <span class="text-muted text-xs">Verifikasi HR</span>
+              </div>
+            </div>
+
+            <!-- 4. Tanda Tangan GM -->
+            <div class="sig-card" id="card-sig-gm">
+              <div class="sig-card-header">
+                <strong>4. General Manager (GM)</strong>
+                <button type="button" class="btn-sig-clear" onclick="app.clearSig('gm')">🗑️ Clear</button>
+              </div>
+              <div class="sig-canvas-wrapper">
+                <canvas id="sig-canvas-gm" class="sig-canvas"></canvas>
+                <div class="sig-canvas-guide"></div>
+                <div class="sig-canvas-hint" id="hint-sig-gm">Tanda tangan di sini</div>
+              </div>
+              <div class="sig-card-footer">
+                <span id="status-sig-gm" class="sig-status waiting">❌ Belum Ditandatangani</span>
+                <span class="text-muted text-xs">Persetujuan Akhir</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Tombol Aksi Form (Ikut Scroll Bersama Konten) -->
+        <div class="modal-footer-scrollable mt-2">
+          <button class="btn btn-outline" onclick="app.closeModal('modal-change-schedule')">Batal</button>
+          <button class="btn btn-primary btn-submit-paperless" id="btn-submit-change-schedule" onclick="app.submitPaperlessChangeSchedule()" disabled>
+            🔒 Lengkapi 4 Tanda Tangan
+          </button>
+        </div>
       </div>
     </div>
   </div>
@@ -960,6 +1122,6 @@
   <!-- Toast Notification -->
   <div id="toast" class="toast hidden"></div>
 
-  <script src="app.js?v=1.3.0"></script>
+  <script src="app.js?v=1.8.0"></script>
 </body>
 </html>

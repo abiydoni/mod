@@ -795,7 +795,7 @@ async function testSheetConnection({ sheetUrl, scriptWebhookUrl, sheetName = 'Oc
             sheetName,
             spreadsheetId,
             officersCount: parsed.officers.length,
-            message: `Koneksi Google Sheets Berhasil! Terbaca ${parsed.officers.length} petugas dinas.`
+            message: `Koneksi Google Sheets Berhasil! Terbaca ${parsed.officers.length} petugas MOD.`
           };
         }
       } catch (err) {}
@@ -831,6 +831,136 @@ async function testSheetConnection({ sheetUrl, scriptWebhookUrl, sheetName = 'Oc
   };
 }
 
+async function applyScheduleChangeRequest({
+  sheetName = 'October 2026',
+  applicant,
+  applicantDate,
+  applicantShift = 'MOD',
+  target,
+  targetDate,
+  targetShift = 'MOD',
+  reason = 'Tukar jadwal MOD',
+  signatures = {},
+  submittedBy = 'Paperless Digital Approval'
+}) {
+  if (!signatures || !signatures.p1 || !signatures.p2 || !signatures.hrm || !signatures.gm) {
+    throw new Error('Semua 4 tanda tangan digital (Pihak 1, Pihak 2, HRM, dan GM) wajib dibubuhkan secara lengkap.');
+  }
+
+  if (!applicant || !target) {
+    throw new Error('Nama petugas pemohon dan petugas pengganti wajib dipilih.');
+  }
+
+  const parseDay = (d) => {
+    if (typeof d === 'number') return d;
+    if (!d) return 0;
+    if (typeof d === 'string' && d.includes('-')) {
+      const parts = d.split('-');
+      return parseInt(parts[2], 10);
+    }
+    return parseInt(d, 10);
+  };
+
+  const dayFrom = parseDay(applicantDate);
+  const dayTo = parseDay(targetDate);
+
+  if (!dayFrom || dayFrom < 1 || dayFrom > 31) {
+    throw new Error('Tanggal shift asal tidak valid.');
+  }
+
+  let schedule = await fetchScheduleFromGoogle(sheetName);
+  if (!schedule || !schedule.officers) {
+    schedule = {
+      sheetName,
+      officers: storage.getAllOfficers().map(o => ({
+        name: o.name,
+        role: o.role || o.level,
+        shifts: {}
+      })),
+      lastUpdated: new Date().toISOString(),
+      source: 'app_database'
+    };
+  }
+
+  const officers = schedule.officers;
+
+  let officerApplicant = officers.find(o => (o.name || '').trim().toLowerCase() === applicant.trim().toLowerCase());
+  let officerTarget = officers.find(o => (o.name || '').trim().toLowerCase() === target.trim().toLowerCase());
+
+  if (!officerApplicant) {
+    officerApplicant = { name: applicant, role: 'Petugas', shifts: {} };
+    officers.push(officerApplicant);
+  }
+  if (!officerTarget) {
+    officerTarget = { name: target, role: 'Petugas', shifts: {} };
+    officers.push(officerTarget);
+  }
+
+  if (!officerApplicant.shifts) officerApplicant.shifts = {};
+  if (!officerTarget.shifts) officerTarget.shifts = {};
+
+  const origApplicantShiftOnFrom = officerApplicant.shifts[dayFrom] || applicantShift;
+  const origTargetShiftOnTo = dayTo ? (officerTarget.shifts[dayTo] || targetShift) : null;
+
+  if (dayFrom === dayTo || !dayTo) {
+    officerApplicant.shifts[dayFrom] = origTargetShiftOnTo || (origApplicantShiftOnFrom === 'MOD1' ? 'MOD2' : 'MOD1');
+    officerTarget.shifts[dayFrom] = origApplicantShiftOnFrom;
+  } else {
+    officerTarget.shifts[dayFrom] = origApplicantShiftOnFrom;
+    delete officerApplicant.shifts[dayFrom];
+
+    officerApplicant.shifts[dayTo] = origTargetShiftOnTo || applicantShift || 'MOD';
+    delete officerTarget.shifts[dayTo];
+  }
+
+  schedule.lastUpdated = new Date().toISOString();
+  schedule.source = 'app_database';
+
+  saveLocalMonthSchedule(sheetName, schedule);
+
+  let syncResult = null;
+  try {
+    syncResult = await syncToGoogleAppsScript(sheetName, officers);
+  } catch (e) {
+    console.warn('Sync to Google Apps Script warning:', e.message);
+  }
+
+  const swapRecord = {
+    id: `CHG-${Date.now()}`,
+    sheetName,
+    applicant,
+    applicantDate,
+    applicantDay: dayFrom,
+    applicantShift: origApplicantShiftOnFrom,
+    target,
+    targetDate,
+    targetDay: dayTo || dayFrom,
+    targetShift: origTargetShiftOnTo || targetShift,
+    reason,
+    signatures: {
+      p1: signatures.p1,
+      p2: signatures.p2,
+      hrm: signatures.hrm,
+      gm: signatures.gm
+    },
+    submittedBy,
+    timestamp: new Date().toISOString(),
+    status: 'APPROVED_AND_SYNCED',
+    googleSync: syncResult ? syncResult.success : false
+  };
+
+  storage.saveScheduleSwap(swapRecord);
+  storage.addLog(`Perubahan jadwal MOD #${swapRecord.id} disetujui (4 Pihak) dan diterapkan ke sistem.`, 'system');
+
+  return {
+    success: true,
+    message: `Perubahan jadwal #${swapRecord.id} berhasil disetujui (4 Pihak) dan langsung diperbarui di Web & Google Drive!`,
+    swapRecord,
+    schedule,
+    googleSync: syncResult
+  };
+}
+
 module.exports = {
   fetchScheduleFromGoogle,
   saveLocalMonthSchedule,
@@ -842,6 +972,7 @@ module.exports = {
   testSheetConnection,
   extractSpreadsheetId,
   extractGid,
+  applyScheduleChangeRequest,
   MONTH_NAMES,
   HARI_INDONESIA,
   BULAN_INDONESIA,

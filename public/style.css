@@ -1,4 +1,5 @@
 :root {
+  color-scheme: dark;
   --bg-dark: #0b0f19;
   --bg-card: rgba(18, 24, 38, 0.85);
   --bg-card-hover: rgba(26, 34, 52, 0.95);
@@ -19,6 +20,20 @@
   --radius-sm: 6px;
 }
 
+select,
+select option,
+select optgroup {
+  background-color: #0f172a !important;
+  color: #f8fafc !important;
+  color-scheme: dark !important;
+}
+
+select option {
+  padding: 8px 12px;
+  background-color: #0f172a !important;
+  color: #f8fafc !important;
+}
+
 * {
   box-sizing: border-box;
   margin: 0;
@@ -32,6 +47,19 @@ body {
   min-height: 100vh;
   overflow-x: hidden;
   position: relative;
+}
+
+/* Global Visibility Utility */
+.hidden {
+  display: none !important;
+}
+
+.login-overlay-backdrop.hidden,
+.user-dropdown-menu.hidden,
+.modal-backdrop.hidden {
+  display: none !important;
+  pointer-events: none !important;
+  visibility: hidden !important;
 }
 
 /* Ambient glow backgrounds */
@@ -831,13 +859,13 @@ body {
 .matrix-table {
   width: 100%;
   border-collapse: collapse;
-  font-size: 0.74rem;
+  font-size: 0.80rem;
   min-width: 1000px;
-  line-height: 1.25;
+  line-height: 1.3;
 }
 
 .matrix-table th, .matrix-table td {
-  padding: 3px 5px;
+  padding: 5px 4px;
   border: 1px solid var(--border-color);
   text-align: center;
   white-space: nowrap;
@@ -856,62 +884,89 @@ body {
   background: rgba(15, 23, 42, 0.95);
   color: var(--text-muted);
   font-weight: 600;
-  font-size: 0.70rem;
-  padding: 4px 4px;
+  font-size: 0.74rem;
+  padding: 6px 4px;
   position: sticky;
   top: 0;
   z-index: 1;
 }
 
 /* Sticky Columns for Matrix Table */
+#matrix-table tbody td.col-officer-no,
+#matrix-table thead tr:first-child th.col-officer-no,
 #matrix-table tbody td:nth-child(1),
 #matrix-table thead tr:first-child th:nth-child(1) {
-  text-align: left;
-  font-weight: 600;
   position: sticky;
   left: 0;
   background: #0f172a;
   z-index: 2;
-  min-width: 140px;
-  max-width: 170px;
+  width: 38px;
+  min-width: 38px;
+  max-width: 38px;
+  padding: 4px 2px;
+  text-align: center;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: #94a3b8;
+}
+
+#matrix-table tbody td.col-officer-name,
+#matrix-table thead tr:first-child th.col-officer-name,
+#matrix-table tbody td:nth-child(2),
+#matrix-table thead tr:first-child th:nth-child(2) {
+  position: sticky;
+  left: 38px;
+  background: #0f172a;
+  z-index: 2;
+  text-align: left;
+  font-weight: 600;
+  font-size: 0.82rem;
+  min-width: 135px;
+  max-width: 160px;
   padding-left: 8px;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
-#matrix-table tbody td:nth-child(2),
-#matrix-table thead tr:first-child th:nth-child(2) {
-  text-align: left;
-  font-size: 0.68rem;
-  color: var(--text-muted);
+#matrix-table tbody td.col-officer-role,
+#matrix-table thead tr:first-child th.col-officer-role,
+#matrix-table tbody td:nth-child(3),
+#matrix-table thead tr:first-child th:nth-child(3) {
   position: sticky;
-  left: 140px;
+  left: 173px;
   background: #0f172a;
   z-index: 2;
-  min-width: 130px;
-  max-width: 160px;
-  padding-left: 6px;
+  text-align: left;
+  font-size: 0.74rem;
+  color: var(--text-muted);
+  min-width: 125px;
+  max-width: 150px;
+  padding-left: 8px;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
 /* Date cells for Matrix Table (All dates 01-31 equal width) */
-#matrix-table thead tr:last-child th,
-#matrix-table tbody td:not(:nth-child(1)):not(:nth-child(2)):not(:last-child) {
+#matrix-table thead tr th:not(.col-officer-no):not(.col-officer-name):not(.col-officer-role):not(.col-total):not(:last-child),
+#matrix-table tbody td:not(:nth-child(1)):not(:nth-child(2)):not(:nth-child(3)):not(:last-child) {
   width: 26px;
   min-width: 26px;
   max-width: 26px;
-  padding: 3px 1px;
+  padding: 4px 1px;
   text-align: center;
+  font-size: 0.74rem;
 }
 
 /* Total column for Matrix Table */
+#matrix-table thead tr th.col-total,
 #matrix-table thead tr:first-child th:last-child,
 #matrix-table tbody td:last-child {
-  width: 36px;
-  min-width: 36px;
-  max-width: 36px;
+  width: 38px;
+  min-width: 38px;
+  max-width: 38px;
   text-align: center;
+  font-weight: 700;
+  font-size: 0.78rem;
 }
 
 /* Sticky Columns for Editor Table */
@@ -1055,45 +1110,50 @@ body {
   background: rgba(16, 185, 129, 0.25);
   color: #34d399;
   border: 1px solid rgba(16, 185, 129, 0.45);
-}
-
 /* Master Officers Table */
 .officers-table {
   width: 100%;
   border-collapse: collapse;
-  font-size: 0.76rem;
-  line-height: 1.25;
+  font-size: 0.84rem;
+  line-height: 1.4;
 }
 
-.officers-table th, .officers-table td {
-  padding: 4px 8px;
+.officers-table th,
+.officers-table td {
+  padding: 8px 12px;
   border-bottom: 1px solid var(--border-color);
-  text-align: left;
+  text-align: left !important;
   white-space: nowrap;
   vertical-align: middle;
 }
 
 .officers-table th {
-  background: rgba(15, 23, 42, 0.9);
+  background: rgba(15, 23, 42, 0.95);
   color: var(--text-muted);
   font-weight: 600;
-  font-size: 0.72rem;
-  padding: 6px 8px;
+  font-size: 0.78rem;
+  padding: 9px 12px;
+  text-align: left !important;
 }
 
-.officers-table tbody tr:hover {
-  background-color: rgba(255, 255, 255, 0.03);
+.officers-table th.text-center,
+.officers-table td.text-center {
+  text-align: center !important;
+}
+
+.officers-table tbody tr:hover td {
+  background-color: rgba(255, 255, 255, 0.04);
 }
 
 .matrix-badge-mod1 {
   background: rgba(99, 102, 241, 0.28);
   color: #c7d2fe;
   font-weight: 700;
-  border-radius: 3px;
-  padding: 1px 4px;
-  font-size: 0.66rem;
+  border-radius: 4px;
+  padding: 2px 6px;
+  font-size: 0.72rem;
   display: inline-block;
-  line-height: 1.1;
+  line-height: 1.15;
   letter-spacing: -0.01em;
 }
 
@@ -1101,12 +1161,23 @@ body {
   background: rgba(245, 158, 11, 0.28);
   color: #fef08a;
   font-weight: 700;
-  border-radius: 3px;
-  padding: 1px 4px;
-  font-size: 0.66rem;
+  border-radius: 4px;
+  padding: 2px 6px;
+  font-size: 0.72rem;
   display: inline-block;
-  line-height: 1.1;
-  letter-spacing: -0.01em;
+  line-height: 1.15;
+}
+
+.matrix-badge-mod {
+  background: rgba(16, 185, 129, 0.28);
+  color: #a7f3d0;
+  font-weight: 700;
+  border-radius: 4px;
+  padding: 2px 6px;
+  font-size: 0.72rem;
+  display: inline-block;
+  line-height: 1.15;
+}  letter-spacing: -0.01em;
 }
 
 .matrix-badge-mod {
@@ -1216,6 +1287,41 @@ label {
 .form-input:focus, .form-input-sm:focus {
   border-color: var(--border-focus);
   box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2);
+}
+
+/* Multi-line Message & Template Textareas */
+textarea.form-input,
+textarea {
+  width: 100% !important;
+  min-height: 140px !important;
+  height: auto !important;
+  line-height: 1.6 !important;
+  font-family: inherit !important;
+  font-size: 0.9rem !important;
+  padding: 12px 14px !important;
+  resize: vertical !important;
+  box-sizing: border-box !important;
+  border-radius: var(--radius-md) !important;
+}
+
+#custom-broadcast-text {
+  min-height: 180px !important;
+  font-size: 0.92rem !important;
+  line-height: 1.6 !important;
+}
+
+#cfg-template-text {
+  min-height: 200px !important;
+  font-family: 'JetBrains Mono', 'Fira Code', Consolas, Monaco, monospace !important;
+  font-size: 0.88rem !important;
+  line-height: 1.6 !important;
+}
+
+#txt-share-preview {
+  min-height: 140px !important;
+  font-family: 'JetBrains Mono', 'Fira Code', Consolas, Monaco, monospace !important;
+  font-size: 0.82rem !important;
+  line-height: 1.5 !important;
 }
 
 .checkbox-group {
@@ -1328,37 +1434,87 @@ label {
 .modal-backdrop {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.7);
+  background: rgba(0, 0, 0, 0.75);
   backdrop-filter: blur(8px);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 1000;
+  -webkit-backdrop-filter: blur(8px);
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  z-index: 99999 !important;
+  padding: 16px;
+  animation: fadeIn 0.2s ease-out;
+}
+
+.modal-backdrop.hidden {
+  display: none !important;
 }
 
 .modal-box {
   background: #111827;
   border: 1px solid var(--border-color);
-  border-radius: var(--radius-lg);
-  width: 90%;
-  max-width: 520px;
-  padding: 24px;
-  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
+  border-radius: 12px;
+  width: 92%;
+  max-width: 480px;
+  max-height: 88vh;
+  padding: 20px 22px;
+  box-shadow: 0 25px 50px rgba(0, 0, 0, 0.6);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+#modal-users-management .modal-box,
+.modal-box.modal-lg {
+  max-width: 720px !important;
+  width: 95% !important;
+}
+
+#modal-share-link .modal-box {
+  max-width: 450px;
+}
+
+#modal-confirm-action .modal-box {
+  max-width: 440px;
+}
+
+#modal-change-schedule .modal-box-large {
+  max-width: 650px;
+  height: 90vh;
+  max-height: 90vh;
+  border-radius: 12px;
+  padding: 0;
 }
 
 .modal-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 16px;
+  margin-bottom: 14px;
+}
+
+.modal-header h3 {
+  font-size: 0.92rem;
+  font-weight: 700;
+  color: var(--text-main);
+  margin: 0;
 }
 
 .modal-close {
   background: transparent;
   border: none;
-  font-size: 1.5rem;
+  font-size: 1.3rem;
   color: var(--text-muted);
   cursor: pointer;
+  line-height: 1;
+}
+
+.modal-close:hover {
+  color: #f87171;
+}
+
+.modal-body {
+  overflow-y: auto;
+  padding-right: 2px;
 }
 
 .modal-preview-box {
@@ -1373,7 +1529,10 @@ label {
 .modal-footer {
   display: flex;
   justify-content: flex-end;
-  gap: 12px;
+  gap: 10px;
+  margin-top: 14px;
+  padding-top: 10px;
+  border-top: 1px solid var(--border-color);
 }
 
 /* Toast */
@@ -1690,6 +1849,7 @@ label {
 /* User Profile & Topbar Dropdown */
 .user-dropdown-container {
   position: relative;
+  z-index: 1000;
 }
 
 .btn-user-profile {
@@ -1774,19 +1934,27 @@ label {
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 8px 10px;
+  padding: 10px 12px;
   background: transparent;
   border: none;
   border-radius: 6px;
   color: var(--text-main);
-  font-size: 0.82rem;
+  font-size: 0.85rem;
+  font-weight: 500;
   cursor: pointer;
   text-align: left;
-  transition: background 0.15s;
+  transition: all 0.15s ease;
+  pointer-events: auto;
+  user-select: none;
+}
+
+.dropdown-item * {
+  pointer-events: none;
 }
 
 .dropdown-item:hover {
-  background: rgba(255, 255, 255, 0.06);
+  background: rgba(255, 255, 255, 0.08);
+  color: #ffffff;
 }
 
 .dropdown-item.text-danger {
@@ -1794,6 +1962,7 @@ label {
 }
 .dropdown-item.text-danger:hover {
   background: rgba(244, 63, 94, 0.15);
+  color: #f43f5e;
 }
 
 /* Glassmorphic Login Overlay */
@@ -1980,6 +2149,43 @@ label {
 
 .modal-details-box li {
   margin-bottom: 4px;
+}
+
+/* Signature Locking Rules */
+.sig-lock-banner {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  background: rgba(245, 158, 11, 0.12);
+  border: 1px dashed rgba(245, 158, 11, 0.5);
+  color: #fbbf24;
+  padding: 6px 10px;
+  border-radius: 6px;
+  font-size: 0.68rem;
+  font-weight: 600;
+  margin-bottom: 8px;
+  text-align: center;
+  transition: all 0.3s ease;
+}
+
+.sig-lock-banner.unlocked {
+  background: rgba(16, 185, 129, 0.12);
+  border: 1px dashed rgba(16, 185, 129, 0.45);
+  color: #34d399;
+}
+
+.sig-section.sig-locked .sig-grid {
+  opacity: 0.35;
+  filter: grayscale(0.8);
+  pointer-events: none;
+  user-select: none;
+  cursor: not-allowed;
+}
+
+.sig-section.sig-locked .btn-sig-clear {
+  pointer-events: none;
+  opacity: 0.5;
 }
 
 

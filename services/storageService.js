@@ -16,12 +16,14 @@ const SETTINGS_FILE = path.join(DATA_DIR, 'settings.json');
 const OFFICERS_FILE = path.join(DATA_DIR, 'officers.json');
 const LOGS_FILE = path.join(DATA_DIR, 'logs.json');
 const USERS_FILE = path.join(DATA_DIR, 'users.json');
+const SWAPS_FILE = path.join(DATA_DIR, 'schedule_swaps.json');
 
 // In-Memory Cache for ultra-fast (sub-millisecond) response
 let cachedConfig = null;
 let cachedOfficers = null;
 let cachedLogs = null;
 let cachedUsers = null;
+let cachedSwaps = null;
 
 // Password Hashing using PBKDF2 (Native Node.js crypto, zero dependencies)
 function hashPassword(password, salt = null) {
@@ -536,6 +538,34 @@ function deleteUser(userId) {
   }
 }
 
+function getScheduleSwaps() {
+  if (cachedSwaps) return cachedSwaps;
+  if (!fs.existsSync(SWAPS_FILE)) {
+    cachedSwaps = [];
+    return cachedSwaps;
+  }
+  try {
+    cachedSwaps = JSON.parse(fs.readFileSync(SWAPS_FILE, 'utf8'));
+    if (!Array.isArray(cachedSwaps)) cachedSwaps = [];
+  } catch (e) {
+    cachedSwaps = [];
+  }
+  return cachedSwaps;
+}
+
+function saveScheduleSwap(swapRecord) {
+  const swaps = getScheduleSwaps();
+  swaps.unshift(swapRecord);
+  cachedSwaps = swaps;
+  try {
+    fs.writeFileSync(SWAPS_FILE, JSON.stringify(swaps, null, 2), 'utf8');
+    return true;
+  } catch (e) {
+    console.error('Error saving schedule swap record:', e);
+    return false;
+  }
+}
+
 async function getDb() {
   return null;
 }
@@ -560,5 +590,7 @@ module.exports = {
   resetUserPassword,
   sortOfficersByLevel,
   getLevelWeight,
-  deleteUser
+  deleteUser,
+  getScheduleSwaps,
+  saveScheduleSwap
 };

@@ -99,7 +99,7 @@
       "level": "Supervisor",
       "shifts": {
         "8": "MOD",
-        "19": "MOD"
+        "16": "MOD"
       }
     },
     {
@@ -108,7 +108,7 @@
       "level": "Supervisor",
       "shifts": {
         "5": "MOD",
-        "16": "MOD"
+        "19": "MOD"
       }
     },
     {
@@ -175,6 +175,6 @@
       }
     }
   ],
-  "lastUpdated": "2026-10-02T08:00:57.205Z",
+  "lastUpdated": "2026-10-02T09:36:38.850Z",
   "source": "live_google_sheet"
 }

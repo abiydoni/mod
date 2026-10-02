@@ -1,5 +1,38 @@
 [
   {
+    "id": "1790935201408",
+    "timestamp": "2026-10-02T10:00:01.408Z",
+    "type": "AUTO",
+    "shift": "MOD",
+    "status": "SUCCESS",
+    "target": "120363398680818900@g.us",
+    "messageText": "🏨 *PEMBERITAHUAN JADWAL MANAGER ON DUTY (MOD)*\n━━━━━━━━━━━━━━━━━━━━━━━━━━\n📅 *Jumat, 02 Oktober 2026*\n⏰ *Waktu Tugas:* Shift Sore (MOD - Masuk 18:00)\n\n👥 *Petugas MOD Hari Ini:*\n1. *Lukman Prayogo* - R&B Asst. Manager [MOD]\n\n⚠️ *Catatan:* \nMohon bertugas tepat waktu dan menjaga kelancaran operasional dinas sore.\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━\n_Sistem Notifikasi Otomatis MOD_",
+    "statusCode": 200,
+    "response": {
+      "status": true,
+      "message": "Message sent successfully!",
+      "jid": "120363398680818900@g.us",
+      "result": {
+        "key": {
+          "remoteJid": "120363398680818900@g.us",
+          "fromMe": true,
+          "id": "3EB0A1CCDA950821648509"
+        },
+        "message": {
+          "extendedTextMessage": {
+            "text": "🏨 *PEMBERITAHUAN JADWAL MANAGER ON DUTY (MOD)*\n━━━━━━━━━━━━━━━━━━━━━━━━━━\n📅 *Jumat, 02 Oktober 2026*\n⏰ *Waktu Tugas:* Shift Sore (MOD - Masuk 18:00)\n\n👥 *Petugas MOD Hari Ini:*\n1. *Lukman Prayogo* - R&B Asst. Manager [MOD]\n\n⚠️ *Catatan:* \nMohon bertugas tepat waktu dan menjaga kelancaran operasional dinas sore.\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━\n_Sistem Notifikasi Otomatis MOD_"
+          },
+          "messageContextInfo": {
+            "messageSecret": "4OUomzAbSQinnvjRou1BtFQS5qZFmUXtB3yL47SNhDY="
+          }
+        },
+        "messageTimestamp": "1790935200",
+        "status": "PENDING",
+        "participant": "6285183214612:84@s.whatsapp.net"
+      }
+    }
+  },
+  {
     "id": "1790928002102",
     "timestamp": "2026-10-02T08:00:02.102Z",
     "type": "AUTO",

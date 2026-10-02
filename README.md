@@ -10,7 +10,7 @@ Aplikasi Web & Otomasi Pengiriman Notifikasi Jadwal **Manager On Duty (MOD)** la
    - Membuat jadwal baru untuk bulan apa saja (misal: `November 2026`, `Desember 2026`).
    - **Interactive Shift Toggler**: Cukup klik kotak tanggal pada nama petugas untuk mengubah shift (`Kosong` ➔ `MOD1` ➔ `MOD2` ➔ `MOD`).
    - **Smart Auto-Assign**: 1-Klik generate rotasi jadwal otomatis yang adil (weekend diisi MOD1 & MOD2, weekday diisi MOD).
-   - **Kelola Petugas**: Tambah dan hapus petugas dinas secara instan.
+   - **Kelola Petugas**: Tambah dan hapus petugas secara instan.
    - **Ekspor ke CSV**: Jadwal yang dibuat dapat diunduh dalam format CSV dan langsung dibuka di Excel atau disalin ke Google Sheets.
 2. **Sinkronisasi Realtime Google Spreadsheet**:
    - Membaca live data sheet per bulan (seperti `October 2026`).
@@ -19,11 +19,11 @@ Aplikasi Web & Otomasi Pengiriman Notifikasi Jadwal **Manager On Duty (MOD)** la
    - **MOD 1 (Shift Pagi)** ➔ Otomatis dikirim pukul **09:00 WIB** (Masuk jam 09:00)
    - **MOD 2 (Shift Sore)** ➔ Otomatis dikirim pukul **16:00 WIB** (Masuk jam 16:00)
    - **MOD (Shift Sore / Weekday)** ➔ Otomatis dikirim pukul **18:00 WIB** (Masuk jam 18:00)
-3. **Integrasi WhatsApp Gateway**:
+2. **Integrasi WhatsApp Gateway**:
    - Terintegrasi langsung dengan Appsbee WA Gateway API.
    - Mendukung format markdown WhatsApp (*bold*, _italic_, list nomor).
 4. **Dashboard Web Interaktif**:
-   - **Jadwal Hari Ini & Besok**: Kartu status dinas per shift dengan tombol kirim cepat.
+   - **Jadwal Hari Ini & Besok**: Kartu status shift per kategori dengan tombol kirim cepat.
    - **Simulasi Pesan WhatsApp**: Pratinjau realtime pesan sebelum terkirim.
    - **Kalender Matrix**: Tabel jadwal 1 bulan penuh per tanggal 1–31.
    - **Kirim Pesan Manual / Pengumuman**: Kirim broadcast kustom kapan saja ke grup.
