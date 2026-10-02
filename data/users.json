@@ -7,5 +7,14 @@
     "role": "admin",
     "createdAt": "2026-10-01T07:08:47.397Z",
     "updatedAt": "2026-10-01T07:08:47.398Z"
+  },
+  {
+    "id": 3,
+    "username": "hr",
+    "name": "Ardhiny",
+    "password": "ed0cfbe94d56542c125da8e4a3e5df55:b206179c8ea06f352663e280930c13ab4be4f8de0f8fc2832f0865c38867c15613c8f20afcded347db6ea8113f77b9ae54d38ad1c1bf1a59483a3055af905b0a",
+    "role": "operator",
+    "createdAt": "2026-10-02T07:40:44.150Z",
+    "updatedAt": "2026-10-02T07:40:44.150Z"
   }
 ]

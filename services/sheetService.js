@@ -46,8 +46,8 @@ const SEED_OFFICERS = [
   { name: 'Fajar F', role: 'Chief Engineer', level: 'Manager', shifts: { 3: 'MOD2', 11: 'MOD1', 18: 'MOD2' } },
   { name: 'Ardhiny', role: 'HR Manager', level: 'Manager', shifts: { 4: 'MOD2', 11: 'MOD2' } },
   { name: 'Rama', role: 'FO Manager', level: 'Manager', shifts: { 4: 'MOD1', 25: 'MOD1' } },
-  { name: 'Sugiartono', role: 'Bookkeeper', level: 'Supervisor', shifts: { 17: 'MOD2', 30: 'MOD' } },
-  { name: 'Iqbal', role: 'Junior Sous Chef', level: 'Supervisor', shifts: { 1: 'MOD', 24: 'MOD2' } },
+  { name: 'Sugiartono', role: 'Bookkeeper', level: 'Asst Manager', shifts: { 17: 'MOD2', 30: 'MOD' } },
+  { name: 'Iqbal', role: 'Junior Sous Chef', level: 'Asst Manager', shifts: { 1: 'MOD', 24: 'MOD2' } },
   { name: 'Agus Budiono Prastyo', role: 'IT Asst Manager', level: 'Asst Manager', shifts: { 10: 'MOD2', 29: 'MOD' } },
   { name: 'Lukman Prayogo', role: 'R&B Asst. Manager', level: 'Asst Manager', shifts: { 2: 'MOD', 25: 'MOD2' } },
   { name: 'Ota Setiawan', role: 'Asst EHK', level: 'Asst Manager', shifts: { 18: 'MOD1', 31: 'MOD1' } },
@@ -317,62 +317,128 @@ function saveLocalMonthSchedule(sheetName, data) {
   }
 }
 
+function getCandidateSheetNames(targetSheet) {
+  const candidates = new Set();
+  candidates.add(targetSheet);
+
+  const monthEnToId = {
+    'January': 'Januari', 'February': 'Februari', 'March': 'Maret', 'April': 'April',
+    'May': 'Mei', 'June': 'Juni', 'July': 'Juli', 'August': 'Agustus',
+    'September': 'September', 'October': 'Oktober', 'November': 'November', 'December': 'Desember'
+  };
+
+  const monthIdToEn = {};
+  Object.entries(monthEnToId).forEach(([en, id]) => { monthIdToEn[id] = en; });
+
+  const parts = targetSheet.split(' ');
+  if (parts.length >= 2) {
+    const m = parts[0];
+    const y = parts[1];
+    if (monthEnToId[m]) {
+      candidates.add(`${monthEnToId[m]} ${y}`);
+      candidates.add(m);
+      candidates.add(monthEnToId[m]);
+    }
+    if (monthIdToEn[m]) {
+      candidates.add(`${monthIdToEn[m]} ${y}`);
+      candidates.add(m);
+      candidates.add(monthIdToEn[m]);
+    }
+  } else if (parts.length === 1) {
+    const m = parts[0];
+    if (monthEnToId[m]) candidates.add(monthEnToId[m]);
+    if (monthIdToEn[m]) candidates.add(monthIdToEn[m]);
+  }
+
+  return Array.from(candidates);
+}
+
+function countScheduleShifts(schedule) {
+  if (!schedule || !Array.isArray(schedule.officers)) return 0;
+  let count = 0;
+  schedule.officers.forEach(o => {
+    if (o.shifts && typeof o.shifts === 'object') {
+      count += Object.keys(o.shifts).length;
+    }
+  });
+  return count;
+}
+
+let cachedTabsMap = { id: null, tabs: {}, lastFetched: 0 };
+
+async function getSpreadsheetTabsMap(spreadsheetId, force = false) {
+  const now = Date.now();
+  if (!force && cachedTabsMap.id === spreadsheetId && (now - cachedTabsMap.lastFetched) < 120000 && Object.keys(cachedTabsMap.tabs).length > 0) {
+    return cachedTabsMap.tabs;
+  }
+
+  const map = {};
+  try {
+    const html = await fetchUrl(`https://docs.google.com/spreadsheets/d/${spreadsheetId}/htmlview`);
+    const regex = /items\.push\(\{name:\s*"([^"]+)",\s*pageUrl:[^}]+gid:\s*"([0-9]+)"/g;
+    let m;
+    while ((m = regex.exec(html)) !== null) {
+      const name = m[1].trim();
+      const gid = m[2].trim();
+      map[name.toLowerCase()] = gid;
+    }
+    if (Object.keys(map).length > 0) {
+      cachedTabsMap = { id: spreadsheetId, tabs: map, lastFetched: now };
+    }
+  } catch (e) {
+    console.warn('Could not discover sheet tabs map from htmlview:', e.message);
+  }
+  return map;
+}
+
 async function fetchScheduleFromGoogle(sheetName = null, forceLive = false) {
   const config = storage.getConfig();
   const targetSheet = sheetName || (config.spreadsheet && config.spreadsheet.activeSheetName) || 'October 2026';
 
-  // 1. Jika TIDAK forceLive (misal view dashboard biasa), selalu baca dari SQLite instan (1 ms)
-  if (!forceLive) {
-    // Coba baca dari SQLite
-    const cachedSqlite = storage.getCachedSchedule(targetSheet);
-    if (cachedSqlite && cachedSqlite.officers && cachedSqlite.officers.length > 0) {
-      return cachedSqlite;
-    }
+  // 1. Check local cache (SQLite or local JSON file)
+  const cachedSqlite = storage.getCachedSchedule(targetSheet);
+  const localSaved = loadLocalMonthSchedule(targetSheet);
+  const existingLocal = (cachedSqlite && countScheduleShifts(cachedSqlite) > 0)
+    ? cachedSqlite
+    : ((localSaved && countScheduleShifts(localSaved) > 0) ? localSaved : null);
 
-    const localSaved = loadLocalMonthSchedule(targetSheet);
-    if (localSaved && localSaved.officers && localSaved.officers.length > 0) {
-      return {
-        ...localSaved,
-        source: localSaved.source || 'sqlite_db',
-        sheetName: targetSheet
-      };
-    }
-
-    // Jika belum ada jadwal sama sekali untuk bulan ini, gunakan master active officers atau seed
-    const activeMasters = storage.getAllOfficers(true);
-    if (activeMasters && activeMasters.length > 0) {
-      const initialFromMasters = {
-        sheetName: targetSheet,
-        officers: activeMasters.map(o => ({ name: o.name, role: o.role, shifts: {} })),
-        lastUpdated: new Date().toISOString(),
-        source: 'sqlite_db'
-      };
-      saveLocalMonthSchedule(targetSheet, initialFromMasters);
-      return initialFromMasters;
-    }
-
-    const seedData = {
-      sheetName: targetSheet,
-      officers: SEED_OFFICERS,
-      lastUpdated: new Date().toISOString(),
-      source: 'seed_initial'
+  // If NOT forceLive and we already have a populated local schedule with shifts, return immediately
+  if (!forceLive && existingLocal) {
+    return {
+      ...existingLocal,
+      source: existingLocal.source || 'sqlite_db',
+      sheetName: targetSheet
     };
-    saveLocalMonthSchedule(targetSheet, seedData);
-    return seedData;
   }
 
-  // 2. Jika forceLive === true (tombol Sync ditekan), lakukan live fetch dari Google Sheets
+  // 2. Fetch live from Google Sheets if forceLive OR if local schedule has no shifts yet
   const rawInput = (config.spreadsheet && (config.spreadsheet.sheetUrl || config.spreadsheet.spreadsheetId)) || '';
   const spreadsheetId = extractSpreadsheetId(rawInput);
   const gid = extractGid(rawInput);
   let errorMsg = null;
 
   if (spreadsheetId) {
+    const candidateNames = getCandidateSheetNames(targetSheet);
+    const tabsMap = await getSpreadsheetTabsMap(spreadsheetId, forceLive);
     const urlsToTry = [];
-    if (gid) {
+
+    // 1. First priority: Exact GID matched from discovered spreadsheet tabs (100% reliable CSV export)
+    for (const cName of candidateNames) {
+      const matchedGid = tabsMap[cName.toLowerCase()];
+      if (matchedGid) {
+        urlsToTry.push(`https://docs.google.com/spreadsheets/d/${spreadsheetId}/export?format=csv&gid=${matchedGid}`);
+      }
+    }
+
+    // 2. Second priority: GID in user config URL if targetSheet matches activeSheetName
+    if (gid && (!sheetName || targetSheet === config.spreadsheet?.activeSheetName)) {
       urlsToTry.push(`https://docs.google.com/spreadsheets/d/${spreadsheetId}/export?format=csv&gid=${gid}`);
     }
-    urlsToTry.push(`https://docs.google.com/spreadsheets/d/${spreadsheetId}/gviz/tq?tqx=out:csv&sheet=${encodeURIComponent(targetSheet)}`);
+
+    // 3. Fallback: GViz query URLs
+    candidateNames.forEach(cName => {
+      urlsToTry.push(`https://docs.google.com/spreadsheets/d/${spreadsheetId}/gviz/tq?tqx=out:csv&sheet=${encodeURIComponent(cName)}`);
+    });
 
     for (const url of urlsToTry) {
       try {
@@ -380,7 +446,7 @@ async function fetchScheduleFromGoogle(sheetName = null, forceLive = false) {
         if (csv && csv.length > 50 && !csv.includes('<!DOCTYPE html>')) {
           const rows = parseCsv(csv);
           const parsed = parseSpreadsheetRows(rows, targetSheet);
-          if (parsed && parsed.officers && parsed.officers.length > 0) {
+          if (parsed && parsed.officers && parsed.officers.length > 0 && countScheduleShifts(parsed) > 0) {
             parsed.source = 'live_google_sheet';
             saveLocalMonthSchedule(targetSheet, parsed);
             return parsed;
@@ -392,56 +458,203 @@ async function fetchScheduleFromGoogle(sheetName = null, forceLive = false) {
     }
   }
 
-  // Fallback jika sync gagal
-  const existing = loadLocalMonthSchedule(targetSheet) || { sheetName: targetSheet, officers: SEED_OFFICERS, source: 'cached_data' };
-  existing.syncWarning = errorMsg ? `Google Sheet belum dapat dijangkau (${errorMsg}). Menggunakan data SQLite lokal.` : null;
-  return existing;
+  // 3. Fallback: if Google Sheet fetch was not successful, use existing local or initialize
+  if (existingLocal) {
+    existingLocal.syncWarning = errorMsg ? `Google Sheet belum dapat dijangkau (${errorMsg}). Menggunakan data lokal.` : null;
+    return existingLocal;
+  }
+
+  if (localSaved && localSaved.officers && localSaved.officers.length > 0) {
+    return { ...localSaved, source: 'sqlite_db', sheetName: targetSheet };
+  }
+
+  const activeMasters = storage.getAllOfficers(true);
+  if (activeMasters && activeMasters.length > 0) {
+    const initialFromMasters = {
+      sheetName: targetSheet,
+      officers: storage.sortOfficersByLevel(activeMasters.map(o => ({
+        name: o.name,
+        role: o.role,
+        level: o.level || 'Supervisor',
+        shifts: {}
+      }))),
+      lastUpdated: new Date().toISOString(),
+      source: 'sqlite_db'
+    };
+    saveLocalMonthSchedule(targetSheet, initialFromMasters);
+    return initialFromMasters;
+  }
+
+  const seedData = {
+    sheetName: targetSheet,
+    officers: SEED_OFFICERS,
+    lastUpdated: new Date().toISOString(),
+    source: 'seed_initial'
+  };
+  saveLocalMonthSchedule(targetSheet, seedData);
+  return seedData;
 }
 
 function generateSmartSchedule(officersList, monthName = 'October', year = 2026) {
   const monthIdx = MONTH_NAMES.indexOf(monthName) !== -1 ? MONTH_NAMES.indexOf(monthName) : 9;
   const daysInMonth = new Date(year, monthIdx + 1, 0).getDate();
 
+  // 1. Determine Previous Month & Year to read previous duty spacing
+  let prevMonthIdx = monthIdx - 1;
+  let prevYear = year;
+  if (prevMonthIdx < 0) {
+    prevMonthIdx = 11;
+    prevYear = year - 1;
+  }
+  const prevMonthName = MONTH_NAMES[prevMonthIdx];
+  const prevSheetName = `${prevMonthName} ${prevYear}`;
+  const prevDaysInMonth = new Date(prevYear, prevMonthIdx + 1, 0).getDate();
+
+  // 2. Fetch previous month schedule (from cache / sqlite / disk)
+  let prevSchedule = storage.getCachedSchedule(prevSheetName);
+  if (!prevSchedule || !prevSchedule.officers || prevSchedule.officers.length === 0) {
+    prevSchedule = loadLocalMonthSchedule(prevSheetName);
+  }
+
+  // Build map of last duty in previous month: { officerNameLower: relativeTimelineIndex }
+  const prevDutyMap = {};
+  if (prevSchedule && Array.isArray(prevSchedule.officers)) {
+    prevSchedule.officers.forEach(po => {
+      const nameKey = (po.name || '').toLowerCase().trim();
+      let maxD = -1;
+      if (po.shifts) {
+        Object.keys(po.shifts).forEach(d => {
+          const num = parseInt(d, 10);
+          if (num > maxD) maxD = num;
+        });
+      }
+      if (maxD > 0) {
+        // relative timeline index (e.g. Day 31 in 31-day month = 0, Day 30 = -1, Day 10 = -21)
+        prevDutyMap[nameKey] = maxD - prevDaysInMonth;
+      }
+    });
+  }
+
+  // Master level map
+  const masterLevelMap = {};
+  const allMasters = storage.getAllOfficers();
+  allMasters.forEach(m => {
+    masterLevelMap[(m.name || '').toLowerCase().trim()] = m.level || 'Supervisor';
+  });
+
+  // 3. Prepare base officers with hierarchy sorting
   const baseOfficers = (officersList && officersList.length > 0) ? officersList.map(o => ({
     name: o.name,
     role: o.role || 'Officer',
-    level: o.level || 'Supervisor',
+    level: masterLevelMap[(o.name || '').toLowerCase().trim()] || o.level || 'Supervisor',
     shifts: {}
-  })) : SEED_OFFICERS.map(o => ({
+  })) : allMasters.filter(m => m.isActive === 1 || m.isActive === true).map(o => ({
     name: o.name,
     role: o.role,
     level: o.level || 'Supervisor',
     shifts: {}
   }));
 
-  const officers = storage.sortOfficersByLevel(baseOfficers);
+  const sortedBase = storage.sortOfficersByLevel(baseOfficers);
 
-  let officerIndex = 0;
+  // 4. Initialize scheduling state for each officer
+  const schedulingState = sortedBase.map((o, idx) => {
+    const nameKey = (o.name || '').toLowerCase().trim();
+    // If found in prev month, use actual gap. Otherwise initialize based on hierarchy order
+    const initialTimeline = prevDutyMap[nameKey] !== undefined ? prevDutyMap[nameKey] : (-100 - idx);
+    const weight = storage.getLevelWeight ? storage.getLevelWeight(o.level) : 3;
 
+    return {
+      name: o.name,
+      role: o.role,
+      level: o.level || 'Supervisor',
+      levelWeight: weight,
+      lastTimeline: initialTimeline,
+      shifts: {},
+      totalCount: 0,
+      weekendCount: 0,
+      weekdayCount: 0
+    };
+  });
+
+  // 5. Day-by-day Fair Spacing Assignment
   for (let d = 1; d <= daysInMonth; d++) {
     const dateObj = new Date(year, monthIdx, d);
     const dayOfWeek = dateObj.getDay();
-
     const isWeekend = (dayOfWeek === 0 || dayOfWeek === 6);
 
-    if (isWeekend) {
-      const off1 = officers[officerIndex % officers.length];
-      off1.shifts[d] = 'MOD1';
-      officerIndex++;
+    // Shifts required today
+    const requiredShifts = isWeekend ? ['MOD1', 'MOD2'] : ['MOD'];
+    const assignedToday = new Set();
 
-      const off2 = officers[officerIndex % officers.length];
-      off2.shifts[d] = 'MOD2';
-      officerIndex++;
-    } else {
-      const off = officers[officerIndex % officers.length];
-      off.shifts[d] = 'MOD';
-      officerIndex++;
+    for (const shiftName of requiredShifts) {
+      // Filter candidates who haven't worked today and didn't work on consecutive previous day (d - 1)
+      let candidates = schedulingState.filter(s => {
+        if (assignedToday.has(s.name)) return false;
+        if (s.lastTimeline === d - 1) return false; // Prevent back-to-back consecutive duty days
+        return true;
+      });
+
+      // If all candidates worked yesterday (only in extreme cases with tiny team), relax constraint
+      if (candidates.length === 0) {
+        candidates = schedulingState.filter(s => !assignedToday.has(s.name));
+      }
+
+      // Sort candidates by fairness and rest distance (spacing)
+      candidates.sort((a, b) => {
+        // 1. Total shift count in current month (lowest count first -> equal workload)
+        if (a.totalCount !== b.totalCount) {
+          return a.totalCount - b.totalCount;
+        }
+
+        // 2. Rest gap since last duty (longest rest first -> fair spacing across month border)
+        const gapA = d - a.lastTimeline;
+        const gapB = d - b.lastTimeline;
+        if (gapA !== gapB) {
+          return gapB - gapA;
+        }
+
+        // 3. Shift type balance (Weekend vs Weekday balance)
+        if (isWeekend && a.weekendCount !== b.weekendCount) {
+          return a.weekendCount - b.weekendCount;
+        }
+        if (!isWeekend && a.weekdayCount !== b.weekdayCount) {
+          return a.weekdayCount - b.weekdayCount;
+        }
+
+        // 4. Hierarchy level weight (Manager -> Asst Manager -> Supervisor)
+        if (a.levelWeight !== b.levelWeight) {
+          return a.levelWeight - b.levelWeight;
+        }
+
+        return a.name.localeCompare(b.name);
+      });
+
+      const chosen = candidates[0];
+      if (chosen) {
+        chosen.shifts[d] = shiftName;
+        chosen.lastTimeline = d;
+        chosen.totalCount++;
+        if (isWeekend) chosen.weekendCount++; else chosen.weekdayCount++;
+        assignedToday.add(chosen.name);
+      }
     }
   }
 
+  // 6. Map back to clean officer objects sorted by level
+  const finalOfficers = sortedBase.map(b => {
+    const found = schedulingState.find(s => s.name.toLowerCase() === b.name.toLowerCase());
+    return {
+      name: b.name,
+      role: b.role,
+      level: b.level || 'Supervisor',
+      shifts: found ? found.shifts : {}
+    };
+  });
+
   return {
     sheetName: `${monthName} ${year}`,
-    officers,
+    officers: storage.sortOfficersByLevel(finalOfficers),
     lastUpdated: new Date().toISOString(),
     source: 'app_database'
   };

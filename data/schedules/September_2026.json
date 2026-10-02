@@ -1,13 +1,13 @@
 {
-  "sheetName": "October 2026",
+  "sheetName": "September 2026",
   "officers": [
     {
       "name": "Ardhiny",
       "role": "HR Manager",
       "level": "Manager",
       "shifts": {
-        "4": "MOD2",
-        "11": "MOD2"
+        "5": "MOD1",
+        "26": "MOD1"
       }
     },
     {
@@ -15,9 +15,8 @@
       "role": "Chief Accountant",
       "level": "Manager",
       "shifts": {
-        "17": "MOD1",
-        "24": "MOD1",
-        "31": "MOD2"
+        "3": "MOD IN HOUSE",
+        "12": "MOD1"
       }
     },
     {
@@ -25,9 +24,8 @@
       "role": "Chief Engineer",
       "level": "Manager",
       "shifts": {
-        "3": "MOD2",
-        "11": "MOD1",
-        "18": "MOD2"
+        "12": "MOD2",
+        "20": "MOD2"
       }
     },
     {
@@ -35,8 +33,8 @@
       "role": "FO Manager",
       "level": "Manager",
       "shifts": {
-        "4": "MOD1",
-        "25": "MOD1"
+        "6": "MOD1",
+        "13": "MOD2"
       }
     },
     {
@@ -44,17 +42,9 @@
       "role": "IT Asst Manager",
       "level": "Asst Manager",
       "shifts": {
-        "10": "MOD2",
-        "29": "MOD"
-      }
-    },
-    {
-      "name": "Bekti Utami",
-      "role": "Asst. Sales Marketing Manager",
-      "level": "Asst Manager",
-      "shifts": {
-        "3": "MOD1",
-        "10": "MOD1"
+        "13": "MOD1",
+        "23": "MOD",
+        "28": "MOD"
       }
     },
     {
@@ -62,8 +52,8 @@
       "role": "Junior Sous Chef",
       "level": "Asst Manager",
       "shifts": {
-        "1": "MOD",
-        "24": "MOD2"
+        "5": "MOD2",
+        "27": "MOD1"
       }
     },
     {
@@ -71,8 +61,8 @@
       "role": "R&B Asst. Manager",
       "level": "Asst Manager",
       "shifts": {
-        "2": "MOD",
-        "25": "MOD2"
+        "20": "MOD1",
+        "26": "MOD2"
       }
     },
     {
@@ -80,17 +70,18 @@
       "role": "Asst EHK",
       "level": "Asst Manager",
       "shifts": {
-        "18": "MOD1",
-        "31": "MOD1"
+        "19": "MOD1",
+        "27": "MOD2",
+        "30": "MOD"
       }
     },
     {
       "name": "Sugiartono",
-      "role": "Bookkeeper",
+      "role": "Bookeeper",
       "level": "Asst Manager",
       "shifts": {
-        "17": "MOD2",
-        "30": "MOD"
+        "6": "MOD2",
+        "19": "MOD2"
       }
     },
     {
@@ -98,8 +89,8 @@
       "role": "AR/IA",
       "level": "Supervisor",
       "shifts": {
-        "8": "MOD",
-        "19": "MOD"
+        "16": "MOD",
+        "25": "MOD"
       }
     },
     {
@@ -107,8 +98,8 @@
       "role": "Sales Executive",
       "level": "Supervisor",
       "shifts": {
-        "5": "MOD",
-        "16": "MOD"
+        "2": "MOD",
+        "11": "MOD"
       }
     },
     {
@@ -116,8 +107,8 @@
       "role": "ENG Supervisor",
       "level": "Supervisor",
       "shifts": {
-        "9": "MOD",
-        "23": "MOD"
+        "10": "MOD",
+        "21": "MOD"
       }
     },
     {
@@ -125,8 +116,8 @@
       "role": "Purchasing",
       "level": "Supervisor",
       "shifts": {
-        "7": "MOD",
-        "20": "MOD"
+        "1": "MOD",
+        "15": "MOD"
       }
     },
     {
@@ -134,8 +125,8 @@
       "role": "HK Shift Leader",
       "level": "Supervisor",
       "shifts": {
-        "13": "MOD",
-        "26": "MOD"
+        "9": "MOD",
+        "22": "MOD"
       }
     },
     {
@@ -143,8 +134,8 @@
       "role": "FBP",
       "level": "Supervisor",
       "shifts": {
-        "14": "MOD",
-        "27": "MOD"
+        "8": "MOD",
+        "29": "MOD"
       }
     },
     {
@@ -152,17 +143,23 @@
       "role": "AP/GC",
       "level": "Supervisor",
       "shifts": {
-        "6": "MOD",
-        "21": "MOD"
+        "4": "MOD",
+        "17": "MOD"
       }
+    },
+    {
+      "name": "Martinus",
+      "role": "Sales Marketing Manager",
+      "level": "Supervisor",
+      "shifts": {}
     },
     {
       "name": "Septi Fira",
       "role": "Sales Executive",
       "level": "Supervisor",
       "shifts": {
-        "12": "MOD",
-        "22": "MOD"
+        "7": "MOD",
+        "18": "MOD"
       }
     },
     {
@@ -170,11 +167,11 @@
       "role": "FBP",
       "level": "Supervisor",
       "shifts": {
-        "15": "MOD",
-        "28": "MOD"
+        "14": "MOD",
+        "24": "MOD"
       }
     }
   ],
-  "lastUpdated": "2026-10-02T08:00:57.205Z",
+  "lastUpdated": "2026-10-02T08:10:53.827Z",
   "source": "live_google_sheet"
 }

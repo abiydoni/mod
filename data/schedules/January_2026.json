@@ -1,23 +1,29 @@
 {
-  "sheetName": "October 2026",
+  "sheetName": "January 2026",
   "officers": [
     {
       "name": "Ardhiny",
       "role": "HR Manager",
       "level": "Manager",
       "shifts": {
-        "4": "MOD2",
+        "1": "MOD2",
+        "2": "MOD",
         "11": "MOD2"
       }
+    },
+    {
+      "name": "Ardhiny",
+      "role": "",
+      "level": "Manager",
+      "shifts": {}
     },
     {
       "name": "Doni Abiyantoro",
       "role": "Chief Accountant",
       "level": "Manager",
       "shifts": {
-        "17": "MOD1",
-        "24": "MOD1",
-        "31": "MOD2"
+        "3": "MOD1",
+        "16": "MOD1"
       }
     },
     {
@@ -25,18 +31,8 @@
       "role": "Chief Engineer",
       "level": "Manager",
       "shifts": {
-        "3": "MOD2",
-        "11": "MOD1",
-        "18": "MOD2"
-      }
-    },
-    {
-      "name": "Rama",
-      "role": "FO Manager",
-      "level": "Manager",
-      "shifts": {
         "4": "MOD1",
-        "25": "MOD1"
+        "17": "MOD1"
       }
     },
     {
@@ -44,71 +40,86 @@
       "role": "IT Asst Manager",
       "level": "Asst Manager",
       "shifts": {
-        "10": "MOD2",
-        "29": "MOD"
-      }
-    },
-    {
-      "name": "Bekti Utami",
-      "role": "Asst. Sales Marketing Manager",
-      "level": "Asst Manager",
-      "shifts": {
-        "3": "MOD1",
-        "10": "MOD1"
+        "11": "MOD1",
+        "24": "MOD1"
       }
     },
     {
       "name": "Iqbal",
-      "role": "Junior Sous Chef",
+      "role": "CDP",
       "level": "Asst Manager",
       "shifts": {
-        "1": "MOD",
-        "24": "MOD2"
-      }
-    },
-    {
-      "name": "Lukman Prayogo",
-      "role": "R&B Asst. Manager",
-      "level": "Asst Manager",
-      "shifts": {
-        "2": "MOD",
+        "18": "MOD2",
         "25": "MOD2"
       }
     },
     {
-      "name": "Ota Setiawan",
-      "role": "Asst EHK",
+      "name": "Lukman Prayogo",
+      "role": "FB Supervisor",
       "level": "Asst Manager",
       "shifts": {
-        "18": "MOD1",
+        "24": "MOD2",
         "31": "MOD1"
       }
     },
     {
-      "name": "Sugiartono",
-      "role": "Bookkeeper",
+      "name": "Ota Setiawan",
+      "role": "HK Supervisor",
       "level": "Asst Manager",
       "shifts": {
-        "17": "MOD2",
-        "30": "MOD"
+        "14": "MOD",
+        "31": "MOD2"
+      }
+    },
+    {
+      "name": "Sugiartono",
+      "role": "Bookeeper",
+      "level": "Asst Manager",
+      "shifts": {
+        "10": "MOD1",
+        "18": "MOD1"
+      }
+    },
+    {
+      "name": "Arlyna Olivia",
+      "role": "Asst. Sales Marketing Manager",
+      "level": "Supervisor",
+      "shifts": {
+        "3": "MOD2",
+        "16": "MOD2"
       }
     },
     {
       "name": "Ayu",
-      "role": "AR/IA",
+      "role": "GC/AP",
       "level": "Supervisor",
       "shifts": {
-        "8": "MOD",
-        "19": "MOD"
+        "5": "MOD",
+        "23": "MOD"
       }
+    },
+    {
+      "name": "Created by",
+      "role": "",
+      "level": "Supervisor",
+      "shifts": {}
     },
     {
       "name": "Dian Nurkhasanah",
       "role": "Sales Executive",
       "level": "Supervisor",
       "shifts": {
-        "5": "MOD",
-        "16": "MOD"
+        "9": "MOD",
+        "30": "MOD"
+      }
+    },
+    {
+      "name": "Doni Herlambang",
+      "role": "HK Shift Leader",
+      "level": "Supervisor",
+      "shifts": {
+        "25": "MOD1",
+        "28": "MOD"
       }
     },
     {
@@ -116,16 +127,16 @@
       "role": "ENG Supervisor",
       "level": "Supervisor",
       "shifts": {
-        "9": "MOD",
-        "23": "MOD"
+        "4": "MOD2",
+        "19": "MOD"
       }
     },
     {
       "name": "Fajar Kuncoro",
-      "role": "Purchasing",
+      "role": "IA",
       "level": "Supervisor",
       "shifts": {
-        "7": "MOD",
+        "6": "MOD",
         "20": "MOD"
       }
     },
@@ -134,7 +145,7 @@
       "role": "HK Shift Leader",
       "level": "Supervisor",
       "shifts": {
-        "13": "MOD",
+        "12": "MOD",
         "26": "MOD"
       }
     },
@@ -143,17 +154,33 @@
       "role": "FBP",
       "level": "Supervisor",
       "shifts": {
-        "14": "MOD",
+        "13": "MOD",
         "27": "MOD"
       }
     },
     {
       "name": "Hendri D Prayogo",
-      "role": "AP/GC",
+      "role": "AR",
       "level": "Supervisor",
       "shifts": {
-        "6": "MOD",
+        "7": "MOD",
         "21": "MOD"
+      }
+    },
+    {
+      "name": "Human Resource Manager",
+      "role": "",
+      "level": "Supervisor",
+      "shifts": {}
+    },
+    {
+      "name": "Ryan",
+      "role": "FO Manager",
+      "level": "Supervisor",
+      "shifts": {
+        "1": "MOD1",
+        "10": "MOD2",
+        "17": "MOD2"
       }
     },
     {
@@ -161,7 +188,7 @@
       "role": "Sales Executive",
       "level": "Supervisor",
       "shifts": {
-        "12": "MOD",
+        "8": "MOD",
         "22": "MOD"
       }
     },
@@ -171,10 +198,10 @@
       "level": "Supervisor",
       "shifts": {
         "15": "MOD",
-        "28": "MOD"
+        "29": "MOD"
       }
     }
   ],
-  "lastUpdated": "2026-10-02T08:00:57.205Z",
+  "lastUpdated": "2026-10-02T08:11:31.581Z",
   "source": "live_google_sheet"
 }

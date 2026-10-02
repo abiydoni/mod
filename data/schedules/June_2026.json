@@ -1,23 +1,28 @@
 {
-  "sheetName": "October 2026",
+  "sheetName": "June 2026",
   "officers": [
     {
       "name": "Ardhiny",
       "role": "HR Manager",
       "level": "Manager",
       "shifts": {
-        "4": "MOD2",
-        "11": "MOD2"
+        "9": "MOD",
+        "13": "MOD1"
       }
+    },
+    {
+      "name": "Ardhiny",
+      "role": "",
+      "level": "Manager",
+      "shifts": {}
     },
     {
       "name": "Doni Abiyantoro",
       "role": "Chief Accountant",
       "level": "Manager",
       "shifts": {
-        "17": "MOD1",
-        "24": "MOD1",
-        "31": "MOD2"
+        "8": "MOD",
+        "11": "MOD"
       }
     },
     {
@@ -25,9 +30,8 @@
       "role": "Chief Engineer",
       "level": "Manager",
       "shifts": {
-        "3": "MOD2",
-        "11": "MOD1",
-        "18": "MOD2"
+        "6": "MOD1",
+        "29": "MOD"
       }
     },
     {
@@ -35,8 +39,8 @@
       "role": "FO Manager",
       "level": "Manager",
       "shifts": {
-        "4": "MOD1",
-        "25": "MOD1"
+        "6": "MOD2",
+        "16": "MOD1"
       }
     },
     {
@@ -44,17 +48,8 @@
       "role": "IT Asst Manager",
       "level": "Asst Manager",
       "shifts": {
-        "10": "MOD2",
-        "29": "MOD"
-      }
-    },
-    {
-      "name": "Bekti Utami",
-      "role": "Asst. Sales Marketing Manager",
-      "level": "Asst Manager",
-      "shifts": {
-        "3": "MOD1",
-        "10": "MOD1"
+        "7": "MOD2",
+        "21": "MOD2"
       }
     },
     {
@@ -62,8 +57,8 @@
       "role": "Junior Sous Chef",
       "level": "Asst Manager",
       "shifts": {
-        "1": "MOD",
-        "24": "MOD2"
+        "1": "MOD2",
+        "27": "MOD1"
       }
     },
     {
@@ -71,44 +66,59 @@
       "role": "R&B Asst. Manager",
       "level": "Asst Manager",
       "shifts": {
-        "2": "MOD",
-        "25": "MOD2"
+        "13": "MOD2",
+        "28": "MOD1"
       }
     },
     {
       "name": "Ota Setiawan",
-      "role": "Asst EHK",
+      "role": "HK Supervisor",
       "level": "Asst Manager",
       "shifts": {
-        "18": "MOD1",
-        "31": "MOD1"
+        "12": "MOD",
+        "28": "MOD2"
       }
     },
     {
       "name": "Sugiartono",
-      "role": "Bookkeeper",
+      "role": "Bookeeper",
       "level": "Asst Manager",
       "shifts": {
-        "17": "MOD2",
-        "30": "MOD"
+        "1": "MOD1",
+        "27": "MOD2"
       }
     },
     {
       "name": "Ayu",
-      "role": "AR/IA",
+      "role": "GC/AP",
       "level": "Supervisor",
       "shifts": {
-        "8": "MOD",
-        "19": "MOD"
+        "17": "MOD",
+        "25": "MOD"
       }
+    },
+    {
+      "name": "Created by",
+      "role": "",
+      "level": "Supervisor",
+      "shifts": {}
     },
     {
       "name": "Dian Nurkhasanah",
       "role": "Sales Executive",
       "level": "Supervisor",
       "shifts": {
-        "5": "MOD",
-        "16": "MOD"
+        "15": "MOD",
+        "30": "MOD"
+      }
+    },
+    {
+      "name": "Doni Herlambang",
+      "role": "HK Shift Leader",
+      "level": "Supervisor",
+      "shifts": {
+        "4": "MOD",
+        "26": "MOD"
       }
     },
     {
@@ -116,8 +126,8 @@
       "role": "ENG Supervisor",
       "level": "Supervisor",
       "shifts": {
-        "9": "MOD",
-        "23": "MOD"
+        "14": "MOD2",
+        "20": "MOD2"
       }
     },
     {
@@ -125,8 +135,8 @@
       "role": "Purchasing",
       "level": "Supervisor",
       "shifts": {
-        "7": "MOD",
-        "20": "MOD"
+        "14": "MOD1",
+        "21": "MOD1"
       }
     },
     {
@@ -134,8 +144,8 @@
       "role": "HK Shift Leader",
       "level": "Supervisor",
       "shifts": {
-        "13": "MOD",
-        "26": "MOD"
+        "3": "MOD",
+        "24": "MOD"
       }
     },
     {
@@ -143,17 +153,32 @@
       "role": "FBP",
       "level": "Supervisor",
       "shifts": {
-        "14": "MOD",
-        "27": "MOD"
+        "2": "MOD",
+        "23": "MOD"
       }
     },
     {
       "name": "Hendri D Prayogo",
-      "role": "AP/GC",
+      "role": "AR",
       "level": "Supervisor",
       "shifts": {
-        "6": "MOD",
-        "21": "MOD"
+        "10": "MOD",
+        "19": "MOD"
+      }
+    },
+    {
+      "name": "Human Resource Manager",
+      "role": "",
+      "level": "Supervisor",
+      "shifts": {}
+    },
+    {
+      "name": "Martinus",
+      "role": "Sales Marketing Manager",
+      "level": "Supervisor",
+      "shifts": {
+        "7": "MOD1",
+        "20": "MOD1"
       }
     },
     {
@@ -161,7 +186,7 @@
       "role": "Sales Executive",
       "level": "Supervisor",
       "shifts": {
-        "12": "MOD",
+        "18": "MOD",
         "22": "MOD"
       }
     },
@@ -170,11 +195,11 @@
       "role": "FBP",
       "level": "Supervisor",
       "shifts": {
-        "15": "MOD",
-        "28": "MOD"
+        "5": "MOD",
+        "16": "MOD2"
       }
     }
   ],
-  "lastUpdated": "2026-10-02T08:00:57.205Z",
+  "lastUpdated": "2026-10-02T08:12:29.371Z",
   "source": "live_google_sheet"
 }

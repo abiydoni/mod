@@ -271,31 +271,21 @@
           <div class="editor-header-bar">
             <div>
               <h3>✏️ Buat & Edit Jadwal MOD</h3>
-              <p class="text-muted">Buat jadwal baru, ubah shift per tanggal, atau generate rotasi otomatis.</p>
+              <p class="text-muted">Kelola jadwal dinas bulan berjalan, atau klik Generate untuk membuat jadwal baru bulan berikutnya.</p>
             </div>
             <div class="editor-actions-group">
-              <div class="form-row-compact">
-                <select id="editor-month" class="form-input-sm">
-                  <option value="January">Januari</option>
-                  <option value="February">Februari</option>
-                  <option value="March">Maret</option>
-                  <option value="April">April</option>
-                  <option value="May">Mei</option>
-                  <option value="June">Juni</option>
-                  <option value="July">Juli</option>
-                  <option value="August">Agustus</option>
-                  <option value="September">September</option>
-                  <option value="October" selected>Oktober</option>
-                  <option value="November">November</option>
-                  <option value="December">Desember</option>
-                </select>
-                <select id="editor-year" class="form-input-sm">
-                  <option value="2026" selected>2026</option>
-                  <option value="2027">2027</option>
-                  <option value="2028">2028</option>
-                </select>
-                <button class="btn btn-sm btn-outline" id="btn-editor-load">📂 Buka</button>
+              <div class="period-switcher-group" id="editor-period-switch">
+                <button class="btn btn-sm btn-primary active" id="btn-editor-cur-month" onclick="app.switchEditorPeriod('current')">
+                  📅 Bulan Sekarang (<span id="label-cur-month">Oktober 2026</span>)
+                </button>
+                <div class="btn-group-nested hidden" id="group-editor-next-month">
+                  <button class="btn btn-sm btn-outline" id="btn-editor-next-month" onclick="app.switchEditorPeriod('next')">
+                    ⚡ Bulan Berikutnya (<span id="label-next-month">November 2026</span>)
+                  </button>
+                  <button class="btn btn-sm btn-icon-close" id="btn-close-next-draft" onclick="app.closeNextMonthTab(event)" title="Tutup & Sembunyikan Bulan Berikutnya">✕</button>
+                </div>
               </div>
+              <span class="status-pill status-badge-warning" id="editor-period-badge">📅 Mode Edit: Oktober 2026 (Bulan Berjalan)</span>
             </div>
           </div>
 
@@ -305,8 +295,8 @@
               <button class="btn btn-sm btn-secondary" id="btn-add-officer-modal">
                 ➕ Tambah Petugas
               </button>
-              <button class="btn btn-sm btn-secondary" id="btn-auto-generate-schedule" title="Rotasi adil weekend MOD1/MOD2 dan weekday MOD">
-                ⚡ Generate Otomatis (Smart Assign)
+              <button class="btn btn-sm btn-primary" id="btn-auto-generate-schedule" title="Buat rotasi jadwal dinas bulan berikutnya secara adil dan merata">
+                ⚡ Generate Jadwal Bulan Berikutnya
               </button>
               <button class="btn btn-sm btn-outline" id="btn-export-csv">
                 📥 Unduh CSV (Excel/Sheet)
@@ -387,6 +377,28 @@
               <p class="text-muted">Data jadwal lengkap satu bulan per tanggal dan petugas</p>
             </div>
             <div class="matrix-actions">
+              <div class="form-row-compact">
+                <select id="matrix-month" class="form-input-sm">
+                  <option value="January">Januari</option>
+                  <option value="February">Februari</option>
+                  <option value="March">Maret</option>
+                  <option value="April">April</option>
+                  <option value="May">Mei</option>
+                  <option value="June">Juni</option>
+                  <option value="July">Juli</option>
+                  <option value="August">Agustus</option>
+                  <option value="September">September</option>
+                  <option value="October" selected>Oktober</option>
+                  <option value="November">November</option>
+                  <option value="December">Desember</option>
+                </select>
+                <select id="matrix-year" class="form-input-sm">
+                  <option value="2026" selected>2026</option>
+                  <option value="2027">2027</option>
+                  <option value="2028">2028</option>
+                </select>
+                <button class="btn btn-sm btn-outline" id="btn-matrix-load">📂 Buka</button>
+              </div>
               <input type="text" id="matrix-search" class="form-input-sm" placeholder="🔍 Cari nama petugas...">
               <button class="btn btn-outline btn-sm" id="btn-refresh-matrix">🔄 Refresh</button>
             </div>
@@ -644,6 +656,37 @@
                   </div>
                 </div>
               </div>
+          <!-- 5. User Management Card (Full Width Card) -->
+          <div class="panel-card settings-section-card full-width-card" id="card-users-management">
+            <div class="settings-card-header" style="display: flex; justify-content: space-between; align-items: center;">
+              <div style="display: flex; align-items: center; gap: 12px;">
+                <div class="header-icon-box bg-blue">👥</div>
+                <div>
+                  <h4>5. Manajemen Pengguna & Hak Akses (Database Users)</h4>
+                  <p class="text-muted text-xs">Kelola akun administrator dan operator yang memiliki akses ke aplikasi (Tersimpan Permanen di Database)</p>
+                </div>
+              </div>
+              <button class="btn btn-sm btn-primary" onclick="app.openCreateUserModal()">
+                ➕ Tambah Pengguna Baru
+              </button>
+            </div>
+
+            <div class="matrix-table-wrapper mt-3">
+              <table class="matrix-table users-table">
+                <thead>
+                  <tr>
+                    <th style="width: 50px;">No</th>
+                    <th>Username</th>
+                    <th>Nama Lengkap</th>
+                    <th style="width: 140px;">Hak Akses (Role)</th>
+                    <th style="width: 140px;">Terdaftar</th>
+                    <th style="width: 160px;" class="text-center">Aksi</th>
+                  </tr>
+                </thead>
+                <tbody id="settings-users-tbody">
+                  <tr><td colspan="6" class="text-center py-4">Memuat data pengguna...</td></tr>
+                </tbody>
+              </table>
             </div>
           </div>
         </div>
@@ -718,6 +761,30 @@
       <div class="modal-footer">
         <button class="btn btn-outline" onclick="app.closeModal()">Batal</button>
         <button class="btn btn-primary" id="btn-modal-confirm-send">Kirim Sekarang 🚀</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal Action Confirmation (Generate / Simpan Jadwal) -->
+  <div id="modal-confirm-action" class="modal-backdrop hidden">
+    <div class="modal-box">
+      <div class="modal-header">
+        <h3 id="modal-confirm-title">Konfirmasi Tindakan</h3>
+        <button class="modal-close" onclick="app.closeModal('modal-confirm-action')">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="confirm-content-card">
+          <div class="confirm-icon-badge" id="modal-confirm-icon">⚡</div>
+          <div class="confirm-text-area">
+            <h4 id="modal-confirm-heading">Konfirmasi</h4>
+            <p id="modal-confirm-message" class="text-muted text-sm mt-1"></p>
+          </div>
+        </div>
+        <div id="modal-confirm-details" class="modal-details-box mt-3"></div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-outline" onclick="app.closeModal('modal-confirm-action')">Batal</button>
+        <button class="btn btn-primary" id="btn-modal-action-confirm">Ya, Lanjutkan</button>
       </div>
     </div>
   </div>

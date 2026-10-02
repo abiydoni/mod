@@ -7,10 +7,16 @@ const app = {
   config: null,
   editorOfficers: [],
   masterOfficers: [],
+  editorDrafts: {},
+  editorTargetMode: 'current',
+  nextMonthTabOpen: false,
   editorMonth: 'October',
   editorYear: 2026,
+  matrixMonth: 'October',
+  matrixYear: 2026,
   currentUser: null,
   currentTemplateKey: 'MOD1',
+  pendingConfirmCallback: null,
 
   async init() {
     this.startClock();
@@ -60,7 +66,8 @@ const app = {
       this.loadDutyData(),
       this.loadMatrixData(),
       this.loadMasterOfficers(),
-      this.loadLogs()
+      this.loadLogs(),
+      this.loadUsersList()
     ]);
 
     this.setProgress(100, false);
@@ -131,6 +138,8 @@ const app = {
           this.loadEditorData();
         } else if (tabId === 'tab-officers') {
           this.loadMasterOfficers();
+        } else if (tabId === 'tab-settings') {
+          this.loadUsersList();
         }
       });
     });
@@ -174,21 +183,6 @@ const app = {
       });
     }
 
-    // Refresh Matrix
-    const btnRefreshMatrix = document.getElementById('btn-refresh-matrix');
-    if (btnRefreshMatrix) {
-      btnRefreshMatrix.addEventListener('click', () => {
-        this.loadMatrixData();
-      });
-    }
-
-    // Search Matrix
-    const matrixSearch = document.getElementById('matrix-search');
-    if (matrixSearch) {
-      matrixSearch.addEventListener('input', (e) => {
-        this.filterMatrixTable(e.target.value);
-      });
-    }
 
     // Search Master Officers
     const offSearch = document.getElementById('officer-search');
@@ -246,16 +240,6 @@ const app = {
       });
     }
 
-    // Editor: Load month
-    const btnEditorLoad = document.getElementById('btn-editor-load');
-    if (btnEditorLoad) {
-      btnEditorLoad.addEventListener('click', () => {
-        this.editorMonth = document.getElementById('editor-month').value;
-        this.editorYear = parseInt(document.getElementById('editor-year').value, 10);
-        this.loadEditorData();
-      });
-    }
-
     // Editor: Add officer modal button
     const btnAddOffModal = document.getElementById('btn-add-officer-modal');
     if (btnAddOffModal) {
@@ -285,6 +269,62 @@ const app = {
     if (btnSaveEditor) {
       btnSaveEditor.addEventListener('click', () => {
         this.saveEditorSchedule();
+      });
+    }
+
+    // Matrix: Month & Year change
+    const mSelect = document.getElementById('matrix-month');
+    const ySelect = document.getElementById('matrix-year');
+    if (mSelect) {
+      mSelect.addEventListener('change', () => {
+        const m = mSelect.value;
+        const y = document.getElementById('matrix-year')?.value || 2026;
+        this.loadMatrixData(m, y, false);
+      });
+    }
+    if (ySelect) {
+      ySelect.addEventListener('change', () => {
+        const m = document.getElementById('matrix-month')?.value || 'October';
+        const y = ySelect.value;
+        this.loadMatrixData(m, y, false);
+      });
+    }
+
+    // Matrix: Load month button
+    const btnMatrixLoad = document.getElementById('btn-matrix-load');
+    if (btnMatrixLoad) {
+      btnMatrixLoad.addEventListener('click', () => {
+        const m = document.getElementById('matrix-month')?.value || 'October';
+        const y = document.getElementById('matrix-year')?.value || 2026;
+        this.loadMatrixData(m, y, true);
+      });
+    }
+
+    // Matrix: Refresh button
+    const btnRefreshMatrix = document.getElementById('btn-refresh-matrix');
+    if (btnRefreshMatrix) {
+      btnRefreshMatrix.addEventListener('click', () => {
+        const m = document.getElementById('matrix-month')?.value || 'October';
+        const y = document.getElementById('matrix-year')?.value || 2026;
+        this.loadMatrixData(m, y, true);
+      });
+    }
+
+    // Matrix: Search input
+    const matrixSearch = document.getElementById('matrix-search');
+    if (matrixSearch) {
+      matrixSearch.addEventListener('input', (e) => {
+        this.filterMatrixTable(e.target.value);
+      });
+    }
+
+    // Modal Confirmation Action: Proceed button
+    const btnModalActionConfirm = document.getElementById('btn-modal-action-confirm');
+    if (btnModalActionConfirm) {
+      btnModalActionConfirm.addEventListener('click', () => {
+        if (typeof this.pendingConfirmCallback === 'function') {
+          this.pendingConfirmCallback();
+        }
       });
     }
 
@@ -714,14 +754,36 @@ const app = {
     }
   },
 
-  async loadMatrixData() {
+  async loadMatrixData(month = null, year = null, force = false) {
+    if (month) this.matrixMonth = month;
+    if (year) this.matrixYear = parseInt(year, 10);
+
+    const mSelect = document.getElementById('matrix-month');
+    const ySelect = document.getElementById('matrix-year');
+    if (mSelect && mSelect.value !== this.matrixMonth) mSelect.value = this.matrixMonth;
+    if (ySelect && parseInt(ySelect.value, 10) !== this.matrixYear) ySelect.value = this.matrixYear;
+
+    const tbody = document.getElementById('matrix-tbody');
+    if (tbody) {
+      tbody.innerHTML = `<tr><td colspan="35" class="text-center py-4">⏳ Memuat kalender matrix ${this.matrixMonth} ${this.matrixYear}...</td></tr>`;
+    }
+
     try {
-      const res = await fetch('/api/schedule/current');
+      const sheetName = `${this.matrixMonth} ${this.matrixYear}`;
+      const url = `/api/schedule/current?sheet=${encodeURIComponent(sheetName)}${force ? '&force=true' : ''}`;
+      const res = await fetch(url);
       const data = await res.json();
       this.cachedMatrix = data;
       this.renderMatrixTable(data);
+      if (force && data.officers && data.officers.length > 0) {
+        const srcLabel = data.source === 'live_google_sheet' ? 'Google Sheets' : 'Database';
+        this.showToast(`✅ Jadwal ${this.matrixMonth} ${this.matrixYear} berhasil dimuat dari ${srcLabel}!`, 'success');
+      }
     } catch (e) {
       console.error('Failed to load matrix:', e);
+      if (tbody) {
+        tbody.innerHTML = `<tr><td colspan="35" class="text-center py-4 text-danger">Gagal memuat jadwal: ${e.message}</td></tr>`;
+      }
     }
   },
 
@@ -734,15 +796,41 @@ const app = {
 
     if (!daysTr || !datesTr || !tbody) return;
 
+    const monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+    const monthNamesId = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
+    
+    let targetMonth = this.matrixMonth || 'October';
+    let targetYear = this.matrixYear || 2026;
+
+    if (data.sheetName) {
+      const parts = data.sheetName.split(' ');
+      if (parts.length >= 2 && monthNames.includes(parts[0])) {
+        targetMonth = parts[0];
+        targetYear = parseInt(parts[1], 10) || targetYear;
+      }
+    }
+
+    const monthIdx = monthNames.indexOf(targetMonth) !== -1 ? monthNames.indexOf(targetMonth) : 9;
+    const daysInMonth = new Date(targetYear, monthIdx + 1, 0).getDate();
+    const indMonthName = monthNamesId[monthIdx] || targetMonth;
+    const dayNames = ['Min', 'Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab'];
+
     // Headers
     let daysHtml = `<th rowspan="2">Nama Petugas</th><th rowspan="2">Jabatan</th>`;
     let datesHtml = '';
 
     for (let d = 1; d <= 31; d++) {
-      const dStr = String(d).padStart(2, '0');
-      datesHtml += `<th>${dStr}</th>`;
+      if (d <= daysInMonth) {
+        const dateObj = new Date(targetYear, monthIdx, d);
+        const dayStr = dayNames[dateObj.getDay()];
+        const isWeekend = (dateObj.getDay() === 0 || dateObj.getDay() === 6);
+        const style = isWeekend ? 'style="color:#f43f5e;"' : '';
+        datesHtml += `<th ${style} title="${dayStr}">${String(d).padStart(2, '0')}<br><small>${dayStr}</small></th>`;
+      } else {
+        datesHtml += `<th style="opacity:0.3">-</th>`;
+      }
     }
-    daysHtml += `<th colspan="31" class="text-center">Tanggal</th><th rowspan="2">Total</th>`;
+    daysHtml += `<th colspan="31" class="text-center">Tanggal (${indMonthName} ${targetYear})</th><th rowspan="2">Total</th>`;
 
     daysTr.innerHTML = daysHtml;
     datesTr.innerHTML = datesHtml;
@@ -750,7 +838,7 @@ const app = {
     const tfoot = document.getElementById('matrix-tfoot');
 
     if (officers.length === 0) {
-      tbody.innerHTML = `<tr><td colspan="35" class="text-center py-4">Tidak ada data jadwal tersedia.</td></tr>`;
+      tbody.innerHTML = `<tr><td colspan="35" class="text-center py-4">Belum ada data jadwal untuk ${indMonthName} ${targetYear}. Silakan buka tab "Buat & Edit Jadwal" untuk membuatnya.</td></tr>`;
       if (tfoot) tfoot.innerHTML = '';
       return;
     }
@@ -762,17 +850,21 @@ const app = {
       let shiftCells = '';
       let totalCount = 0;
       for (let d = 1; d <= 31; d++) {
-        const s = o.shifts ? o.shifts[d] : null;
-        if (s) {
-          totalCount++;
-          dailyCounts[d]++;
-          grandTotal++;
-          let badgeClass = 'matrix-badge-mod';
-          if (s === 'MOD1') badgeClass = 'matrix-badge-mod1';
-          if (s === 'MOD2') badgeClass = 'matrix-badge-mod2';
-          shiftCells += `<td><span class="${badgeClass}">${s}</span></td>`;
+        if (d <= daysInMonth) {
+          const s = o.shifts ? o.shifts[d] : null;
+          if (s) {
+            totalCount++;
+            dailyCounts[d]++;
+            grandTotal++;
+            let badgeClass = 'matrix-badge-mod';
+            if (s === 'MOD1') badgeClass = 'matrix-badge-mod1';
+            if (s === 'MOD2') badgeClass = 'matrix-badge-mod2';
+            shiftCells += `<td><span class="${badgeClass}">${s}</span></td>`;
+          } else {
+            shiftCells += `<td></td>`;
+          }
         } else {
-          shiftCells += `<td></td>`;
+          shiftCells += `<td style="opacity:0.2">-</td>`;
         }
       }
 
@@ -781,7 +873,7 @@ const app = {
           <td><strong>${o.name}</strong></td>
           <td>${o.role}</td>
           ${shiftCells}
-          <td><strong>${totalCount}</strong></td>
+          <td class="text-center"><strong>${totalCount}</strong></td>
         </tr>
       `;
     }).join('');
@@ -789,9 +881,13 @@ const app = {
     if (tfoot) {
       let summaryDailyCells = '';
       for (let d = 1; d <= 31; d++) {
-        const c = dailyCounts[d];
-        const badgeClass = c > 1 ? 'matrix-count-badge multi-duty' : (c > 0 ? 'matrix-count-badge has-duty' : 'matrix-count-badge');
-        summaryDailyCells += `<td><span class="${badgeClass}" title="Total ${c} petugas pada tanggal ${d}">${c}</span></td>`;
+        if (d <= daysInMonth) {
+          const c = dailyCounts[d];
+          const badgeClass = c > 1 ? 'matrix-count-badge multi-duty' : (c > 0 ? 'matrix-count-badge has-duty' : 'matrix-count-badge');
+          summaryDailyCells += `<td><span class="${badgeClass}" title="Total ${c} petugas pada tanggal ${d}">${c}</span></td>`;
+        } else {
+          summaryDailyCells += `<td style="opacity:0.2">-</td>`;
+        }
       }
 
       tfoot.innerHTML = `
@@ -799,7 +895,7 @@ const app = {
           <td><strong>JUMLAH MOD</strong></td>
           <td><span class="text-muted text-xs">Total Harian</span></td>
           ${summaryDailyCells}
-          <td><strong>${grandTotal}</strong></td>
+          <td class="text-center"><strong>${grandTotal}</strong></td>
         </tr>
       `;
     }
@@ -1349,14 +1445,158 @@ const app = {
     }
   },
 
+  getNextMonthPeriod() {
+    const monthNames = [
+      'January', 'February', 'March', 'April', 'May', 'June',
+      'July', 'August', 'September', 'October', 'November', 'December'
+    ];
+    const monthNamesId = [
+      'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
+      'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'
+    ];
+
+    let currentMIdx = 9; // October default
+    let currentYr = 2026;
+
+    if (this.config && this.config.spreadsheet && this.config.spreadsheet.activeSheetName) {
+      const parts = this.config.spreadsheet.activeSheetName.split(' ');
+      if (parts.length >= 2) {
+        const foundIdx = monthNames.indexOf(parts[0]);
+        if (foundIdx !== -1) currentMIdx = foundIdx;
+        currentYr = parseInt(parts[1], 10) || currentYr;
+      }
+    } else if (this.currentDate) {
+      currentMIdx = this.currentDate.getMonth();
+      currentYr = this.currentDate.getFullYear();
+    }
+
+    let nextMIdx = currentMIdx + 1;
+    let nextYr = currentYr;
+    if (nextMIdx > 11) {
+      nextMIdx = 0;
+      nextYr += 1;
+    }
+
+    return {
+      month: monthNames[nextMIdx],
+      monthId: monthNamesId[nextMIdx],
+      year: nextYr,
+      monthIdx: nextMIdx,
+      sheetName: `${monthNames[nextMIdx]} ${nextYr}`,
+      currentMonth: monthNames[currentMIdx],
+      currentMonthId: monthNamesId[currentMIdx],
+      currentYear: currentYr,
+      currentMonthIdx: currentMIdx,
+      currentSheetName: `${monthNames[currentMIdx]} ${currentYr}`
+    };
+  },
+
+  switchEditorPeriod(mode = 'next', saveCurrentDraft = true) {
+    // 1. Save in-memory draft of currently active period before switching (if allowed)
+    if (saveCurrentDraft && this.editorOfficers && this.editorOfficers.length > 0) {
+      const currentSheetKey = `${this.editorMonth} ${this.editorYear}`;
+      this.editorDrafts[currentSheetKey] = JSON.parse(JSON.stringify(this.editorOfficers));
+    }
+
+    this.editorTargetMode = mode;
+    const nextInfo = this.getNextMonthPeriod();
+    const btnCur = document.getElementById('btn-editor-cur-month');
+    const btnNext = document.getElementById('btn-editor-next-month');
+
+    if (mode === 'current') {
+      if (btnCur) { btnCur.className = 'btn btn-sm btn-primary active'; }
+      if (btnNext) { btnNext.className = 'btn btn-sm btn-outline'; }
+      this.editorMonth = nextInfo.currentMonth;
+      this.editorYear = nextInfo.currentYear;
+    } else {
+      if (btnCur) { btnCur.className = 'btn btn-sm btn-outline'; }
+      if (btnNext) { btnNext.className = 'btn btn-sm btn-primary active'; }
+      this.editorMonth = nextInfo.month;
+      this.editorYear = nextInfo.year;
+    }
+    this.loadEditorData();
+  },
+
+  closeNextMonthTab(event) {
+    if (event) {
+      event.preventDefault();
+      event.stopPropagation();
+    }
+    const nextInfo = this.getNextMonthPeriod();
+    const nextSheetKey = `${nextInfo.month} ${nextInfo.year}`;
+
+    // 1. Delete in-memory draft of next month
+    delete this.editorDrafts[nextSheetKey];
+    this.nextMonthTabOpen = false;
+
+    // 2. Hide next month button group completely
+    const groupNext = document.getElementById('group-editor-next-month');
+    if (groupNext) groupNext.classList.add('hidden');
+
+    // 3. Automatically switch back to current month without re-saving draft
+    this.switchEditorPeriod('current', false);
+    this.showToast(`Draft jadwal ${nextInfo.monthId} ${nextInfo.year} dihapus & kembali ke jadwal ${nextInfo.currentMonthId} ${nextInfo.currentYear}.`, 'info');
+  },
+
+  openNextMonthTab() {
+    this.nextMonthTabOpen = true;
+    const groupNext = document.getElementById('group-editor-next-month');
+    if (groupNext) groupNext.classList.remove('hidden');
+    this.switchEditorPeriod('next');
+  },
+
   async loadEditorData() {
     try {
+      const nextInfo = this.getNextMonthPeriod();
+
+      const lblCur = document.getElementById('label-cur-month');
+      const lblNext = document.getElementById('label-next-month');
+      if (lblCur) lblCur.innerText = `${nextInfo.currentMonthId} ${nextInfo.currentYear}`;
+      if (lblNext) lblNext.innerText = `${nextInfo.monthId} ${nextInfo.year}`;
+
+      const groupNext = document.getElementById('group-editor-next-month');
+      const nextSheetKey = `${nextInfo.month} ${nextInfo.year}`;
+      const hasNextDraft = !!(this.editorDrafts && this.editorDrafts[nextSheetKey] && this.editorDrafts[nextSheetKey].length > 0);
+
+      if (this.nextMonthTabOpen || (hasNextDraft && this.editorTargetMode === 'next')) {
+        if (groupNext) groupNext.classList.remove('hidden');
+      } else {
+        if (groupNext) groupNext.classList.add('hidden');
+      }
+
+      if (!this.editorTargetMode) this.editorTargetMode = 'current';
+
+      if (this.editorTargetMode === 'current') {
+        this.editorMonth = nextInfo.currentMonth;
+        this.editorYear = nextInfo.currentYear;
+      } else {
+        this.editorMonth = nextInfo.month;
+        this.editorYear = nextInfo.year;
+      }
+
       const sheetName = `${this.editorMonth} ${this.editorYear}`;
+
+      // Check if we have an in-memory draft preserved
+      if (this.editorDrafts && this.editorDrafts[sheetName] && this.editorDrafts[sheetName].length > 0) {
+        this.editorOfficers = this.sortOfficersByLevel(JSON.parse(JSON.stringify(this.editorDrafts[sheetName])));
+        this.renderEditorTable();
+        return;
+      }
+
       const res = await fetch(`/api/schedule/current?sheet=${encodeURIComponent(sheetName)}`);
       const data = await res.json();
-      
+
+      const masterLevelMap = {};
+      (this.masterOfficers || []).forEach(m => {
+        masterLevelMap[(m.name || '').toLowerCase().trim()] = m.level || 'Supervisor';
+      });
+
       if (data.officers && data.officers.length > 0) {
-        this.editorOfficers = this.sortOfficersByLevel(JSON.parse(JSON.stringify(data.officers)));
+        const enriched = data.officers.map(o => ({
+          ...o,
+          level: masterLevelMap[(o.name || '').toLowerCase().trim()] || o.level || 'Supervisor'
+        }));
+        this.editorOfficers = this.sortOfficersByLevel(JSON.parse(JSON.stringify(enriched)));
       } else {
         const activeMasters = this.masterOfficers.filter(o => o.isActive === 1 || o.isActive === true);
         const mapped = activeMasters.map(o => ({
@@ -1383,8 +1623,22 @@ const app = {
     if (!daysTr || !datesTr || !tbody) return;
 
     const monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
-    const monthIdx = monthNames.indexOf(this.editorMonth) !== -1 ? monthNames.indexOf(this.editorMonth) : 9;
+    const monthNamesId = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
+    const monthIdx = monthNames.indexOf(this.editorMonth) !== -1 ? monthNames.indexOf(this.editorMonth) : 10;
     const daysInMonth = new Date(this.editorYear, monthIdx + 1, 0).getDate();
+    const indMonthName = monthNamesId[monthIdx] || this.editorMonth;
+
+    const isCur = (this.editorTargetMode === 'current');
+    const periodBadge = document.getElementById('editor-period-badge');
+    if (periodBadge) {
+      if (isCur) {
+        periodBadge.innerText = `📅 Mode Edit: ${indMonthName} ${this.editorYear} (Bulan Berjalan)`;
+        periodBadge.className = 'status-pill status-badge-warning';
+      } else {
+        periodBadge.innerText = `📅 Target Jadwal Baru: ${indMonthName} ${this.editorYear} (Bulan Berikutnya)`;
+        periodBadge.className = 'status-pill status-badge-success';
+      }
+    }
 
     let daysHtml = `<th rowspan="2">Aksi</th><th rowspan="2">Nama Petugas</th><th rowspan="2">Jabatan</th>`;
     let datesHtml = '';
@@ -1402,7 +1656,7 @@ const app = {
         datesHtml += `<th style="opacity:0.3">-</th>`;
       }
     }
-    daysHtml += `<th colspan="31" class="text-center">Tanggal (${this.editorMonth} ${this.editorYear})</th><th rowspan="2">Total</th>`;
+    daysHtml += `<th colspan="31" class="text-center">Tanggal (${indMonthName} ${this.editorYear})</th><th rowspan="2">Total</th>`;
 
     daysTr.innerHTML = daysHtml;
     datesTr.innerHTML = datesHtml;
@@ -1509,6 +1763,9 @@ const app = {
       delete this.editorOfficers[officerIdx].shifts[day];
     }
 
+    const currentSheetKey = `${this.editorMonth} ${this.editorYear}`;
+    this.editorDrafts[currentSheetKey] = JSON.parse(JSON.stringify(this.editorOfficers));
+
     this.renderEditorTable();
   },
 
@@ -1517,77 +1774,216 @@ const app = {
     const name = this.editorOfficers[idx].name;
     if (confirm(`Apakah Anda yakin ingin menghapus "${name}" dari jadwal ini?`)) {
       this.editorOfficers.splice(idx, 1);
+      const currentSheetKey = `${this.editorMonth} ${this.editorYear}`;
+      this.editorDrafts[currentSheetKey] = JSON.parse(JSON.stringify(this.editorOfficers));
       this.renderEditorTable();
       this.showToast(`Petugas "${name}" dihapus.`, 'success');
     }
   },
 
-  async autoGenerateSchedule() {
-    if (this.editorOfficers.length === 0) {
-      this.showToast('Tambahkan minimal 1 petugas terlebih dahulu!', 'error');
-      return;
-    }
-
-    if (!confirm(`Generate rotasi jadwal otomatis untuk ${this.editorOfficers.length} petugas di ${this.editorMonth} ${this.editorYear}?`)) {
-      return;
-    }
-
-    try {
-      const res = await fetch('/api/schedule/generate', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          month: this.editorMonth,
-          year: this.editorYear,
-          officers: this.editorOfficers
-        })
-      });
-      const data = await res.json();
-      if (data.success) {
-        this.editorOfficers = data.schedule.officers;
-        this.renderEditorTable();
-        this.showToast('⚡ Jadwal otomatis berhasil dibuat!', 'success');
-      } else {
-        this.showToast(`Gagal generate: ${data.error}`, 'error');
+  showConfirmModal({ title, icon = '⚡', heading, message, detailsHtml = '', confirmText = 'Ya, Lanjutkan', confirmClass = 'btn-primary', onConfirm }) {
+    const modal = document.getElementById('modal-confirm-action');
+    if (!modal) {
+      if (confirm(`${heading}\n\n${message}`)) {
+        if (typeof onConfirm === 'function') onConfirm();
       }
-    } catch (e) {
-      this.showToast(`Error: ${e.message}`, 'error');
+      return;
     }
+
+    const titleEl = document.getElementById('modal-confirm-title');
+    const iconEl = document.getElementById('modal-confirm-icon');
+    const headingEl = document.getElementById('modal-confirm-heading');
+    const msgEl = document.getElementById('modal-confirm-message');
+    const detailsEl = document.getElementById('modal-confirm-details');
+    const btnConfirm = document.getElementById('btn-modal-action-confirm');
+
+    if (titleEl) titleEl.innerText = title || 'Konfirmasi Tindakan';
+    if (iconEl) iconEl.innerText = icon || '⚡';
+    if (headingEl) headingEl.innerText = heading || 'Konfirmasi';
+    if (msgEl) msgEl.innerText = message || '';
+    if (detailsEl) {
+      if (detailsHtml) {
+        detailsEl.innerHTML = detailsHtml;
+        detailsEl.classList.remove('hidden');
+      } else {
+        detailsEl.innerHTML = '';
+        detailsEl.classList.add('hidden');
+      }
+    }
+
+    if (btnConfirm) {
+      btnConfirm.innerText = confirmText || 'Ya, Lanjutkan';
+      btnConfirm.className = `btn ${confirmClass || 'btn-primary'}`;
+    }
+
+    this.pendingConfirmCallback = onConfirm;
+    modal.classList.remove('hidden');
+  },
+
+  async autoGenerateSchedule() {
+    const nextInfo = this.getNextMonthPeriod();
+    const nextSheetKey = `${nextInfo.month} ${nextInfo.year}`;
+
+    // Get active officers to schedule
+    let officersToSchedule = [];
+    if (this.masterOfficers && this.masterOfficers.length > 0) {
+      officersToSchedule = this.masterOfficers.filter(o => o.isActive === 1 || o.isActive === true);
+    } else if (this.editorOfficers && this.editorOfficers.length > 0) {
+      officersToSchedule = this.editorOfficers;
+    }
+
+    if (officersToSchedule.length === 0) {
+      this.showToast('Tambahkan minimal 1 petugas aktif terlebih dahulu di Data Karyawan!', 'error');
+      return;
+    }
+
+    const monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+    const monthIdx = nextInfo.monthIdx;
+    const daysInMonth = new Date(nextInfo.year, monthIdx + 1, 0).getDate();
+
+    const detailsHtml = `
+      <div><strong>📅 Periode Target Baru:</strong> <span class="badge badge-manager">${nextInfo.monthId} ${nextInfo.year}</span> (Bulan Berikutnya - ${daysInMonth} Hari)</div>
+      <div><strong>🛡️ Keamanan Data:</strong> Jadwal bulan berjalan saat ini (<strong>${nextInfo.currentMonthId} ${nextInfo.currentYear}</strong>) tetap aktif, aman & tidak berubah.</div>
+      <div><strong>👥 Petugas Aktif:</strong> ${officersToSchedule.length} Karyawan Terdaftar</div>
+      <div class="mt-1"><strong>⚡ Aturan Pola Rotasi:</strong></div>
+      <ul>
+        <li><strong>Sabtu & Minggu (Weekend):</strong> 2 Petugas per hari (MOD1 Pagi 09:00 & MOD2 Sore 16:00)</li>
+        <li><strong>Senin - Jumat (Weekday):</strong> 1 Petugas per hari (MOD Sore 18:00)</li>
+        <li><strong>Urutan Rotasi:</strong> Mengikuti hierarki Level & Jarak Dinas Bulan Sebelumnya (${nextInfo.currentMonthId} ${nextInfo.currentYear}) secara adil</li>
+      </ul>
+    `;
+
+    this.showConfirmModal({
+      title: '⚡ Generate Rotasi Jadwal Bulan Berikutnya',
+      icon: '⚡',
+      heading: `Generate Jadwal Bulan Berikutnya (${nextInfo.monthId} ${nextInfo.year})?`,
+      message: `Sistem akan membuatkan draf rotasi jadwal dinas untuk bulan berikutnya (${nextInfo.monthId} ${nextInfo.year}) dengan memperhitungkan jarak dinas bulan sebelumnya agar adil.`,
+      detailsHtml,
+      confirmText: `Generate Jadwal ${nextInfo.monthId} ⚡`,
+      confirmClass: 'btn-primary',
+      onConfirm: async () => {
+        this.closeModal('modal-confirm-action');
+        this.setStatus(`⏳ Meng-generate rotasi otomatis ${nextInfo.monthId} ${nextInfo.year}...`, 'working');
+        try {
+          const res = await fetch('/api/schedule/generate', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              month: nextInfo.month,
+              year: nextInfo.year,
+              officers: officersToSchedule
+            })
+          });
+          const data = await res.json();
+          if (data.success) {
+            const masterLevelMap = {};
+            (this.masterOfficers || []).forEach(m => {
+              masterLevelMap[(m.name || '').toLowerCase().trim()] = m.level || 'Supervisor';
+            });
+            const enriched = (data.schedule.officers || []).map(o => ({
+              ...o,
+              level: masterLevelMap[(o.name || '').toLowerCase().trim()] || o.level || 'Supervisor'
+            }));
+            
+            const sortedOfficers = this.sortOfficersByLevel(enriched);
+            this.editorDrafts[nextSheetKey] = JSON.parse(JSON.stringify(sortedOfficers));
+            this.nextMonthTabOpen = true;
+            this.editorTargetMode = 'next';
+            this.editorMonth = nextInfo.month;
+            this.editorYear = nextInfo.year;
+            this.editorOfficers = sortedOfficers;
+
+            // Activate next month tab in switcher UI
+            const btnCur = document.getElementById('btn-editor-cur-month');
+            const btnNext = document.getElementById('btn-editor-next-month');
+            const groupNext = document.getElementById('group-editor-next-month');
+            if (btnCur) btnCur.className = 'btn btn-sm btn-outline';
+            if (btnNext) btnNext.className = 'btn btn-sm btn-primary active';
+            if (groupNext) groupNext.classList.remove('hidden');
+
+            this.renderEditorTable();
+            this.showToast(`⚡ Draf jadwal ${nextInfo.monthId} ${nextInfo.year} berhasil dibuat! Silakan periksa atau klik Simpan.`, 'success');
+            this.setStatus(`🟢 Draf jadwal ${nextInfo.monthId} ${nextInfo.year} siap (Klik Simpan untuk menyimpan permanen).`, 'ready');
+          } else {
+            this.showToast(`Gagal generate: ${data.error}`, 'error');
+            this.setStatus(`❌ Gagal generate: ${data.error}`, 'error');
+          }
+        } catch (e) {
+          this.showToast(`Error: ${e.message}`, 'error');
+        }
+      }
+    });
   },
 
   async saveEditorSchedule() {
+    const nextInfo = this.getNextMonthPeriod();
+    const isCur = (this.editorTargetMode === 'current');
     const sheetName = `${this.editorMonth} ${this.editorYear}`;
-    const btn = document.getElementById('btn-save-editor-schedule');
-    if (btn) {
-      btn.innerHTML = '⏳ Menyimpan ke Google Drive...';
-      btn.disabled = true;
-    }
+    const monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+    const monthNamesId = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
+    const monthIdx = monthNames.indexOf(this.editorMonth) !== -1 ? monthNames.indexOf(this.editorMonth) : (isCur ? nextInfo.currentMonthIdx : nextInfo.monthIdx);
+    const indMonthName = monthNamesId[monthIdx] || this.editorMonth;
 
-    try {
-      const res = await fetch('/api/schedule/save', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          sheetName,
-          officers: this.editorOfficers
-        })
-      });
-      const data = await res.json();
-      if (data.success) {
-        this.showToast(data.message || '✅ Jadwal berhasil disimpan & disinkronkan ke Google Spreadsheet!', 'success');
-        await this.loadDutyData();
-        await this.loadMatrixData();
-      } else {
-        this.showToast(`❌ Gagal simpan: ${data.error}`, 'error');
+    let shiftCount = 0;
+    this.editorOfficers.forEach(o => {
+      if (o.shifts) {
+        shiftCount += Object.keys(o.shifts).length;
       }
-    } catch (e) {
-      this.showToast(`Error: ${e.message}`, 'error');
-    } finally {
-      if (btn) {
-        btn.innerHTML = '💾 Simpan Jadwal ke Sistem';
-        btn.disabled = false;
+    });
+
+    const detailsHtml = `
+      <div><strong>📅 Periode Jadwal:</strong> <span class="badge ${isCur ? 'badge-supervisor' : 'badge-manager'}">${indMonthName} ${this.editorYear}</span> (${isCur ? 'Bulan Berjalan' : 'Bulan Berikutnya'})</div>
+      <div><strong>👥 Total Petugas:</strong> ${this.editorOfficers.length} Petugas (${shiftCount} Shift Terjadwal)</div>
+      <div><strong>💾 Tujuan Penyimpanan:</strong> Database Lokal & Siap Ditampilkan di Kalender Matrix</div>
+    `;
+
+    this.showConfirmModal({
+      title: isCur ? '💾 Simpan Jadwal Bulan Berjalan' : '💾 Simpan Jadwal Bulan Berikutnya',
+      icon: '💾',
+      heading: `Simpan Jadwal ${indMonthName} ${this.editorYear} ke Sistem?`,
+      message: `Perubahan jadwal dinas untuk ${indMonthName} ${this.editorYear} akan disimpan secara permanen ke database dan langsung dapat dilihat di Kalender Matrix & Dashboard.`,
+      detailsHtml,
+      confirmText: `Simpan Jadwal ${indMonthName} 💾`,
+      confirmClass: 'btn-primary',
+      onConfirm: async () => {
+        this.closeModal('modal-confirm-action');
+        const btn = document.getElementById('btn-save-editor-schedule');
+        if (btn) {
+          btn.innerHTML = '⏳ Menyimpan Jadwal...';
+          btn.disabled = true;
+        }
+        this.setStatus(`💾 Menyimpan jadwal ${sheetName}...`, 'working');
+
+        try {
+          const res = await fetch('/api/schedule/save', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              sheetName,
+              officers: this.editorOfficers
+            })
+          });
+          const data = await res.json();
+          if (data.success) {
+            delete this.editorDrafts[sheetName];
+            this.showToast(data.message || `✅ Jadwal ${indMonthName} ${this.editorYear} berhasil disimpan!`, 'success');
+            this.setStatus(`🟢 Jadwal ${indMonthName} ${this.editorYear} tersimpan aktif.`, 'ready');
+            await this.loadDutyData();
+            await this.loadMatrixData(this.editorMonth, this.editorYear);
+          } else {
+            this.showToast(`❌ Gagal simpan: ${data.error}`, 'error');
+            this.setStatus(`❌ Gagal simpan: ${data.error}`, 'error');
+          }
+        } catch (e) {
+          this.showToast(`Error: ${e.message}`, 'error');
+        } finally {
+          if (btn) {
+            btn.innerHTML = '💾 Simpan Jadwal ke Sistem';
+            btn.disabled = false;
+          }
+        }
       }
-    }
+    });
   },
 
   exportCsv() {
@@ -1808,9 +2204,10 @@ const app = {
   },
 
   async loadUsersList() {
-    const tbody = document.getElementById('users-table-tbody');
-    if (!tbody) return;
-    tbody.innerHTML = '<tr><td colspan="6" class="text-center py-4">Memuat data pengguna...</td></tr>';
+    const modalTbody = document.getElementById('users-table-tbody');
+    const settingsTbody = document.getElementById('settings-users-tbody');
+    if (modalTbody) modalTbody.innerHTML = '<tr><td colspan="6" class="text-center py-4">Memuat data pengguna...</td></tr>';
+    if (settingsTbody) settingsTbody.innerHTML = '<tr><td colspan="6" class="text-center py-4">Memuat data pengguna...</td></tr>';
 
     try {
       const res = await fetch('/api/users');
@@ -1818,11 +2215,13 @@ const app = {
       const users = data.users || [];
 
       if (users.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="6" class="text-center py-4">Belum ada data pengguna.</td></tr>';
+        const emptyHtml = '<tr><td colspan="6" class="text-center py-4">Belum ada data pengguna.</td></tr>';
+        if (modalTbody) modalTbody.innerHTML = emptyHtml;
+        if (settingsTbody) settingsTbody.innerHTML = emptyHtml;
         return;
       }
 
-      tbody.innerHTML = users.map((u, idx) => {
+      const rowsHtml = users.map((u, idx) => {
         const isCurrent = this.currentUser && (this.currentUser.id === u.id || this.currentUser.username === u.username);
         const roleBadge = u.role === 'admin' 
           ? '<span class="status-badge-success">Administrator</span>' 
@@ -1844,8 +2243,13 @@ const app = {
           </tr>
         `;
       }).join('');
+
+      if (modalTbody) modalTbody.innerHTML = rowsHtml;
+      if (settingsTbody) settingsTbody.innerHTML = rowsHtml;
     } catch (e) {
-      tbody.innerHTML = `<tr><td colspan="6" class="text-center py-4 text-danger">Gagal memuat pengguna: ${e.message}</td></tr>`;
+      const errHtml = `<tr><td colspan="6" class="text-center py-4 text-danger">Gagal memuat pengguna: ${e.message}</td></tr>`;
+      if (modalTbody) modalTbody.innerHTML = errHtml;
+      if (settingsTbody) settingsTbody.innerHTML = errHtml;
     }
   },
 

@@ -38,7 +38,8 @@ app.get('/api/status', (req, res) => {
 app.get('/api/schedule/current', async (req, res) => {
   try {
     const sheetName = req.query.sheet;
-    const schedule = await sheetService.fetchScheduleFromGoogle(sheetName);
+    const force = req.query.force === 'true' || req.query.force === '1';
+    const schedule = await sheetService.fetchScheduleFromGoogle(sheetName, force);
     res.json(schedule);
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -122,15 +123,14 @@ app.post('/api/schedule/save', async (req, res) => {
   }
 });
 
-// 4c. Generate Smart Auto Schedule
+// 4c. Generate Smart Auto Schedule (In-Memory Draft, only saved on explicit user Save)
 app.post('/api/schedule/generate', async (req, res) => {
   try {
     const { month = 'October', year = 2026, officers = [] } = req.body;
     const generated = sheetService.generateSmartSchedule(officers, month, parseInt(year, 10));
-    sheetService.saveLocalMonthSchedule(generated.sheetName, generated);
     res.json({
       success: true,
-      message: `Jadwal otomatis untuk ${generated.sheetName} berhasil dibuat!`,
+      message: `Jadwal otomatis untuk ${generated.sheetName} berhasil dibuat (Draft)!`,
       schedule: generated
     });
   } catch (err) {

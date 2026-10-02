@@ -1,180 +1,141 @@
 {
-  "sheetName": "October 2026",
+  "sheetName": "August 2026",
   "officers": [
     {
       "name": "Ardhiny",
       "role": "HR Manager",
       "level": "Manager",
-      "shifts": {
-        "4": "MOD2",
-        "11": "MOD2"
-      }
+      "shifts": {}
+    },
+    {
+      "name": "Ardhiny",
+      "role": "",
+      "level": "Manager",
+      "shifts": {}
     },
     {
       "name": "Doni Abiyantoro",
       "role": "Chief Accountant",
       "level": "Manager",
-      "shifts": {
-        "17": "MOD1",
-        "24": "MOD1",
-        "31": "MOD2"
-      }
+      "shifts": {}
     },
     {
       "name": "Fajar F",
       "role": "Chief Engineer",
       "level": "Manager",
-      "shifts": {
-        "3": "MOD2",
-        "11": "MOD1",
-        "18": "MOD2"
-      }
+      "shifts": {}
     },
     {
       "name": "Rama",
       "role": "FO Manager",
       "level": "Manager",
-      "shifts": {
-        "4": "MOD1",
-        "25": "MOD1"
-      }
+      "shifts": {}
     },
     {
       "name": "Agus Budiono Prastyo",
       "role": "IT Asst Manager",
       "level": "Asst Manager",
-      "shifts": {
-        "10": "MOD2",
-        "29": "MOD"
-      }
-    },
-    {
-      "name": "Bekti Utami",
-      "role": "Asst. Sales Marketing Manager",
-      "level": "Asst Manager",
-      "shifts": {
-        "3": "MOD1",
-        "10": "MOD1"
-      }
+      "shifts": {}
     },
     {
       "name": "Iqbal",
       "role": "Junior Sous Chef",
       "level": "Asst Manager",
-      "shifts": {
-        "1": "MOD",
-        "24": "MOD2"
-      }
+      "shifts": {}
     },
     {
       "name": "Lukman Prayogo",
       "role": "R&B Asst. Manager",
       "level": "Asst Manager",
-      "shifts": {
-        "2": "MOD",
-        "25": "MOD2"
-      }
+      "shifts": {}
     },
     {
       "name": "Ota Setiawan",
-      "role": "Asst EHK",
+      "role": "HK Supervisor",
       "level": "Asst Manager",
-      "shifts": {
-        "18": "MOD1",
-        "31": "MOD1"
-      }
+      "shifts": {}
     },
     {
       "name": "Sugiartono",
-      "role": "Bookkeeper",
+      "role": "Bookeeper",
       "level": "Asst Manager",
-      "shifts": {
-        "17": "MOD2",
-        "30": "MOD"
-      }
+      "shifts": {}
     },
     {
       "name": "Ayu",
       "role": "AR/IA",
       "level": "Supervisor",
-      "shifts": {
-        "8": "MOD",
-        "19": "MOD"
-      }
+      "shifts": {}
+    },
+    {
+      "name": "Created by",
+      "role": "",
+      "level": "Supervisor",
+      "shifts": {}
     },
     {
       "name": "Dian Nurkhasanah",
       "role": "Sales Executive",
       "level": "Supervisor",
-      "shifts": {
-        "5": "MOD",
-        "16": "MOD"
-      }
+      "shifts": {}
     },
     {
       "name": "Faizin",
       "role": "ENG Supervisor",
       "level": "Supervisor",
-      "shifts": {
-        "9": "MOD",
-        "23": "MOD"
-      }
+      "shifts": {}
     },
     {
       "name": "Fajar Kuncoro",
       "role": "Purchasing",
       "level": "Supervisor",
-      "shifts": {
-        "7": "MOD",
-        "20": "MOD"
-      }
+      "shifts": {}
     },
     {
       "name": "Guntur",
       "role": "HK Shift Leader",
       "level": "Supervisor",
-      "shifts": {
-        "13": "MOD",
-        "26": "MOD"
-      }
+      "shifts": {}
     },
     {
       "name": "Hendri",
       "role": "FBP",
       "level": "Supervisor",
-      "shifts": {
-        "14": "MOD",
-        "27": "MOD"
-      }
+      "shifts": {}
     },
     {
       "name": "Hendri D Prayogo",
       "role": "AP/GC",
       "level": "Supervisor",
-      "shifts": {
-        "6": "MOD",
-        "21": "MOD"
-      }
+      "shifts": {}
+    },
+    {
+      "name": "Human Resource Manager",
+      "role": "",
+      "level": "Supervisor",
+      "shifts": {}
+    },
+    {
+      "name": "Martinus",
+      "role": "Sales Marketing Manager",
+      "level": "Supervisor",
+      "shifts": {}
     },
     {
       "name": "Septi Fira",
       "role": "Sales Executive",
       "level": "Supervisor",
-      "shifts": {
-        "12": "MOD",
-        "22": "MOD"
-      }
+      "shifts": {}
     },
     {
       "name": "Syahrul",
       "role": "FBP",
       "level": "Supervisor",
       "shifts": {
-        "15": "MOD",
-        "28": "MOD"
+        "3": "MOD"
       }
     }
   ],
-  "lastUpdated": "2026-10-02T08:00:57.205Z",
+  "lastUpdated": "2026-10-02T08:03:56.268Z",
   "source": "live_google_sheet"
 }

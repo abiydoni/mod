@@ -1,5 +1,38 @@
 [
   {
+    "id": "1790928002102",
+    "timestamp": "2026-10-02T08:00:02.102Z",
+    "type": "AUTO",
+    "shift": "MOD2",
+    "status": "SUCCESS",
+    "target": "120363398680818900@g.us",
+    "messageText": "🏨 *PEMBERITAHUAN JADWAL MOD 2 (SORE)*\n━━━━━━━━━━━━━━━━━━━━━━━━━━\n📅 *Jumat, 02 Oktober 2026*\n⏰ *Waktu Tugas:* Shift Sore (MOD 2 - Masuk 16:00)\n\n👥 *Petugas MOD 2 Sore Hari Ini:*\n_Tidak ada petugas yang dijadwalkan._\n\n⚠️ *Catatan:* \nMohon bertugas tepat waktu dan lakukan serah terima dinas.\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━\n_Sistem Notifikasi Otomatis MOD_",
+    "statusCode": 200,
+    "response": {
+      "status": true,
+      "message": "Message sent successfully!",
+      "jid": "120363398680818900@g.us",
+      "result": {
+        "key": {
+          "remoteJid": "120363398680818900@g.us",
+          "fromMe": true,
+          "id": "3EB057FEDCC3996845F40F"
+        },
+        "message": {
+          "extendedTextMessage": {
+            "text": "🏨 *PEMBERITAHUAN JADWAL MOD 2 (SORE)*\n━━━━━━━━━━━━━━━━━━━━━━━━━━\n📅 *Jumat, 02 Oktober 2026*\n⏰ *Waktu Tugas:* Shift Sore (MOD 2 - Masuk 16:00)\n\n👥 *Petugas MOD 2 Sore Hari Ini:*\n_Tidak ada petugas yang dijadwalkan._\n\n⚠️ *Catatan:* \nMohon bertugas tepat waktu dan lakukan serah terima dinas.\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━\n_Sistem Notifikasi Otomatis MOD_"
+          },
+          "messageContextInfo": {
+            "messageSecret": "Xa+i7emn1oa/0vdDTd0ALaA4QAoZ7T7W9tQoLn/+88Y="
+          }
+        },
+        "messageTimestamp": "1790927999",
+        "status": "PENDING",
+        "participant": "6285183214612:84@s.whatsapp.net"
+      }
+    }
+  },
+  {
     "id": "1790845204057",
     "timestamp": "2026-10-01T09:00:04.057Z",
     "type": "AUTO",
