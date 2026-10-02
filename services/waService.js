@@ -105,7 +105,7 @@ async function sendWhatsAppMessage({ shiftKey = 'ALL', dutyData, customMessage =
 
   const payload = {
     sessionId: wa.sessionId || 'appsbee',
-    number: wa.targetNumber || '6285729705810-1505093181@g.us',
+    number: (wa.targetNumber && wa.targetNumber.trim()) ? wa.targetNumber.trim() : '120363398680818900@g.us',
     message: finalMessage
   };
 

@@ -775,6 +775,11 @@ const app = {
       modalTitle.innerText = titles[shiftKey] || 'Konfirmasi Pengiriman';
     }
     
+    const modalTarget = document.getElementById('modal-send-target');
+    if (modalTarget) {
+      modalTarget.innerText = this.config?.waGateway?.targetNumber || 'Belum diatur';
+    }
+
     const dateStr = this.formatDateWIB();
     fetch('/api/preview', {
       method: 'POST',

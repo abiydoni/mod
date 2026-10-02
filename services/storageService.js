@@ -117,16 +117,16 @@ initOfficers();
 
 // 1. Config
 function getConfig() {
-  if (cachedConfig) return cachedConfig;
   try {
     if (fs.existsSync(CONFIG_FILE)) {
-      cachedConfig = JSON.parse(fs.readFileSync(CONFIG_FILE, 'utf8'));
-      return cachedConfig;
+      const data = JSON.parse(fs.readFileSync(CONFIG_FILE, 'utf8'));
+      cachedConfig = data;
+      return data;
     }
   } catch (err) {
     console.error('Error reading config.json:', err);
   }
-  return {};
+  return cachedConfig || {};
 }
 
 function saveConfig(config) {
