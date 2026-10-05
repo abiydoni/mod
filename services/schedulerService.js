@@ -6,45 +6,75 @@ const storage = require('./storageService');
 let activeJobs = {};
 let dispatchedToday = {}; // { 'YYYY-MM-DD_MOD1': true }
 
-function getTodayKey(shiftKey) {
-  const todayStr = new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Jakarta' }).format(new Date());
-  return `${todayStr}_${shiftKey}`;
+function getTodayDateStr() {
+  return new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Jakarta' }).format(new Date());
 }
 
-async function triggerShiftDispatch(shiftKey) {
+function getTodayKey(shiftKey) {
+  return `${getTodayDateStr()}_${shiftKey}`;
+}
+
+async function triggerShiftDispatch(shiftKey, isManual = false) {
   const timeWib = new Date().toLocaleTimeString('id-ID', { timeZone: 'Asia/Jakarta' });
+  const dateStr = getTodayDateStr();
+  const todayKey = `${dateStr}_${shiftKey}`;
   console.log(`[SCHEDULER] Triggering scheduled dispatch for ${shiftKey} at ${timeWib} WIB...`);
   
+  // 1. Persistent Check: Has this shift already been dispatched successfully today by ANY worker process?
+  if (!isManual && (storage.isShiftDispatchedToday(shiftKey, dateStr) || (dispatchedToday[todayKey] && dispatchedToday[todayKey].result && dispatchedToday[todayKey].result.success))) {
+    console.log(`[SCHEDULER] Shift ${shiftKey} already dispatched today (${dateStr}). Skipping duplicate.`);
+    return {
+      success: false,
+      skipped: true,
+      reason: `Shift ${shiftKey} sudah terkirim hari ini (${dateStr}). Pengiriman duplikat diabaikan.`
+    };
+  }
+
+  // 2. Multi-Worker Concurrency Lock: Prevent multiple Passenger processes from firing at the exact same millisecond
+  const lockAcquired = isManual || storage.acquireDispatchLock(todayKey, 60000);
+  if (!lockAcquired) {
+    console.log(`[SCHEDULER] Dispatch lock for ${todayKey} already held by another worker process. Skipping concurrent duplicate.`);
+    return {
+      success: false,
+      skipped: true,
+      reason: `Pengiriman ${shiftKey} sedang diproses oleh worker lain.`
+    };
+  }
+
   try {
     const schedule = await sheetService.fetchScheduleFromGoogle();
     const duty = sheetService.getDutyForDate(schedule, new Date());
     
     const officers = shiftKey === 'ALL' ? (duty.all || []) : (duty[shiftKey] || []);
     if (!officers || officers.length === 0) {
-      console.log(`[SCHEDULER] No officers for shift ${shiftKey} today (${timeWib} WIB). Dispatch skipped.`);
-      const res = await waService.sendWhatsAppMessage({
-        shiftKey,
-        dutyData: duty,
-        manual: false
-      });
-      return res;
+      console.log(`[SCHEDULER] No officers for shift ${shiftKey} today (${timeWib} WIB). Skipping WhatsApp broadcast.`);
+      storage.releaseDispatchLock(todayKey);
+      return {
+        success: false,
+        skipped: true,
+        reason: `Tidak ada petugas yang dijadwalkan untuk shift ${shiftKey} hari ini.`
+      };
     }
 
     const res = await waService.sendWhatsAppMessage({
       shiftKey,
       dutyData: duty,
-      manual: false
+      manual: isManual
     });
 
-    const todayKey = getTodayKey(shiftKey);
-    dispatchedToday[todayKey] = {
-      time: new Date().toLocaleString('id-ID', { timeZone: 'Asia/Jakarta' }),
-      result: res
-    };
+    if (res && res.success) {
+      storage.recordShiftDispatch(shiftKey, dateStr, res);
+      dispatchedToday[todayKey] = {
+        time: new Date().toLocaleString('id-ID', { timeZone: 'Asia/Jakarta' }),
+        result: res
+      };
+    }
 
+    storage.releaseDispatchLock(todayKey);
     console.log(`[SCHEDULER] Dispatch for ${shiftKey} completed. Status: ${res.success ? 'OK' : (res.skipped ? 'SKIPPED' : 'FAILED')}`);
     return res;
   } catch (err) {
+    storage.releaseDispatchLock(todayKey);
     console.error(`[SCHEDULER] Error during ${shiftKey} dispatch:`, err);
     return { success: false, error: err.message };
   }
@@ -113,29 +143,29 @@ function initScheduler() {
 function getSchedulerStatus() {
   const config = storage.getConfig();
   const schedules = config.schedules || {};
-  const todayStr = new Date().toISOString().split('T')[0];
+  const todayStr = getTodayDateStr();
 
   return {
     timezone: 'Asia/Jakarta',
     currentTime: new Date().toLocaleString('id-ID', { timeZone: 'Asia/Jakarta' }),
     activeSchedules: {
       MOD1: {
-        time: (schedules.MOD1 && schedules.MOD1.time) || '09:00',
-        cron: (schedules.MOD1 && schedules.MOD1.cron) || '0 9 * * *',
+        time: (schedules.MOD1 && schedules.MOD1.time) || '08:00',
+        cron: (schedules.MOD1 && schedules.MOD1.cron) || '0 8 * * *',
         enabled: schedules.MOD1 ? schedules.MOD1.enabled : true,
-        dispatchedToday: !!dispatchedToday[`${todayStr}_MOD1`]
+        dispatchedToday: storage.isShiftDispatchedToday('MOD1', todayStr) || !!dispatchedToday[`${todayStr}_MOD1`]
       },
       MOD2: {
-        time: (schedules.MOD2 && schedules.MOD2.time) || '16:00',
-        cron: (schedules.MOD2 && schedules.MOD2.cron) || '0 16 * * *',
+        time: (schedules.MOD2 && schedules.MOD2.time) || '15:00',
+        cron: (schedules.MOD2 && schedules.MOD2.cron) || '0 15 * * *',
         enabled: schedules.MOD2 ? schedules.MOD2.enabled : true,
-        dispatchedToday: !!dispatchedToday[`${todayStr}_MOD2`]
+        dispatchedToday: storage.isShiftDispatchedToday('MOD2', todayStr) || !!dispatchedToday[`${todayStr}_MOD2`]
       },
       MOD: {
-        time: (schedules.MOD && schedules.MOD.time) || '18:00',
-        cron: (schedules.MOD && schedules.MOD.cron) || '0 18 * * *',
+        time: (schedules.MOD && schedules.MOD.time) || '17:00',
+        cron: (schedules.MOD && schedules.MOD.cron) || '0 17 * * *',
         enabled: schedules.MOD ? schedules.MOD.enabled : true,
-        dispatchedToday: !!dispatchedToday[`${todayStr}_MOD`]
+        dispatchedToday: storage.isShiftDispatchedToday('MOD', todayStr) || !!dispatchedToday[`${todayStr}_MOD`]
       }
     }
   };

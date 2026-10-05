@@ -736,10 +736,10 @@ function getDutyForDate(scheduleData, targetDate = new Date()) {
 
   officers.forEach(officer => {
     const shift = officer.shifts ? officer.shifts[day] : null;
-    if (shift) {
+    if (shift && officer.name && officer.name.trim() !== '') {
       const officerInfo = {
-        name: officer.name,
-        role: officer.role,
+        name: officer.name.trim(),
+        role: (officer.role || '').trim(),
         shift
       };
 

@@ -17,6 +17,12 @@ const OFFICERS_FILE = path.join(DATA_DIR, 'officers.json');
 const LOGS_FILE = path.join(DATA_DIR, 'logs.json');
 const USERS_FILE = path.join(DATA_DIR, 'users.json');
 const SWAPS_FILE = path.join(DATA_DIR, 'schedule_swaps.json');
+const DISPATCH_HISTORY_FILE = path.join(DATA_DIR, 'dispatch_history.json');
+const LOCKS_DIR = path.join(DATA_DIR, 'locks');
+
+if (!fs.existsSync(LOCKS_DIR)) {
+  fs.mkdirSync(LOCKS_DIR, { recursive: true });
+}
 
 // In-Memory Cache for ultra-fast (sub-millisecond) response
 let cachedConfig = null;
@@ -24,6 +30,71 @@ let cachedOfficers = null;
 let cachedLogs = null;
 let cachedUsers = null;
 let cachedSwaps = null;
+
+// Multi-Worker Passenger Dispatch Lock & Persistent Tracking
+function acquireDispatchLock(lockKey, ttlMs = 60000) {
+  const safeKey = lockKey.replace(/[^a-zA-Z0-9_-]/g, '_');
+  const lockFile = path.join(LOCKS_DIR, `${safeKey}.lock`);
+  try {
+    if (fs.existsSync(lockFile)) {
+      const stats = fs.statSync(lockFile);
+      const age = Date.now() - stats.mtimeMs;
+      if (age < ttlMs) {
+        return false; // Still held by another worker
+      }
+      try { fs.unlinkSync(lockFile); } catch (e) {}
+    }
+    const fd = fs.openSync(lockFile, 'wx');
+    fs.writeSync(fd, `${process.pid}_${Date.now()}`);
+    fs.closeSync(fd);
+    return true;
+  } catch (err) {
+    return false;
+  }
+}
+
+function releaseDispatchLock(lockKey) {
+  const safeKey = lockKey.replace(/[^a-zA-Z0-9_-]/g, '_');
+  const lockFile = path.join(LOCKS_DIR, `${safeKey}.lock`);
+  try {
+    if (fs.existsSync(lockFile)) {
+      fs.unlinkSync(lockFile);
+    }
+  } catch (e) {}
+}
+
+function getDispatchHistory() {
+  try {
+    if (fs.existsSync(DISPATCH_HISTORY_FILE)) {
+      return JSON.parse(fs.readFileSync(DISPATCH_HISTORY_FILE, 'utf8'));
+    }
+  } catch (e) {}
+  return {};
+}
+
+function isShiftDispatchedToday(shiftKey, dateStr) {
+  const history = getDispatchHistory();
+  const key = `${dateStr}_${shiftKey}`;
+  return !!(history[key] && history[key].success);
+}
+
+function recordShiftDispatch(shiftKey, dateStr, result) {
+  const history = getDispatchHistory();
+  const key = `${dateStr}_${shiftKey}`;
+  history[key] = {
+    timestamp: new Date().toISOString(),
+    timeWib: new Date().toLocaleString('id-ID', { timeZone: 'Asia/Jakarta' }),
+    shiftKey,
+    date: dateStr,
+    success: !!(result && (result.success || result.statusCode === 200 || result.status === 'SUCCESS')),
+    pid: process.pid
+  };
+  try {
+    fs.writeFileSync(DISPATCH_HISTORY_FILE, JSON.stringify(history, null, 2), 'utf8');
+  } catch (e) {
+    console.error('Error writing dispatch_history.json:', e);
+  }
+}
 
 // Password Hashing using PBKDF2 (Native Node.js crypto, zero dependencies)
 function hashPassword(password, salt = null) {
@@ -592,5 +663,10 @@ module.exports = {
   getLevelWeight,
   deleteUser,
   getScheduleSwaps,
-  saveScheduleSwap
+  saveScheduleSwap,
+  acquireDispatchLock,
+  releaseDispatchLock,
+  isShiftDispatchedToday,
+  recordShiftDispatch,
+  getDispatchHistory
 };
