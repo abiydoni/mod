@@ -85,7 +85,7 @@ function sendHttpJson(apiUrl, payload, headers = {}) {
   });
 }
 
-async function sendWhatsAppMessage({ shiftKey = 'ALL', dutyData, customMessage = null, manual = false }) {
+async function sendWhatsAppMessage({ shiftKey = 'ALL', dutyData, customMessage = null, manual = false, allowEmpty = false }) {
   const config = storage.getConfig();
   const wa = config.waGateway || {};
 
@@ -95,10 +95,38 @@ async function sendWhatsAppMessage({ shiftKey = 'ALL', dutyData, customMessage =
       shift: shiftKey,
       status: 'SKIPPED',
       target: wa.targetNumber || 'N/A',
-      message: 'WA Gateway dinonaktifkan di pengaturan.',
+      messageText: 'WA Gateway dinonaktifkan di pengaturan.',
       response: null
     });
     return { success: false, reason: 'WA Gateway disabled', log: logItem };
+  }
+
+  // Jika pengiriman pesan jadwal (bukan custom broadcast) dan tidak ada petugas yang dijadwalkan, jangan kirim ke WA Group
+  if (!customMessage && dutyData && !allowEmpty) {
+    let officers = [];
+    if (shiftKey === 'ALL') {
+      officers = dutyData.all || [];
+    } else {
+      officers = dutyData[shiftKey] || [];
+    }
+
+    if (!officers || officers.length === 0) {
+      const logItem = storage.addLog({
+        type: manual ? 'MANUAL' : 'AUTO',
+        shift: shiftKey,
+        status: 'SKIPPED',
+        target: (wa.targetNumber && wa.targetNumber.trim()) ? wa.targetNumber.trim() : '120363398680818900@g.us',
+        messageText: `Pengiriman dibatalkan: Tidak ada petugas yang dijadwalkan untuk shift ${shiftKey} pada ${dutyData.date || 'hari ini'}.`,
+        response: { reason: 'NO_OFFICERS_SCHEDULED' }
+      });
+
+      return {
+        success: false,
+        skipped: true,
+        reason: `Tidak ada petugas yang dijadwalkan untuk shift ${shiftKey}. Pesan tidak dikirim ke WA Group.`,
+        log: logItem
+      };
+    }
   }
 
   let finalMessage = customMessage;

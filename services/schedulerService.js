@@ -19,9 +19,15 @@ async function triggerShiftDispatch(shiftKey) {
     const schedule = await sheetService.fetchScheduleFromGoogle();
     const duty = sheetService.getDutyForDate(schedule, new Date());
     
-    const officers = duty[shiftKey] || [];
-    if (officers.length === 0) {
-      console.log(`[SCHEDULER] No officers for shift ${shiftKey} today (${timeWib} WIB).`);
+    const officers = shiftKey === 'ALL' ? (duty.all || []) : (duty[shiftKey] || []);
+    if (!officers || officers.length === 0) {
+      console.log(`[SCHEDULER] No officers for shift ${shiftKey} today (${timeWib} WIB). Dispatch skipped.`);
+      const res = await waService.sendWhatsAppMessage({
+        shiftKey,
+        dutyData: duty,
+        manual: false
+      });
+      return res;
     }
 
     const res = await waService.sendWhatsAppMessage({
@@ -36,7 +42,7 @@ async function triggerShiftDispatch(shiftKey) {
       result: res
     };
 
-    console.log(`[SCHEDULER] Dispatch for ${shiftKey} completed. Status: ${res.success ? 'OK' : 'FAILED'}`);
+    console.log(`[SCHEDULER] Dispatch for ${shiftKey} completed. Status: ${res.success ? 'OK' : (res.skipped ? 'SKIPPED' : 'FAILED')}`);
     return res;
   } catch (err) {
     console.error(`[SCHEDULER] Error during ${shiftKey} dispatch:`, err);

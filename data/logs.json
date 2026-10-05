@@ -1,5 +1,17 @@
 [
   {
+    "id": "1791161618620",
+    "timestamp": "2026-10-05T00:53:38.620Z",
+    "type": "MANUAL",
+    "shift": "MOD1",
+    "status": "SKIPPED",
+    "target": "120363334863742679@g.us",
+    "messageText": "Pengiriman dibatalkan: Tidak ada petugas yang dijadwalkan untuk shift MOD1 pada 2026-10-05.",
+    "response": {
+      "reason": "NO_OFFICERS_SCHEDULED"
+    }
+  },
+  {
     "id": "1790935201408",
     "timestamp": "2026-10-02T10:00:01.408Z",
     "type": "AUTO",

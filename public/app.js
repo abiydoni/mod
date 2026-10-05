@@ -1543,8 +1543,10 @@ const app = {
 
       if (data.success) {
         this.showToast('✅ Pesan berhasil dikirim ke WhatsApp Group!', 'success');
+      } else if (data.skipped) {
+        this.showToast(`ℹ️ ${data.reason || 'Pengiriman dilewati: Tidak ada petugas yang dijadwalkan.'}`, 'warning');
       } else {
-        this.showToast(`❌ Gagal kirim: ${data.error || 'Periksa gateway WA'}`, 'error');
+        this.showToast(`❌ Gagal kirim: ${data.error || data.reason || 'Periksa gateway WA'}`, 'error');
       }
       await this.loadLogs();
     } catch (e) {
