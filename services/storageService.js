@@ -31,36 +31,164 @@ let cachedLogs = null;
 let cachedUsers = null;
 let cachedSwaps = null;
 
-// Multi-Worker Passenger Dispatch Lock & Persistent Tracking
-function acquireDispatchLock(lockKey, ttlMs = 60000) {
-  const safeKey = lockKey.replace(/[^a-zA-Z0-9_-]/g, '_');
-  const lockFile = path.join(LOCKS_DIR, `${safeKey}.lock`);
+// Multi-Worker Passenger Dispatch Lock & Master Process Election
+function getSlotFilePath(shiftKey, dateStr) {
+  const safeDate = dateStr.replace(/[^a-zA-Z0-9_-]/g, '_');
+  const safeShift = shiftKey.replace(/[^a-zA-Z0-9_-]/g, '_');
+  return path.join(LOCKS_DIR, `dispatch_${safeDate}_${safeShift}.json`);
+}
+
+function claimShiftDispatchSlot(shiftKey, dateStr) {
+  const slotFile = getSlotFilePath(shiftKey, dateStr);
   try {
-    if (fs.existsSync(lockFile)) {
-      const stats = fs.statSync(lockFile);
-      const age = Date.now() - stats.mtimeMs;
-      if (age < ttlMs) {
-        return false; // Still held by another worker
+    if (fs.existsSync(slotFile)) {
+      try {
+        const raw = fs.readFileSync(slotFile, 'utf8');
+        const info = JSON.parse(raw);
+        if (info.status === 'COMPLETED') {
+          return { acquired: false, reason: 'ALREADY_COMPLETED', info };
+        }
+        if (info.status === 'SKIPPED') {
+          return { acquired: false, reason: 'ALREADY_SKIPPED', info };
+        }
+        if (info.status === 'IN_PROGRESS') {
+          const age = Date.now() - (info.timestamp || 0);
+          // If in progress and less than 5 minutes, another process is currently sending
+          if (age < 300000) {
+            return { acquired: false, reason: 'IN_PROGRESS', info };
+          }
+          // Process probably died/crashed mid-send (>5 min ago), remove stale lock
+          try { fs.unlinkSync(slotFile); } catch (e) {}
+        }
+      } catch (parseErr) {
+        // Corrupted file, try to unlink
+        try { fs.unlinkSync(slotFile); } catch (e) {}
       }
-      try { fs.unlinkSync(lockFile); } catch (e) {}
     }
-    const fd = fs.openSync(lockFile, 'wx');
-    fs.writeSync(fd, `${process.pid}_${Date.now()}`);
+
+    // Atomic file creation with 'wx' flag
+    const fd = fs.openSync(slotFile, 'wx');
+    const claimData = JSON.stringify({
+      status: 'IN_PROGRESS',
+      shiftKey,
+      date: dateStr,
+      pid: process.pid,
+      timestamp: Date.now(),
+      startedAt: new Date().toISOString(),
+      timeWib: new Date().toLocaleString('id-ID', { timeZone: 'Asia/Jakarta' })
+    }, null, 2);
+    fs.writeSync(fd, claimData);
     fs.closeSync(fd);
-    return true;
+    return { acquired: true };
   } catch (err) {
+    // EEXIST means another process claimed the slot at the exact same millisecond
+    return { acquired: false, reason: 'CONCURRENT_CLAIM', error: err.message };
+  }
+}
+
+function completeShiftDispatchSlot(shiftKey, dateStr, result) {
+  const slotFile = getSlotFilePath(shiftKey, dateStr);
+  const completedData = {
+    status: 'COMPLETED',
+    shiftKey,
+    date: dateStr,
+    pid: process.pid,
+    timestamp: Date.now(),
+    completedAt: new Date().toISOString(),
+    timeWib: new Date().toLocaleString('id-ID', { timeZone: 'Asia/Jakarta' }),
+    success: !!(result && (result.success || result.statusCode === 200 || result.status === 'SUCCESS')),
+    result: result?.response || result?.result || null
+  };
+  try {
+    fs.writeFileSync(slotFile, JSON.stringify(completedData, null, 2), 'utf8');
+  } catch (err) {
+    console.error(`Error completing dispatch slot for ${shiftKey}:`, err);
+  }
+  // Also persist to consolidated dispatch history
+  recordShiftDispatch(shiftKey, dateStr, result);
+}
+
+function failShiftDispatchSlot(shiftKey, dateStr, reason = 'FAILED') {
+  const slotFile = getSlotFilePath(shiftKey, dateStr);
+  const data = {
+    status: reason.includes('NO_OFFICERS') ? 'SKIPPED' : 'FAILED',
+    shiftKey,
+    date: dateStr,
+    pid: process.pid,
+    timestamp: Date.now(),
+    timeWib: new Date().toLocaleString('id-ID', { timeZone: 'Asia/Jakarta' }),
+    reason
+  };
+  try {
+    fs.writeFileSync(slotFile, JSON.stringify(data, null, 2), 'utf8');
+  } catch (err) {}
+}
+
+// Master Scheduler Process Election
+function getSchedulerMasterStatus() {
+  const masterFile = path.join(LOCKS_DIR, 'scheduler_master.json');
+  try {
+    if (fs.existsSync(masterFile)) {
+      const data = JSON.parse(fs.readFileSync(masterFile, 'utf8'));
+      const age = Date.now() - (data.timestamp || 0);
+      // Master lease valid for 45 seconds
+      if (age < 45000) {
+        return {
+          isMaster: data.pid === process.pid,
+          masterPid: data.pid,
+          isAlive: true,
+          ageMs: age
+        };
+      }
+    }
+  } catch (e) {}
+  return { isMaster: false, masterPid: null, isAlive: false, ageMs: 0 };
+}
+
+function tryElectMasterScheduler() {
+  const masterFile = path.join(LOCKS_DIR, 'scheduler_master.json');
+  try {
+    const status = getSchedulerMasterStatus();
+    if (status.isAlive && !status.isMaster) {
+      // Active master is another process
+      return false;
+    }
+    // Claim or renew master lease
+    fs.writeFileSync(masterFile, JSON.stringify({
+      pid: process.pid,
+      timestamp: Date.now(),
+      lastHeartbeat: new Date().toISOString()
+    }), 'utf8');
+    return true;
+  } catch (e) {
     return false;
   }
 }
 
-function releaseDispatchLock(lockKey) {
-  const safeKey = lockKey.replace(/[^a-zA-Z0-9_-]/g, '_');
-  const lockFile = path.join(LOCKS_DIR, `${safeKey}.lock`);
+function releaseMasterScheduler() {
+  const masterFile = path.join(LOCKS_DIR, 'scheduler_master.json');
   try {
-    if (fs.existsSync(lockFile)) {
-      fs.unlinkSync(lockFile);
+    if (fs.existsSync(masterFile)) {
+      const data = JSON.parse(fs.readFileSync(masterFile, 'utf8'));
+      if (data.pid === process.pid) {
+        fs.unlinkSync(masterFile);
+      }
     }
   } catch (e) {}
+}
+
+// Backward compatibility legacy locks
+function acquireDispatchLock(lockKey, ttlMs = 60000) {
+  const parts = lockKey.split('_');
+  const dateStr = parts[0];
+  const shiftKey = parts.slice(1).join('_');
+  const claim = claimShiftDispatchSlot(shiftKey, dateStr);
+  return claim.acquired;
+}
+
+function releaseDispatchLock(lockKey) {
+  // Deliberately empty: Daily dispatch locks MUST NOT be released after completion!
+  // Completed slots remain permanently on disk for that day so duplicate sending is impossible.
 }
 
 function getDispatchHistory() {
@@ -73,6 +201,18 @@ function getDispatchHistory() {
 }
 
 function isShiftDispatchedToday(shiftKey, dateStr) {
+  // Check primary atomic slot file first
+  const slotFile = getSlotFilePath(shiftKey, dateStr);
+  try {
+    if (fs.existsSync(slotFile)) {
+      const info = JSON.parse(fs.readFileSync(slotFile, 'utf8'));
+      if (info.status === 'COMPLETED') return true;
+      if (info.status === 'SKIPPED') return true;
+      if (info.status === 'IN_PROGRESS' && (Date.now() - (info.timestamp || 0) < 300000)) return true;
+    }
+  } catch (e) {}
+
+  // Check consolidated history
   const history = getDispatchHistory();
   const key = `${dateStr}_${shiftKey}`;
   return !!(history[key] && history[key].success);
@@ -271,39 +411,48 @@ function saveConfig(config) {
 
 // 2. Delivery Logs
 function getLogs(limit = 100) {
-  if (!cachedLogs) {
-    try {
-      if (fs.existsSync(LOGS_FILE)) {
-        cachedLogs = JSON.parse(fs.readFileSync(LOGS_FILE, 'utf8'));
-      } else {
-        cachedLogs = [];
+  try {
+    if (fs.existsSync(LOGS_FILE)) {
+      const data = JSON.parse(fs.readFileSync(LOGS_FILE, 'utf8'));
+      if (Array.isArray(data)) {
+        cachedLogs = data;
+        return cachedLogs.slice(0, limit);
       }
-    } catch (err) {
-      console.error('Error reading logs.json:', err);
-      cachedLogs = [];
     }
+  } catch (err) {
+    console.error('Error reading logs.json:', err);
   }
-  return cachedLogs.slice(0, limit);
+  return (cachedLogs || []).slice(0, limit);
 }
 
 function addLog(entry) {
   const logItem = {
     id: Date.now().toString(),
     timestamp: new Date().toISOString(),
+    pid: process.pid,
     ...entry
   };
 
-  if (!cachedLogs) {
-    getLogs(100);
+  let logs = [];
+  try {
+    if (fs.existsSync(LOGS_FILE)) {
+      const parsed = JSON.parse(fs.readFileSync(LOGS_FILE, 'utf8'));
+      if (Array.isArray(parsed)) {
+        logs = parsed;
+      }
+    }
+  } catch (err) {
+    logs = cachedLogs || [];
   }
 
-  cachedLogs.unshift(logItem);
-  if (cachedLogs.length > 500) {
-    cachedLogs = cachedLogs.slice(0, 500);
+  logs.unshift(logItem);
+  if (logs.length > 500) {
+    logs = logs.slice(0, 500);
   }
+  cachedLogs = logs;
 
   try {
-    fs.writeFileSync(LOGS_FILE, JSON.stringify(cachedLogs, null, 2), 'utf8');
+    fs.writeFileSync(LOGS_FILE, JSON.stringify(logs, null, 2), 'utf8');
   } catch (err) {
     console.error('Error writing logs.json:', err);
   }
@@ -668,5 +817,11 @@ module.exports = {
   releaseDispatchLock,
   isShiftDispatchedToday,
   recordShiftDispatch,
-  getDispatchHistory
+  getDispatchHistory,
+  claimShiftDispatchSlot,
+  completeShiftDispatchSlot,
+  failShiftDispatchSlot,
+  getSchedulerMasterStatus,
+  tryElectMasterScheduler,
+  releaseMasterScheduler
 };

@@ -13,6 +13,8 @@ lerna-debug.log*
 # Logs and runtime data
 *.log
 data/logs.json
+data/dispatch_history.json
+data/locks/
 *.sqlite-journal
 *.sqlite-shm
 *.sqlite-wal
