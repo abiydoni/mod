@@ -403,6 +403,18 @@ function getCurrentCalendarSheetName() {
   return formatter.format(new Date());
 }
 
+function getNextCalendarSheetName() {
+  const d = new Date();
+  d.setDate(1);
+  d.setMonth(d.getMonth() + 1);
+  const formatter = new Intl.DateTimeFormat('en-US', {
+    timeZone: 'Asia/Jakarta',
+    month: 'long',
+    year: 'numeric'
+  });
+  return formatter.format(d);
+}
+
 function getSheetNameForDate(targetDate = new Date()) {
   try {
     const dObj = typeof targetDate === 'string'
@@ -1032,6 +1044,7 @@ module.exports = {
   hasSavedSchedule,
   getSavedScheduleSheets,
   getCurrentCalendarSheetName,
+  getNextCalendarSheetName,
   getSheetNameForDate,
   countScheduleShifts,
   MONTH_NAMES,

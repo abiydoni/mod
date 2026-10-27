@@ -55,8 +55,9 @@ app.get('/api/schedule/current', async (req, res) => {
 app.get('/api/schedule/duty', async (req, res) => {
   try {
     const dateParam = req.query.date || new Date();
+    const force = req.query.force === 'true' || req.query.force === '1';
     const sheetName = req.query.sheet || sheetService.getSheetNameForDate(dateParam);
-    const schedule = await sheetService.fetchScheduleFromGoogle(sheetName);
+    const schedule = await sheetService.fetchScheduleFromGoogle(sheetName, force);
     const duty = sheetService.getDutyForDate(schedule, dateParam);
     res.json({
       duty,
@@ -69,17 +70,52 @@ app.get('/api/schedule/duty', async (req, res) => {
   }
 });
 
-// 4. Force Sync Google Sheet
+// 4. Force Sync Google Sheet (Current Month + Next Month)
 app.post('/api/schedule/sync', async (req, res) => {
   try {
-    const sheetName = req.body.sheetName;
-    const schedule = await sheetService.fetchScheduleFromGoogle(sheetName, true);
+    const config = storage.getConfig();
+    const calSheet = sheetService.getCurrentCalendarSheetName();
+    const nextCalSheet = sheetService.getNextCalendarSheetName();
+    const requestedSheet = req.body.sheetName || config.spreadsheet?.activeSheetName || calSheet;
+    const requestedNext = req.body.nextSheetName || nextCalSheet;
+
+    const sheetsToSync = new Set();
+    if (requestedSheet) sheetsToSync.add(requestedSheet);
+    if (requestedNext) sheetsToSync.add(requestedNext);
+    sheetsToSync.add(calSheet);
+    sheetsToSync.add(nextCalSheet);
+
+    const syncedResults = [];
+    let totalOfficers = 0;
+    let anyWarning = null;
+
+    for (const sName of sheetsToSync) {
+      try {
+        const schedule = await sheetService.fetchScheduleFromGoogle(sName, true);
+        totalOfficers += schedule.officers?.length || 0;
+        if (schedule.syncWarning) anyWarning = schedule.syncWarning;
+        syncedResults.push({
+          sheetName: sName,
+          success: true,
+          source: schedule.source,
+          officersCount: schedule.officers?.length || 0,
+          syncWarning: schedule.syncWarning
+        });
+      } catch (err) {
+        syncedResults.push({
+          sheetName: sName,
+          success: false,
+          error: err.message
+        });
+      }
+    }
+
     res.json({
       success: true,
-      message: 'Google Sheet disinkronkan.',
-      source: schedule.source,
-      officersCount: schedule.officers?.length || 0,
-      syncWarning: schedule.syncWarning
+      message: `Google Sheets berhasil disinkronkan (${Array.from(sheetsToSync).join(', ')}).`,
+      results: syncedResults,
+      officersCount: totalOfficers,
+      syncWarning: anyWarning
     });
   } catch (err) {
     res.status(500).json({ success: false, error: err.message });

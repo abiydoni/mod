@@ -642,10 +642,10 @@ const app = {
     }
   },
 
-  async loadDutyData() {
+  async loadDutyData(force = false) {
     try {
       const dateStr = this.formatDateWIB();
-      const res = await fetch(`/api/schedule/duty?date=${dateStr}`);
+      const res = await fetch(`/api/schedule/duty?date=${dateStr}${force ? '&force=true' : ''}`);
       const data = await res.json();
       this.cachedDuty = data.duty;
 
@@ -740,26 +740,39 @@ const app = {
     const originalText = btn.innerHTML;
     btn.innerHTML = '🔄 Menyinkronkan...';
     btn.disabled = true;
-    this.setStatus('🔄 Menghubungi Google Sheets & menyinkronkan data...', 'working');
-    this.setProgress(40);
+    this.setStatus('🔄 Menghubungi Google Sheets & menyinkronkan data bulan berjalan & bulan berikutnya...', 'working');
+    this.setProgress(30);
 
     try {
-      const sheetName = document.getElementById('cfg-sheet-name')?.value.trim() || this.config?.spreadsheet?.activeSheetName || 'October 2026';
+      const nextInfo = this.getNextMonthPeriod();
+      const currentSheetName = nextInfo.currentSheetName;
+      const nextSheetName = nextInfo.sheetName;
+
+      this.setProgress(50);
       const res = await fetch('/api/schedule/sync', { 
         method: 'POST', 
         headers: { 'Content-Type': 'application/json' }, 
-        body: JSON.stringify({ sheetName }) 
+        body: JSON.stringify({ 
+          sheetName: currentSheetName,
+          nextSheetName: nextSheetName
+        }) 
       });
       const data = await res.json();
       if (data.success) {
-        this.showToast(`✅ Berhasil disinkronkan! Ditemukan ${data.officersCount} data petugas.`, 'success');
-        this.setStatus(`✅ Google Sheets berhasil disinkronkan (${data.officersCount} Petugas)`, 'ready');
-        this.setProgress(100, false);
-        await this.loadDutyData();
-        await this.loadMatrixData();
+        this.setProgress(80);
+        // Clear in-memory drafts so fresh Google Sheet data is applied
+        this.editorDrafts = {};
+
+        this.showToast(`✅ Berhasil disinkronkan dari Google Sheets (${currentSheetName} & ${nextSheetName})!`, 'success');
+        this.setStatus(`✅ Google Sheets live (${currentSheetName} & ${nextSheetName}) berhasil disinkronkan`, 'ready');
+
+        // Force reload duty data, matrix data, and editor data!
+        await this.loadDutyData(true);
+        await this.loadMatrixData(this.matrixMonth, this.matrixYear, true);
         if (typeof this.loadEditorData === 'function') {
-          await this.loadEditorData();
+          await this.loadEditorData(true);
         }
+        this.setProgress(100, false);
       } else {
         this.showToast(`Gagal sinkron: ${data.error}`, 'error');
         this.setStatus(`❌ Gagal sinkronisasi: ${data.error}`, 'error');
@@ -2157,7 +2170,7 @@ const app = {
     this.switchEditorPeriod('next');
   },
 
-  async loadEditorData() {
+  async loadEditorData(force = false) {
     try {
       const nextInfo = this.getNextMonthPeriod();
 
@@ -2172,7 +2185,7 @@ const app = {
       const nextSheetKey = `${nextInfo.month} ${nextInfo.year}`;
 
       // Check if next month exists: either in-memory draft OR already saved in system
-      const hasNextDraft = !!(this.editorDrafts && this.editorDrafts[nextSheetKey] && this.editorDrafts[nextSheetKey].length > 0);
+      const hasNextDraft = !force && !!(this.editorDrafts && this.editorDrafts[nextSheetKey] && this.editorDrafts[nextSheetKey].length > 0);
       let hasSavedNext = false;
       try {
         const checkRes = await fetch(`/api/schedule/check?sheet=${encodeURIComponent(nextInfo.sheetName)}`);
@@ -2223,14 +2236,18 @@ const app = {
 
       const sheetName = `${this.editorMonth} ${this.editorYear}`;
 
+      if (force) {
+        delete this.editorDrafts[sheetName];
+      }
+
       // Check if we have an in-memory draft preserved
-      if (this.editorDrafts && this.editorDrafts[sheetName] && this.editorDrafts[sheetName].length > 0) {
+      if (!force && this.editorDrafts && this.editorDrafts[sheetName] && this.editorDrafts[sheetName].length > 0) {
         this.editorOfficers = this.sortOfficersByLevel(JSON.parse(JSON.stringify(this.editorDrafts[sheetName])));
         this.renderEditorTable();
         return;
       }
 
-      const res = await fetch(`/api/schedule/current?sheet=${encodeURIComponent(sheetName)}`);
+      const res = await fetch(`/api/schedule/current?sheet=${encodeURIComponent(sheetName)}${force ? '&force=true' : ''}`);
       const data = await res.json();
 
       const masterLevelMap = {};
@@ -2646,6 +2663,40 @@ const app = {
   exportCsv() {
     const sheetName = `${this.editorMonth} ${this.editorYear}`;
     window.open(`/api/schedule/export?sheet=${encodeURIComponent(sheetName)}`, '_blank');
+  },
+
+  async syncCurrentEditorSheet() {
+    const sheetName = `${this.editorMonth} ${this.editorYear}`;
+    const btn = document.getElementById('btn-sync-editor-sheet');
+    const originalText = btn ? btn.innerHTML : '🔄 Tarik dari Google Sheet';
+    if (btn) {
+      btn.innerHTML = '🔄 Menarik...';
+      btn.disabled = true;
+    }
+    this.setStatus(`🔄 Mengambil jadwal ${sheetName} dari Google Sheet...`, 'working');
+    try {
+      const res = await fetch(`/api/schedule/current?sheet=${encodeURIComponent(sheetName)}&force=true`);
+      const data = await res.json();
+      if (data && data.officers && data.officers.length > 0) {
+        delete this.editorDrafts[sheetName];
+        await this.loadEditorData(true);
+        await this.loadDutyData(true);
+        await this.loadMatrixData(this.editorMonth, this.editorYear, true);
+        this.showToast(`✅ Jadwal ${sheetName} berhasil ditarik langsung dari Google Sheet (${data.officers.length} Petugas)!`, 'success');
+        this.setStatus(`✅ Jadwal ${sheetName} berhasil disinkronkan dari Google Sheet`, 'ready');
+      } else {
+        this.showToast(`⚠️ Tidak ada data jadwal ditemukan di Google Sheet untuk ${sheetName}.`, 'warning');
+        this.setStatus(`⚠️ Data tidak ditemukan untuk ${sheetName}`, 'ready');
+      }
+    } catch (e) {
+      this.showToast(`Error: ${e.message}`, 'error');
+      this.setStatus(`❌ Gagal tarik dari Google Sheet: ${e.message}`, 'error');
+    } finally {
+      if (btn) {
+        btn.innerHTML = originalText;
+        btn.disabled = false;
+      }
+    }
   },
 
   showToast(message, type = 'success') {
