@@ -55,7 +55,7 @@ app.get('/api/schedule/current', async (req, res) => {
 app.get('/api/schedule/duty', async (req, res) => {
   try {
     const dateParam = req.query.date || new Date();
-    const sheetName = req.query.sheet;
+    const sheetName = req.query.sheet || sheetService.getSheetNameForDate(dateParam);
     const schedule = await sheetService.fetchScheduleFromGoogle(sheetName);
     const duty = sheetService.getDutyForDate(schedule, dateParam);
     res.json({
@@ -137,6 +137,23 @@ app.post('/api/schedule/generate', async (req, res) => {
       success: true,
       message: `Jadwal otomatis untuk ${generated.sheetName} berhasil dibuat (Draft)!`,
       schedule: generated
+    });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// 4d. Check if Schedule for a Month Exists in System
+app.get('/api/schedule/check', (req, res) => {
+  try {
+    const sheetName = req.query.sheet;
+    const exists = sheetService.hasSavedSchedule(sheetName);
+    const savedSheets = sheetService.getSavedScheduleSheets();
+    res.json({
+      success: true,
+      sheetName,
+      exists,
+      savedSheets
     });
   } catch (err) {
     res.status(500).json({ success: false, error: err.message });
@@ -299,9 +316,10 @@ app.delete('/api/officers/:id', (req, res) => {
 // 5. Preview WA Message
 app.post('/api/preview', async (req, res) => {
   try {
-    const { shift = 'ALL', date = null } = req.body;
+    const { shift = 'ALL', date = null, sheet = null } = req.body;
     const targetDate = date || new Date();
-    const schedule = await sheetService.fetchScheduleFromGoogle();
+    const sheetName = sheet || sheetService.getSheetNameForDate(targetDate);
+    const schedule = await sheetService.fetchScheduleFromGoogle(sheetName);
     const duty = sheetService.getDutyForDate(schedule, targetDate);
     
     const config = storage.getConfig();
@@ -323,9 +341,10 @@ app.post('/api/preview', async (req, res) => {
 // 6. Manual Send Shift Message to WA
 app.post('/api/send/shift', async (req, res) => {
   try {
-    const { shift = 'ALL', date = null } = req.body;
+    const { shift = 'ALL', date = null, sheet = null } = req.body;
     const targetDate = date || new Date();
-    const schedule = await sheetService.fetchScheduleFromGoogle();
+    const sheetName = sheet || sheetService.getSheetNameForDate(targetDate);
+    const schedule = await sheetService.fetchScheduleFromGoogle(sheetName);
     const duty = sheetService.getDutyForDate(schedule, targetDate);
 
     const result = await waService.sendWhatsAppMessage({

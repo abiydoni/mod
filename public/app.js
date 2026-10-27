@@ -2033,19 +2033,35 @@ const app = {
       'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'
     ];
 
-    let currentMIdx = 9; // October default
-    let currentYr = 2026;
+    // Real calendar current date (Asia/Jakarta WIB)
+    const now = this.currentDate || new Date();
+    const formatter = new Intl.DateTimeFormat('en-US', {
+      timeZone: 'Asia/Jakarta',
+      month: 'numeric',
+      year: 'numeric'
+    });
+    const parts = formatter.formatToParts(now);
+    const calM = parseInt(parts.find(p => p.type === 'month')?.value || (now.getMonth() + 1), 10) - 1;
+    const calY = parseInt(parts.find(p => p.type === 'year')?.value || now.getFullYear(), 10);
 
+    let currentMIdx = calM;
+    let currentYr = calY;
+
+    // Check if config has an explicit future activeSheetName override
     if (this.config && this.config.spreadsheet && this.config.spreadsheet.activeSheetName) {
-      const parts = this.config.spreadsheet.activeSheetName.split(' ');
-      if (parts.length >= 2) {
-        const foundIdx = monthNames.indexOf(parts[0]);
-        if (foundIdx !== -1) currentMIdx = foundIdx;
-        currentYr = parseInt(parts[1], 10) || currentYr;
+      const spParts = this.config.spreadsheet.activeSheetName.split(' ');
+      if (spParts.length >= 2) {
+        const foundIdx = monthNames.indexOf(spParts[0]);
+        const cfgYr = parseInt(spParts[1], 10);
+        if (foundIdx !== -1 && !isNaN(cfgYr)) {
+          const calTotalMonths = calY * 12 + calM;
+          const cfgTotalMonths = cfgYr * 12 + foundIdx;
+          if (cfgTotalMonths > calTotalMonths) {
+            currentMIdx = foundIdx;
+            currentYr = cfgYr;
+          }
+        }
       }
-    } else if (this.currentDate) {
-      currentMIdx = this.currentDate.getMonth();
-      currentYr = this.currentDate.getFullYear();
     }
 
     let nextMIdx = currentMIdx + 1;
@@ -2095,13 +2111,27 @@ const app = {
     this.loadEditorData();
   },
 
-  closeNextMonthTab(event) {
+  async closeNextMonthTab(event) {
     if (event) {
       event.preventDefault();
       event.stopPropagation();
     }
     const nextInfo = this.getNextMonthPeriod();
     const nextSheetKey = `${nextInfo.month} ${nextInfo.year}`;
+
+    // Check if next month is already saved in system
+    let hasSavedNext = false;
+    try {
+      const checkRes = await fetch(`/api/schedule/check?sheet=${encodeURIComponent(nextInfo.sheetName)}`);
+      const checkData = await checkRes.json();
+      hasSavedNext = !!(checkData && checkData.exists);
+    } catch (e) {}
+
+    if (hasSavedNext) {
+      this.showToast(`Jadwal ${nextInfo.monthId} ${nextInfo.year} sudah tersimpan di sistem. Gunakan tab "Bulan Sekarang" untuk kembali.`, 'info');
+      this.switchEditorPeriod('current', false);
+      return;
+    }
 
     // 1. Delete in-memory draft of next month
     delete this.editorDrafts[nextSheetKey];
@@ -2111,7 +2141,11 @@ const app = {
     const groupNext = document.getElementById('group-editor-next-month');
     if (groupNext) groupNext.classList.add('hidden');
 
-    // 3. Automatically switch back to current month without re-saving draft
+    // 3. Show Generate button again
+    const btnAutoGen = document.getElementById('btn-auto-generate-schedule');
+    if (btnAutoGen) btnAutoGen.classList.remove('hidden');
+
+    // 4. Automatically switch back to current month without re-saving draft
     this.switchEditorPeriod('current', false);
     this.showToast(`Draft jadwal ${nextInfo.monthId} ${nextInfo.year} dihapus & kembali ke jadwal ${nextInfo.currentMonthId} ${nextInfo.currentYear}.`, 'info');
   },
@@ -2133,21 +2167,56 @@ const app = {
       if (lblNext) lblNext.innerText = `${nextInfo.monthId} ${nextInfo.year}`;
 
       const groupNext = document.getElementById('group-editor-next-month');
+      const btnCloseNext = document.getElementById('btn-close-next-draft');
+      const btnAutoGen = document.getElementById('btn-auto-generate-schedule');
       const nextSheetKey = `${nextInfo.month} ${nextInfo.year}`;
-      const hasNextDraft = !!(this.editorDrafts && this.editorDrafts[nextSheetKey] && this.editorDrafts[nextSheetKey].length > 0);
 
-      if (this.nextMonthTabOpen || (hasNextDraft && this.editorTargetMode === 'next')) {
+      // Check if next month exists: either in-memory draft OR already saved in system
+      const hasNextDraft = !!(this.editorDrafts && this.editorDrafts[nextSheetKey] && this.editorDrafts[nextSheetKey].length > 0);
+      let hasSavedNext = false;
+      try {
+        const checkRes = await fetch(`/api/schedule/check?sheet=${encodeURIComponent(nextInfo.sheetName)}`);
+        const checkData = await checkRes.json();
+        if (checkData && checkData.exists) {
+          hasSavedNext = true;
+        }
+      } catch (err) {
+        console.warn('Gagal cek jadwal bulan berikutnya:', err);
+      }
+
+      const hasNextAvailable = hasNextDraft || hasSavedNext || this.nextMonthTabOpen;
+
+      if (hasNextAvailable) {
         if (groupNext) groupNext.classList.remove('hidden');
+        if (btnCloseNext) {
+          // If already saved in system, hide close ✕ button so user doesn't accidentally remove persistent tab
+          btnCloseNext.style.display = hasSavedNext ? 'none' : '';
+        }
+        // If next month already generated/saved, hide the generate button
+        if (btnAutoGen) {
+          btnAutoGen.classList.add('hidden');
+        }
       } else {
         if (groupNext) groupNext.classList.add('hidden');
+        // Next month not generated yet: show generate button
+        if (btnAutoGen) {
+          btnAutoGen.classList.remove('hidden');
+        }
       }
 
       if (!this.editorTargetMode) this.editorTargetMode = 'current';
 
+      // Update button active classes
+      const btnCur = document.getElementById('btn-editor-cur-month');
+      const btnNext = document.getElementById('btn-editor-next-month');
       if (this.editorTargetMode === 'current') {
+        if (btnCur) btnCur.className = 'btn btn-sm btn-primary active';
+        if (btnNext) btnNext.className = 'btn btn-sm btn-outline';
         this.editorMonth = nextInfo.currentMonth;
         this.editorYear = nextInfo.currentYear;
       } else {
+        if (btnCur) btnCur.className = 'btn btn-sm btn-outline';
+        if (btnNext) btnNext.className = 'btn btn-sm btn-primary active';
         this.editorMonth = nextInfo.month;
         this.editorYear = nextInfo.year;
       }
@@ -2475,9 +2544,11 @@ const app = {
             const btnCur = document.getElementById('btn-editor-cur-month');
             const btnNext = document.getElementById('btn-editor-next-month');
             const groupNext = document.getElementById('group-editor-next-month');
+            const btnAutoGen = document.getElementById('btn-auto-generate-schedule');
             if (btnCur) btnCur.className = 'btn btn-sm btn-outline';
             if (btnNext) btnNext.className = 'btn btn-sm btn-primary active';
             if (groupNext) groupNext.classList.remove('hidden');
+            if (btnAutoGen) btnAutoGen.classList.add('hidden');
 
             this.renderEditorTable();
             this.showToast(`⚡ Draf jadwal ${nextInfo.monthId} ${nextInfo.year} berhasil dibuat! Silakan periksa atau klik Simpan.`, 'success');
@@ -2548,6 +2619,14 @@ const app = {
             this.setStatus(`🟢 Jadwal ${indMonthName} ${this.editorYear} tersimpan aktif.`, 'ready');
             await this.loadDutyData();
             await this.loadMatrixData(this.editorMonth, this.editorYear);
+
+            // Keep next month tab visible and ensure buttons state is correct
+            const groupNext = document.getElementById('group-editor-next-month');
+            const btnCloseNext = document.getElementById('btn-close-next-draft');
+            const btnAutoGen = document.getElementById('btn-auto-generate-schedule');
+            if (groupNext) groupNext.classList.remove('hidden');
+            if (btnCloseNext) btnCloseNext.style.display = 'none';
+            if (btnAutoGen) btnAutoGen.classList.add('hidden');
           } else {
             this.showToast(`❌ Gagal simpan: ${data.error}`, 'error');
             this.setStatus(`❌ Gagal simpan: ${data.error}`, 'error');

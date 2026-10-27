@@ -364,6 +364,61 @@ function countScheduleShifts(schedule) {
   return count;
 }
 
+function hasSavedSchedule(sheetName) {
+  if (!sheetName) return false;
+  const sched = storage.getCachedSchedule(sheetName) || loadLocalMonthSchedule(sheetName);
+  if (!sched || !Array.isArray(sched.officers)) return false;
+  return countScheduleShifts(sched) > 0;
+}
+
+function getSavedScheduleSheets() {
+  const result = [];
+  try {
+    if (fs.existsSync(SCHEDULES_DIR)) {
+      const files = fs.readdirSync(SCHEDULES_DIR);
+      files.forEach(f => {
+        if (f.endsWith('.json')) {
+          try {
+            const raw = fs.readFileSync(path.join(SCHEDULES_DIR, f), 'utf8');
+            const data = JSON.parse(raw);
+            if (data && data.sheetName && countScheduleShifts(data) > 0) {
+              result.push(data.sheetName);
+            }
+          } catch (e) {}
+        }
+      });
+    }
+  } catch (err) {
+    console.error('Error getting saved schedule sheets:', err);
+  }
+  return result;
+}
+
+function getCurrentCalendarSheetName() {
+  const formatter = new Intl.DateTimeFormat('en-US', {
+    timeZone: 'Asia/Jakarta',
+    month: 'long',
+    year: 'numeric'
+  });
+  return formatter.format(new Date());
+}
+
+function getSheetNameForDate(targetDate = new Date()) {
+  try {
+    const dObj = typeof targetDate === 'string'
+      ? (targetDate.includes('T') || targetDate.length > 10 ? new Date(targetDate) : new Date(`${targetDate}T00:00:00`))
+      : targetDate;
+    const formatter = new Intl.DateTimeFormat('en-US', {
+      timeZone: 'Asia/Jakarta',
+      month: 'long',
+      year: 'numeric'
+    });
+    return formatter.format(dObj);
+  } catch (e) {
+    return getCurrentCalendarSheetName();
+  }
+}
+
 let cachedTabsMap = { id: null, tabs: {}, lastFetched: 0 };
 
 async function getSpreadsheetTabsMap(spreadsheetId, force = false) {
@@ -393,7 +448,8 @@ async function getSpreadsheetTabsMap(spreadsheetId, force = false) {
 
 async function fetchScheduleFromGoogle(sheetName = null, forceLive = false) {
   const config = storage.getConfig();
-  const targetSheet = sheetName || (config.spreadsheet && config.spreadsheet.activeSheetName) || 'October 2026';
+  const currentCalSheet = getCurrentCalendarSheetName();
+  const targetSheet = sheetName || (config.spreadsheet && config.spreadsheet.activeSheetName) || currentCalSheet;
 
   // 1. Check local cache (SQLite or local JSON file)
   const cachedSqlite = storage.getCachedSchedule(targetSheet);
@@ -973,6 +1029,11 @@ module.exports = {
   extractSpreadsheetId,
   extractGid,
   applyScheduleChangeRequest,
+  hasSavedSchedule,
+  getSavedScheduleSheets,
+  getCurrentCalendarSheetName,
+  getSheetNameForDate,
+  countScheduleShifts,
   MONTH_NAMES,
   HARI_INDONESIA,
   BULAN_INDONESIA,
