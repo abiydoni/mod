@@ -459,6 +459,28 @@ async function getSpreadsheetTabsMap(spreadsheetId, force = false) {
   return map;
 }
 
+function csvMatchesTargetSheet(csv, targetSheet) {
+  if (!csv || !targetSheet) return true;
+  const firstRows = csv.split('\n').slice(0, 5).join(' ').toLowerCase();
+  const targetMonth = targetSheet.trim().toLowerCase().split(' ')[0];
+  
+  const allMonths = [
+    'january', 'february', 'march', 'april', 'may', 'june',
+    'july', 'august', 'september', 'october', 'november', 'december',
+    'januari', 'februari', 'maret', 'april', 'mei', 'juni',
+    'juli', 'agustus', 'september', 'oktober', 'november', 'desember'
+  ];
+
+  const mentionsTarget = firstRows.includes(targetMonth);
+  if (!mentionsTarget) {
+    const mentionsOtherMonth = allMonths.some(m => m !== targetMonth && firstRows.includes(m));
+    if (mentionsOtherMonth) {
+      return false;
+    }
+  }
+  return true;
+}
+
 async function fetchScheduleFromGoogle(sheetName = null, forceLive = false) {
   const config = storage.getConfig();
   const currentCalSheet = getCurrentCalendarSheetName();
@@ -501,7 +523,7 @@ async function fetchScheduleFromGoogle(sheetName = null, forceLive = false) {
 
     // 2. Second priority: GID in user config URL if targetSheet matches activeSheetName
     if (gid && (!sheetName || targetSheet === config.spreadsheet?.activeSheetName)) {
-      urlsToTry.push(`https://docs.google.com/spreadsheets/d/${spreadsheetId}/export?format=csv&gid=${gid}`);
+      // Skipped blind gid fallback to avoid cross-month contamination
     }
 
     // 3. Fallback: GViz query URLs
@@ -512,7 +534,7 @@ async function fetchScheduleFromGoogle(sheetName = null, forceLive = false) {
     for (const url of urlsToTry) {
       try {
         const csv = await fetchUrl(url);
-        if (csv && csv.length > 50 && !csv.includes('<!DOCTYPE html>')) {
+        if (csv && csv.length > 50 && !csv.includes('<!DOCTYPE html>') && csvMatchesTargetSheet(csv, targetSheet)) {
           const rows = parseCsv(csv);
           const parsed = parseSpreadsheetRows(rows, targetSheet);
           if (parsed && parsed.officers && parsed.officers.length > 0 && countScheduleShifts(parsed) > 0) {
@@ -833,6 +855,7 @@ function getDutyForDate(scheduleData, targetDate = new Date()) {
 
 async function testSheetConnection({ sheetUrl, scriptWebhookUrl, sheetName = null }) {
   if (!sheetName) sheetName = getCurrentCalendarSheetName();
+  const targetSheet = sheetName;
   const urlToUse = sheetUrl || (storage.getConfig().spreadsheet && storage.getConfig().spreadsheet.sheetUrl) || '';
   const spreadsheetId = extractSpreadsheetId(urlToUse);
   const gid = extractGid(urlToUse);
@@ -849,14 +872,14 @@ async function testSheetConnection({ sheetUrl, scriptWebhookUrl, sheetName = nul
   if (spreadsheetId) {
     const urlsToTry = [];
     if (gid) {
-      urlsToTry.push(`https://docs.google.com/spreadsheets/d/${spreadsheetId}/export?format=csv&gid=${gid}`);
+      // Skipped blind gid fallback to avoid cross-month contamination
     }
     urlsToTry.push(`https://docs.google.com/spreadsheets/d/${spreadsheetId}/gviz/tq?tqx=out:csv&sheet=${encodeURIComponent(sheetName)}`);
 
     for (const url of urlsToTry) {
       try {
         const csv = await fetchUrl(url);
-        if (csv && csv.length > 50 && !csv.includes('<!DOCTYPE html>')) {
+        if (csv && csv.length > 50 && !csv.includes('<!DOCTYPE html>') && csvMatchesTargetSheet(csv, targetSheet)) {
           const rows = parseCsv(csv);
           const parsed = parseSpreadsheetRows(rows, sheetName);
           parsed.source = 'live_google_sheet';
@@ -917,6 +940,7 @@ async function applyScheduleChangeRequest({
   submittedBy = 'Paperless Digital Approval'
 }) {
   if (!sheetName) sheetName = getCurrentCalendarSheetName();
+  const targetSheet = sheetName;
   if (!signatures || !signatures.p1 || !signatures.p2 || !signatures.hrm || !signatures.gm) {
     throw new Error('Semua 4 tanda tangan digital (Pihak 1, Pihak 2, HRM, dan GM) wajib dibubuhkan secara lengkap.');
   }
