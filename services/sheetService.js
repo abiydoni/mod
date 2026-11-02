@@ -144,7 +144,8 @@ function parseCsv(csvText) {
   return rows;
 }
 
-function parseSpreadsheetRows(rows, sheetName = 'October 2026') {
+function parseSpreadsheetRows(rows, sheetName = null) {
+  sheetName = sheetName || getCurrentCalendarSheetName();
   let dateRowIndex = -1;
   let nameCol = 0;
   let roleCol = 1;
@@ -220,7 +221,7 @@ function parseSpreadsheetRows(rows, sheetName = 'October 2026') {
 }
 
 function getLocalSchedulePath(sheetName) {
-  const safeName = (sheetName || 'October 2026').replace(/[^a-zA-Z0-9_-]/g, '_');
+  const safeName = (sheetName || getCurrentCalendarSheetName()).replace(/[^a-zA-Z0-9_-]/g, '_');
   return path.join(SCHEDULES_DIR, `${safeName}.json`);
 }
 
@@ -461,7 +462,7 @@ async function getSpreadsheetTabsMap(spreadsheetId, force = false) {
 async function fetchScheduleFromGoogle(sheetName = null, forceLive = false) {
   const config = storage.getConfig();
   const currentCalSheet = getCurrentCalendarSheetName();
-  const targetSheet = sheetName || (config.spreadsheet && config.spreadsheet.activeSheetName) || currentCalSheet;
+  const targetSheet = sheetName || currentCalSheet;
 
   // 1. Check local cache (SQLite or local JSON file)
   const cachedSqlite = storage.getCachedSchedule(targetSheet);
@@ -563,7 +564,10 @@ async function fetchScheduleFromGoogle(sheetName = null, forceLive = false) {
   return seedData;
 }
 
-function generateSmartSchedule(officersList, monthName = 'October', year = 2026) {
+function generateSmartSchedule(officersList, monthName = null, year = null) {
+  const now = new Date();
+  if (!monthName) monthName = MONTH_NAMES[now.getMonth()];
+  if (!year) year = now.getFullYear();
   const monthIdx = MONTH_NAMES.indexOf(monthName) !== -1 ? MONTH_NAMES.indexOf(monthName) : 9;
   const daysInMonth = new Date(year, monthIdx + 1, 0).getDate();
 
@@ -730,7 +734,7 @@ function generateSmartSchedule(officersList, monthName = 'October', year = 2026)
 
 function exportScheduleToCsv(scheduleData) {
   const officers = scheduleData.officers || [];
-  let csv = `Schedule MOD ${scheduleData.sheetName || 'October 2026'}\n`;
+  let csv = `Schedule MOD ${scheduleData.sheetName || getCurrentCalendarSheetName()}\n`;
 
   let row1 = ['Name', 'Role'];
   let row2 = ['Day', 'Position'];
@@ -827,7 +831,8 @@ function getDutyForDate(scheduleData, targetDate = new Date()) {
   return duty;
 }
 
-async function testSheetConnection({ sheetUrl, scriptWebhookUrl, sheetName = 'October 2026' }) {
+async function testSheetConnection({ sheetUrl, scriptWebhookUrl, sheetName = null }) {
+  if (!sheetName) sheetName = getCurrentCalendarSheetName();
   const urlToUse = sheetUrl || (storage.getConfig().spreadsheet && storage.getConfig().spreadsheet.sheetUrl) || '';
   const spreadsheetId = extractSpreadsheetId(urlToUse);
   const gid = extractGid(urlToUse);
@@ -900,7 +905,7 @@ async function testSheetConnection({ sheetUrl, scriptWebhookUrl, sheetName = 'Oc
 }
 
 async function applyScheduleChangeRequest({
-  sheetName = 'October 2026',
+  sheetName = null,
   applicant,
   applicantDate,
   applicantShift = 'MOD',
@@ -911,6 +916,7 @@ async function applyScheduleChangeRequest({
   signatures = {},
   submittedBy = 'Paperless Digital Approval'
 }) {
+  if (!sheetName) sheetName = getCurrentCalendarSheetName();
   if (!signatures || !signatures.p1 || !signatures.p2 || !signatures.hrm || !signatures.gm) {
     throw new Error('Semua 4 tanda tangan digital (Pihak 1, Pihak 2, HRM, dan GM) wajib dibubuhkan secara lengkap.');
   }

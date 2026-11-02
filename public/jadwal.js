@@ -6,7 +6,28 @@ const jadwalApp = {
   masterOfficers: [],
   sigPads: {}, // { p1: { canvas, ctx, hasDrawn, strokes }, ... }
 
+  initCurrentPeriod() {
+    const monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+    const now = new Date();
+    const formatter = new Intl.DateTimeFormat('en-US', {
+      timeZone: 'Asia/Jakarta',
+      month: 'numeric',
+      year: 'numeric'
+    });
+    const parts = formatter.formatToParts(now);
+    const mIdx = parseInt(parts.find(p => p.type === 'month')?.value || (now.getMonth() + 1), 10) - 1;
+    const yr = parseInt(parts.find(p => p.type === 'year')?.value || now.getFullYear(), 10);
+    this.matrixMonth = monthNames[mIdx] || 'November';
+    this.matrixYear = yr || 2026;
+
+    const mSelect = document.getElementById('matrix-month');
+    const ySelect = document.getElementById('matrix-year');
+    if (mSelect) mSelect.value = this.matrixMonth;
+    if (ySelect) ySelect.value = String(this.matrixYear);
+  },
+
   async init() {
+    this.initCurrentPeriod();
     await this.loadInitialData();
     this.initSignaturePads();
 

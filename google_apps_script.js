@@ -20,7 +20,9 @@ function doPost(e) {
 
     var data = JSON.parse(e.postData.contents);
     var action = data.action || 'save_schedule';
-    var sheetName = data.sheetName || 'October 2026';
+    var now = new Date();
+    var monthNamesDefault = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+    var sheetName = data.sheetName || (monthNamesDefault[now.getMonth()] + ' ' + now.getFullYear());
 
     var ss = SpreadsheetApp.getActiveSpreadsheet();
     var sheet = ss.getSheetByName(sheetName);

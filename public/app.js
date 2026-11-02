@@ -18,7 +18,31 @@ const app = {
   currentTemplateKey: 'MOD1',
   pendingConfirmCallback: null,
 
+  initCurrentPeriod() {
+    const monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+    const now = new Date();
+    const formatter = new Intl.DateTimeFormat('en-US', {
+      timeZone: 'Asia/Jakarta',
+      month: 'numeric',
+      year: 'numeric'
+    });
+    const parts = formatter.formatToParts(now);
+    const mIdx = parseInt(parts.find(p => p.type === 'month')?.value || (now.getMonth() + 1), 10) - 1;
+    const yr = parseInt(parts.find(p => p.type === 'year')?.value || now.getFullYear(), 10);
+    const curMonth = monthNames[mIdx] || 'November';
+    this.matrixMonth = curMonth;
+    this.matrixYear = yr || 2026;
+    this.editorMonth = curMonth;
+    this.editorYear = yr || 2026;
+
+    const mSelect = document.getElementById('matrix-month');
+    const ySelect = document.getElementById('matrix-year');
+    if (mSelect) mSelect.value = this.matrixMonth;
+    if (ySelect) ySelect.value = String(this.matrixYear);
+  },
+
   async init() {
+    this.initCurrentPeriod();
     this.startClock();
     this.initDateSelector();
     this.setupEventListeners();
@@ -567,7 +591,7 @@ const app = {
         if (webhookEl) webhookEl.value = this.config.spreadsheet.scriptWebhookUrl || '';
         
         const sheetNameEl = document.getElementById('cfg-sheet-name');
-        if (sheetNameEl) sheetNameEl.value = this.config.spreadsheet.activeSheetName || 'October 2026';
+        if (sheetNameEl) sheetNameEl.value = this.config.spreadsheet.activeSheetName || (this.matrixMonth + ' ' + this.matrixYear);
       }
 
       if (this.config.waGateway) {
@@ -1673,7 +1697,7 @@ const app = {
         spreadsheetId: document.getElementById('cfg-sheet-url')?.value.trim() || '',
         sheetUrl: document.getElementById('cfg-sheet-url')?.value.trim() || '',
         scriptWebhookUrl: document.getElementById('cfg-script-webhook')?.value.trim() || '',
-        activeSheetName: document.getElementById('cfg-sheet-name')?.value.trim() || 'October 2026',
+        activeSheetName: document.getElementById('cfg-sheet-name')?.value.trim() || (this.matrixMonth + ' ' + this.matrixYear),
         autoSyncMinutes: 30
       },
       waGateway: {
@@ -1736,7 +1760,7 @@ const app = {
 
     const sheetUrl = document.getElementById('cfg-sheet-url')?.value.trim() || '';
     const scriptWebhookUrl = document.getElementById('cfg-script-webhook')?.value.trim() || '';
-    const sheetName = document.getElementById('cfg-sheet-name')?.value.trim() || 'October 2026';
+    const sheetName = document.getElementById('cfg-sheet-name')?.value.trim() || (this.matrixMonth + ' ' + this.matrixYear);
 
     if (btn) {
       btn.innerHTML = '⏳ Sedang Menguji...';

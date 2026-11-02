@@ -125,7 +125,7 @@ app.post('/api/schedule/sync', async (req, res) => {
 // 4a. Test Google Sheet / Email Connection Check
 app.post('/api/sheet/test-connection', async (req, res) => {
   try {
-    const { sheetUrl, scriptWebhookUrl, sheetName = 'October 2026' } = req.body;
+    const { sheetUrl, scriptWebhookUrl, sheetName = sheetService.getCurrentCalendarSheetName() } = req.body;
     const testResult = await sheetService.testSheetConnection({ sheetUrl, scriptWebhookUrl, sheetName });
     res.json(testResult);
   } catch (err) {
@@ -136,7 +136,7 @@ app.post('/api/sheet/test-connection', async (req, res) => {
 // 4b. Save Custom Schedule (Directly created/edited from the app)
 app.post('/api/schedule/save', async (req, res) => {
   try {
-    const { sheetName = 'October 2026', officers = [] } = req.body;
+    const { sheetName = sheetService.getCurrentCalendarSheetName(), officers = [] } = req.body;
     const data = {
       sheetName,
       officers,
@@ -167,7 +167,9 @@ app.post('/api/schedule/save', async (req, res) => {
 // 4c. Generate Smart Auto Schedule (In-Memory Draft, only saved on explicit user Save)
 app.post('/api/schedule/generate', async (req, res) => {
   try {
-    const { month = 'October', year = 2026, officers = [] } = req.body;
+    const now = new Date();
+    const curMonthName = sheetService.MONTH_NAMES[now.getMonth()];
+    const { month = curMonthName, year = now.getFullYear(), officers = [] } = req.body;
     const generated = sheetService.generateSmartSchedule(officers, month, parseInt(year, 10));
     res.json({
       success: true,
@@ -200,7 +202,7 @@ app.get('/api/schedule/check', (req, res) => {
 app.post('/api/schedule/change-request', async (req, res) => {
   try {
     const {
-      sheetName = 'October 2026',
+      sheetName = sheetService.getCurrentCalendarSheetName(),
       applicant,
       applicantDate,
       applicantShift = 'MOD',
@@ -304,7 +306,7 @@ app.get('/api/schedule/swaps', (req, res) => {
 // 4d. Export Schedule as CSV (for Excel / Google Sheets)
 app.get('/api/schedule/export', async (req, res) => {
   try {
-    const sheetName = req.query.sheet || 'October 2026';
+    const sheetName = req.query.sheet || sheetService.getCurrentCalendarSheetName();
     const schedule = await sheetService.fetchScheduleFromGoogle(sheetName);
     const csv = sheetService.exportScheduleToCsv(schedule);
     res.setHeader('Content-Type', 'text/csv');

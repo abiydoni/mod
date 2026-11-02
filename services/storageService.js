@@ -461,7 +461,8 @@ function addLog(entry) {
 }
 
 // 3. Schedules Cache
-function getCachedSchedule(sheetName = 'October 2026') {
+function getCachedSchedule(sheetName = null) {
+  if (!sheetName) return null;
   try {
     const filename = `${sheetName.replace(/[^a-zA-Z0-9_-]/g, '_')}.json`;
     const filePath = path.join(SCHEDULES_DIR, filename);

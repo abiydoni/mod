@@ -56,8 +56,10 @@ async function triggerShiftDispatch(shiftKey, isManual = false) {
   inFlightDispatch[todayKey] = true;
 
   try {
-    const schedule = await sheetService.fetchScheduleFromGoogle();
-    const duty = sheetService.getDutyForDate(schedule, new Date());
+    const today = new Date();
+    const targetSheet = sheetService.getSheetNameForDate(today);
+    const schedule = await sheetService.fetchScheduleFromGoogle(targetSheet);
+    const duty = sheetService.getDutyForDate(schedule, today);
     
     const officers = shiftKey === 'ALL' ? (duty.all || []) : (duty[shiftKey] || []);
     if (!officers || officers.length === 0) {
@@ -156,11 +158,14 @@ function startMasterCronJobs() {
     console.log(`[SCHEDULER] Master (PID ${process.pid}) scheduled MOD at '${cronExp}' (Timezone: Asia/Jakarta)`);
   }
 
-  // Periodic Google Sheets Sync (every 30 mins)
+  // Periodic Google Sheets Sync (every 30 mins: Current Month & Next Month)
   activeJobs.sync = cron.schedule('*/30 * * * *', async () => {
-    console.log('[SCHEDULER] Running periodic Google Sheet sync...');
+    console.log('[SCHEDULER] Running periodic Google Sheet sync (Current & Next Month)...');
     try {
-      await sheetService.fetchScheduleFromGoogle();
+      const curSheet = sheetService.getCurrentCalendarSheetName();
+      const nextSheet = sheetService.getNextCalendarSheetName();
+      await sheetService.fetchScheduleFromGoogle(curSheet, true);
+      await sheetService.fetchScheduleFromGoogle(nextSheet, true);
     } catch (e) {
       console.error('[SCHEDULER] Periodic sync failed:', e.message);
     }
