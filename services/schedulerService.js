@@ -58,7 +58,7 @@ async function triggerShiftDispatch(shiftKey, isManual = false) {
   try {
     const today = new Date();
     const targetSheet = sheetService.getSheetNameForDate(today);
-    const schedule = await sheetService.fetchScheduleFromGoogle(targetSheet);
+    const schedule = await sheetService.fetchScheduleFromGoogle(targetSheet, true);
     const duty = sheetService.getDutyForDate(schedule, today);
     
     const officers = shiftKey === 'ALL' ? (duty.all || []) : (duty[shiftKey] || []);

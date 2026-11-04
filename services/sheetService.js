@@ -41,25 +41,25 @@ const BULAN_INDONESIA = {
 
 // Built-in initial sample data from user's October 2026 sheet
 const SEED_OFFICERS = [
-  { name: 'Doni Abiyantoro', role: 'Chief Accountant', level: 'Manager', shifts: { 17: 'MOD1', 24: 'MOD1', 31: 'MOD2' } },
-  { name: 'Bekti Utami', role: 'Asst. Sales Marketing Manager', level: 'Asst Manager', shifts: { 3: 'MOD1', 10: 'MOD1' } },
-  { name: 'Fajar F', role: 'Chief Engineer', level: 'Manager', shifts: { 3: 'MOD2', 11: 'MOD1', 18: 'MOD2' } },
-  { name: 'Ardhiny', role: 'HR Manager', level: 'Manager', shifts: { 4: 'MOD2', 11: 'MOD2' } },
-  { name: 'Rama', role: 'FO Manager', level: 'Manager', shifts: { 4: 'MOD1', 25: 'MOD1' } },
-  { name: 'Sugiartono', role: 'Bookkeeper', level: 'Asst Manager', shifts: { 17: 'MOD2', 30: 'MOD' } },
-  { name: 'Iqbal', role: 'Junior Sous Chef', level: 'Asst Manager', shifts: { 1: 'MOD', 24: 'MOD2' } },
-  { name: 'Agus Budiono Prastyo', role: 'IT Asst Manager', level: 'Asst Manager', shifts: { 10: 'MOD2', 29: 'MOD' } },
-  { name: 'Lukman Prayogo', role: 'R&B Asst. Manager', level: 'Asst Manager', shifts: { 2: 'MOD', 25: 'MOD2' } },
-  { name: 'Ota Setiawan', role: 'Asst EHK', level: 'Asst Manager', shifts: { 18: 'MOD1', 31: 'MOD1' } },
-  { name: 'Dian Nurkhasanah', role: 'Sales Executive', level: 'Supervisor', shifts: { 5: 'MOD', 16: 'MOD' } },
-  { name: 'Ayu', role: 'AR/IA', level: 'Supervisor', shifts: { 8: 'MOD', 19: 'MOD' } },
-  { name: 'Fajar Kuncoro', role: 'Purchasing', level: 'Supervisor', shifts: { 7: 'MOD', 20: 'MOD' } },
-  { name: 'Hendri D Prayogo', role: 'AP/GC', level: 'Supervisor', shifts: { 6: 'MOD', 21: 'MOD' } },
-  { name: 'Septi Fira', role: 'Sales Executive', level: 'Supervisor', shifts: { 12: 'MOD', 22: 'MOD' } },
-  { name: 'Faizin', role: 'ENG Supervisor', level: 'Supervisor', shifts: { 9: 'MOD', 23: 'MOD' } },
-  { name: 'Guntur', role: 'HK Shift Leader', level: 'Supervisor', shifts: { 13: 'MOD', 26: 'MOD' } },
-  { name: 'Hendri', role: 'FBP', level: 'Supervisor', shifts: { 14: 'MOD', 27: 'MOD' } },
-  { name: 'Syahrul', role: 'FBP', level: 'Supervisor', shifts: { 15: 'MOD', 28: 'MOD' } }
+  { name: 'Doni Abiyantoro', role: 'Chief Accountant', level: 'Manager', shifts: {} },
+  { name: 'Bekti Utami', role: 'Asst. Sales Marketing Manager', level: 'Asst Manager', shifts: {} },
+  { name: 'Fajar F', role: 'Chief Engineer', level: 'Manager', shifts: {} },
+  { name: 'Ardhiny', role: 'HR Manager', level: 'Manager', shifts: {} },
+  { name: 'Rama', role: 'FO Manager', level: 'Manager', shifts: {} },
+  { name: 'Sugiartono', role: 'Bookkeeper', level: 'Asst Manager', shifts: {} },
+  { name: 'Iqbal', role: 'Junior Sous Chef', level: 'Asst Manager', shifts: {} },
+  { name: 'Agus Budiono Prastyo', role: 'IT Asst Manager', level: 'Asst Manager', shifts: {} },
+  { name: 'Lukman Prayogo', role: 'R&B Asst. Manager', level: 'Asst Manager', shifts: {} },
+  { name: 'Ota Setiawan', role: 'Asst EHK', level: 'Asst Manager', shifts: {} },
+  { name: 'Dian Nurkhasanah', role: 'Sales Executive', level: 'Supervisor', shifts: {} },
+  { name: 'Ayu', role: 'AR/IA', level: 'Supervisor', shifts: {} },
+  { name: 'Fajar Kuncoro', role: 'Purchasing', level: 'Supervisor', shifts: {} },
+  { name: 'Hendri D Prayogo', role: 'AP/GC', level: 'Supervisor', shifts: {} },
+  { name: 'Septi Fira', role: 'Sales Executive', level: 'Supervisor', shifts: {} },
+  { name: 'Faizin', role: 'ENG Supervisor', level: 'Supervisor', shifts: {} },
+  { name: 'Guntur', role: 'HK Shift Leader', level: 'Supervisor', shifts: {} },
+  { name: 'Hendri', role: 'FBP', level: 'Supervisor', shifts: {} },
+  { name: 'Syahrul', role: 'FBP', level: 'Supervisor', shifts: {} }
 ];
 
 function extractSpreadsheetId(input) {
@@ -211,7 +211,7 @@ function parseSpreadsheetRows(rows, sheetName = null) {
     }
   }
 
-  const finalOfficers = officers.length > 0 ? storage.sortOfficersByLevel(officers) : SEED_OFFICERS;
+  const finalOfficers = officers.length > 0 ? storage.sortOfficersByLevel(officers) : [];
 
   return {
     sheetName,
@@ -826,7 +826,7 @@ function getDutyForDate(scheduleData, targetDate = new Date()) {
     all: []
   };
 
-  const officers = (scheduleData && scheduleData.officers) || SEED_OFFICERS;
+  const officers = (scheduleData && scheduleData.officers) || [];
 
   officers.forEach(officer => {
     const shift = officer.shifts ? officer.shifts[day] : null;
