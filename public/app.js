@@ -2002,8 +2002,43 @@ const app = {
         this.showToast(data.message || 'Data karyawan berhasil disimpan!', 'success');
         this.closeOfficerModal();
         await this.loadMasterOfficers();
-        if (document.getElementById('tab-editor')?.classList.contains('active')) {
-          await this.loadEditorData();
+
+        // Immediately update editor officers if loaded
+        if (this.editorOfficers && Array.isArray(this.editorOfficers)) {
+          const newName = (name || '').toLowerCase().trim();
+          const existingIdx = this.editorOfficers.findIndex(o => (o.name || '').toLowerCase().trim() === newName);
+          if (existingIdx === -1 && isActive) {
+            this.editorOfficers.push({
+              name,
+              role,
+              level,
+              shifts: {}
+            });
+            this.editorOfficers = this.sortOfficersByLevel(this.editorOfficers);
+            const sheetKey = `${this.editorMonth} ${this.editorYear}`;
+            if (this.editorDrafts && this.editorDrafts[sheetKey]) {
+              this.editorDrafts[sheetKey] = JSON.parse(JSON.stringify(this.editorOfficers));
+            }
+          } else if (existingIdx !== -1) {
+            if (!isActive) {
+              const hasShifts = this.editorOfficers[existingIdx].shifts && Object.keys(this.editorOfficers[existingIdx].shifts).length > 0;
+              if (!hasShifts) {
+                this.editorOfficers.splice(existingIdx, 1);
+              }
+            } else {
+              this.editorOfficers[existingIdx].name = name;
+              this.editorOfficers[existingIdx].role = role;
+              this.editorOfficers[existingIdx].level = level;
+            }
+            this.editorOfficers = this.sortOfficersByLevel(this.editorOfficers);
+          }
+        }
+
+        if (typeof this.renderEditorTable === 'function') {
+          this.renderEditorTable();
+        }
+        if (typeof this.loadMatrixData === 'function') {
+          await this.loadMatrixData(this.matrixMonth, this.matrixYear);
         }
       } else {
         this.showToast(`❌ Gagal: ${data.error}`, 'error');
@@ -2033,6 +2068,12 @@ const app = {
       if (data.success) {
         this.showToast(`Status karyawan "${officer.name}" diperbarui!`, 'success');
         await this.loadMasterOfficers();
+        if (typeof this.loadEditorData === 'function') {
+          await this.loadEditorData();
+        }
+        if (typeof this.loadMatrixData === 'function') {
+          await this.loadMatrixData(this.matrixMonth, this.matrixYear);
+        }
       } else {
         this.showToast(`Gagal: ${data.error}`, 'error');
       }
@@ -2052,6 +2093,12 @@ const app = {
       if (data.success) {
         this.showToast(`Karyawan "${name}" berhasil dihapus.`, 'success');
         await this.loadMasterOfficers();
+        if (typeof this.loadEditorData === 'function') {
+          await this.loadEditorData();
+        }
+        if (typeof this.loadMatrixData === 'function') {
+          await this.loadMatrixData(this.matrixMonth, this.matrixYear);
+        }
       } else {
         this.showToast(`Gagal: ${data.error}`, 'error');
       }
@@ -2280,10 +2327,22 @@ const app = {
       });
 
       if (data.officers && data.officers.length > 0) {
+        const existingNames = new Set(data.officers.map(o => (o.name || '').toLowerCase().trim()));
         const enriched = data.officers.map(o => ({
           ...o,
           level: masterLevelMap[(o.name || '').toLowerCase().trim()] || o.level || 'Supervisor'
         }));
+        (this.masterOfficers || []).forEach(m => {
+          if ((m.isActive === 1 || m.isActive === true) && !existingNames.has((m.name || '').toLowerCase().trim())) {
+            enriched.push({
+              name: m.name,
+              role: m.role,
+              level: m.level || 'Supervisor',
+              shifts: {}
+            });
+            existingNames.add((m.name || '').toLowerCase().trim());
+          }
+        });
         this.editorOfficers = this.sortOfficersByLevel(JSON.parse(JSON.stringify(enriched)));
       } else {
         const activeMasters = this.masterOfficers.filter(o => o.isActive === 1 || o.isActive === true);

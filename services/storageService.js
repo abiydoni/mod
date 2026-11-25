@@ -490,6 +490,100 @@ function saveCachedSchedule(data) {
   return false;
 }
 
+
+function syncOfficerToSchedules(officer) {
+  if (!officer || !officer.name) return;
+  try {
+    if (!fs.existsSync(SCHEDULES_DIR)) return;
+    const files = fs.readdirSync(SCHEDULES_DIR).filter(f => f.endsWith('.json'));
+    const offName = officer.name.trim();
+    const offNameKey = offName.toLowerCase();
+    files.forEach(f => {
+      const p = path.join(SCHEDULES_DIR, f);
+      try {
+        const sched = JSON.parse(fs.readFileSync(p, 'utf8'));
+        if (sched && Array.isArray(sched.officers)) {
+          const exists = sched.officers.some(o => (o.name || '').toLowerCase().trim() === offNameKey);
+          if (!exists && (officer.isActive === 1 || officer.isActive === true)) {
+            sched.officers.push({
+              name: offName,
+              role: (officer.role || '').trim(),
+              level: normalizeLevel(officer.level || 'Supervisor'),
+              shifts: {}
+            });
+            sched.officers = sortOfficersByLevel(sched.officers);
+            sched.lastUpdated = new Date().toISOString();
+            fs.writeFileSync(p, JSON.stringify(sched, null, 2), 'utf8');
+          }
+        }
+      } catch (e) {}
+    });
+  } catch (err) {
+    console.error('Error syncing officer to schedules:', err);
+  }
+}
+
+function updateOfficerInSchedules(oldName, updatedOfficer) {
+  if (!updatedOfficer) return;
+  try {
+    if (!fs.existsSync(SCHEDULES_DIR)) return;
+    const files = fs.readdirSync(SCHEDULES_DIR).filter(f => f.endsWith('.json'));
+    const oldKey = (oldName || '').toLowerCase().trim();
+    files.forEach(f => {
+      const p = path.join(SCHEDULES_DIR, f);
+      try {
+        const sched = JSON.parse(fs.readFileSync(p, 'utf8'));
+        if (sched && Array.isArray(sched.officers)) {
+          let changed = false;
+          sched.officers.forEach(o => {
+            if ((o.name || '').toLowerCase().trim() === oldKey) {
+              if (updatedOfficer.name) o.name = updatedOfficer.name.trim();
+              if (updatedOfficer.role) o.role = updatedOfficer.role.trim();
+              if (updatedOfficer.level) o.level = normalizeLevel(updatedOfficer.level);
+              changed = true;
+            }
+          });
+          if (changed) {
+            sched.officers = sortOfficersByLevel(sched.officers);
+            sched.lastUpdated = new Date().toISOString();
+            fs.writeFileSync(p, JSON.stringify(sched, null, 2), 'utf8');
+          }
+        }
+      } catch (e) {}
+    });
+  } catch (err) {
+    console.error('Error updating officer in schedules:', err);
+  }
+}
+
+function removeOfficerFromSchedules(officerName) {
+  if (!officerName) return;
+  try {
+    if (!fs.existsSync(SCHEDULES_DIR)) return;
+    const files = fs.readdirSync(SCHEDULES_DIR).filter(f => f.endsWith('.json'));
+    const targetKey = officerName.toLowerCase().trim();
+    files.forEach(f => {
+      const p = path.join(SCHEDULES_DIR, f);
+      try {
+        const sched = JSON.parse(fs.readFileSync(p, 'utf8'));
+        if (sched && Array.isArray(sched.officers)) {
+          const idx = sched.officers.findIndex(o => (o.name || '').toLowerCase().trim() === targetKey);
+          if (idx !== -1) {
+            const hasShifts = sched.officers[idx].shifts && Object.keys(sched.officers[idx].shifts).length > 0;
+            if (!hasShifts) {
+              sched.officers.splice(idx, 1);
+              sched.lastUpdated = new Date().toISOString();
+              fs.writeFileSync(p, JSON.stringify(sched, null, 2), 'utf8');
+            }
+          }
+        }
+      } catch (e) {}
+    });
+  } catch (err) {
+    console.error('Error removing officer from schedules:', err);
+  }
+}
+
 // 4. Master Officers
 function getAllOfficers(onlyActive = false) {
   try {
@@ -538,7 +632,8 @@ function addOfficer({ name, role, level = 'Supervisor', phone = '', isActive = 1
   cachedOfficers.push(newOfficer);
   try {
     fs.writeFileSync(OFFICERS_FILE, JSON.stringify(cachedOfficers, null, 2), 'utf8');
-    return { success: true, message: `Petugas "${trimmedName}" berhasil ditambahkan!`, officer: newOfficer };
+    syncOfficerToSchedules(newOfficer);
+    return { success: true, message: `Petugas "${trimmedName}" berhasil ditambahkan dan disinkronkan ke jadwal!`, officer: newOfficer };
   } catch (err) {
     return { success: false, error: err.message };
   }
@@ -557,6 +652,7 @@ function updateOfficer(id, { name, role, level, phone = '', isActive = 1 }) {
     return { success: false, error: 'Petugas tidak ditemukan' };
   }
 
+  const oldOfficerName = cachedOfficers[index].name;
   const currentLevel = cachedOfficers[index].level || 'Supervisor';
   const newLevel = level !== undefined ? normalizeLevel(level) : currentLevel;
 
@@ -572,7 +668,8 @@ function updateOfficer(id, { name, role, level, phone = '', isActive = 1 }) {
 
   try {
     fs.writeFileSync(OFFICERS_FILE, JSON.stringify(cachedOfficers, null, 2), 'utf8');
-    return { success: true, message: 'Data petugas berhasil diperbarui!', officer: cachedOfficers[index] };
+    updateOfficerInSchedules(oldOfficerName, cachedOfficers[index]);
+    return { success: true, message: 'Data petugas berhasil diperbarui dan disinkronkan ke jadwal!', officer: cachedOfficers[index] };
   } catch (err) {
     return { success: false, error: err.message };
   }
@@ -581,6 +678,7 @@ function updateOfficer(id, { name, role, level, phone = '', isActive = 1 }) {
 function deleteOfficer(id) {
   if (!cachedOfficers) initOfficers();
   const numId = Number(id);
+  const officerToDelete = cachedOfficers.find(o => o.id === numId);
   const initialLen = cachedOfficers.length;
   cachedOfficers = cachedOfficers.filter(o => o.id !== numId);
 
@@ -590,6 +688,7 @@ function deleteOfficer(id) {
 
   try {
     fs.writeFileSync(OFFICERS_FILE, JSON.stringify(cachedOfficers, null, 2), 'utf8');
+    if (officerToDelete) removeOfficerFromSchedules(officerToDelete.name);
     return { success: true, message: 'Petugas berhasil dihapus dari master data!' };
   } catch (err) {
     return { success: false, error: err.message };
@@ -803,6 +902,9 @@ module.exports = {
   addOfficer,
   updateOfficer,
   deleteOfficer,
+  syncOfficerToSchedules,
+  updateOfficerInSchedules,
+  removeOfficerFromSchedules,
   authenticateUser,
   getAllUsers,
   addUser,

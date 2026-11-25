@@ -36,6 +36,12 @@
       }
     },
     {
+      "name": "Rama",
+      "role": "FO Manager",
+      "level": "Manager",
+      "shifts": {}
+    },
+    {
       "name": "Agus Budiono Prastyo",
       "role": "IT Asst Manager",
       "level": "Asst Manager",
@@ -43,6 +49,12 @@
         "11": "MOD1",
         "24": "MOD1"
       }
+    },
+    {
+      "name": "Bekti Utami",
+      "role": "Asst. Sales Marketing Manager",
+      "level": "Asst Manager",
+      "shifts": {}
     },
     {
       "name": "Iqbal",
@@ -174,6 +186,12 @@
       "shifts": {}
     },
     {
+      "name": "Ramadhan Cesario",
+      "role": "Front Office Shift Leader",
+      "level": "Supervisor",
+      "shifts": {}
+    },
+    {
       "name": "Ryan",
       "role": "FO Manager",
       "level": "Supervisor",
@@ -202,6 +220,6 @@
       }
     }
   ],
-  "lastUpdated": "2026-10-02T08:11:31.581Z",
+  "lastUpdated": "2026-11-25T04:39:35.781Z",
   "source": "live_google_sheet"
 }

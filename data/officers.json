@@ -1,5 +1,14 @@
 [
   {
+    "id": 4,
+    "name": "Ardhiny",
+    "role": "HR Manager",
+    "phone": "",
+    "isActive": 1,
+    "updatedAt": "2026-10-02T04:10:24.261Z",
+    "level": "Manager"
+  },
+  {
     "id": 1,
     "name": "Doni Abiyantoro",
     "role": "Chief Accountant",
@@ -8,28 +17,11 @@
     "level": "Manager"
   },
   {
-    "id": 2,
-    "name": "Bekti Utami",
-    "role": "Asst. Sales Marketing Manager",
-    "phone": "",
-    "isActive": 1,
-    "level": "Asst Manager"
-  },
-  {
     "id": 3,
     "name": "Fajar F",
     "role": "Chief Engineer",
     "phone": "",
     "isActive": 1,
-    "level": "Manager"
-  },
-  {
-    "id": 4,
-    "name": "Ardhiny",
-    "role": "HR Manager",
-    "phone": "",
-    "isActive": 1,
-    "updatedAt": "2026-10-02T04:10:24.261Z",
     "level": "Manager"
   },
   {
@@ -41,13 +33,21 @@
     "level": "Manager"
   },
   {
-    "id": 6,
-    "name": "Sugiartono",
-    "role": "Bookkeeper",
+    "id": 8,
+    "name": "Agus Budiono Prastyo",
+    "role": "IT Asst Manager",
     "phone": "",
     "isActive": 1,
-    "level": "Asst Manager",
-    "updatedAt": "2026-10-02T06:04:59.708Z"
+    "updatedAt": "2026-10-02T06:03:44.054Z",
+    "level": "Asst Manager"
+  },
+  {
+    "id": 2,
+    "name": "Bekti Utami",
+    "role": "Asst. Sales Marketing Manager",
+    "phone": "",
+    "isActive": 1,
+    "level": "Asst Manager"
   },
   {
     "id": 7,
@@ -57,15 +57,6 @@
     "isActive": 1,
     "level": "Asst Manager",
     "updatedAt": "2026-10-02T06:04:44.754Z"
-  },
-  {
-    "id": 8,
-    "name": "Agus Budiono Prastyo",
-    "role": "IT Asst Manager",
-    "phone": "",
-    "isActive": 1,
-    "updatedAt": "2026-10-02T06:03:44.054Z",
-    "level": "Asst Manager"
   },
   {
     "id": 9,
@@ -84,12 +75,13 @@
     "level": "Asst Manager"
   },
   {
-    "id": 11,
-    "name": "Dian Nurkhasanah",
-    "role": "Sales Executive",
+    "id": 6,
+    "name": "Sugiartono",
+    "role": "Bookkeeper",
     "phone": "",
     "isActive": 1,
-    "level": "Supervisor"
+    "level": "Asst Manager",
+    "updatedAt": "2026-10-02T06:04:59.708Z"
   },
   {
     "id": 12,
@@ -100,24 +92,8 @@
     "level": "Supervisor"
   },
   {
-    "id": 13,
-    "name": "Fajar Kuncoro",
-    "role": "Purchasing",
-    "phone": "",
-    "isActive": 1,
-    "level": "Supervisor"
-  },
-  {
-    "id": 14,
-    "name": "Hendri D Prayogo",
-    "role": "AP/GC",
-    "phone": "",
-    "isActive": 1,
-    "level": "Supervisor"
-  },
-  {
-    "id": 15,
-    "name": "Septi Fira",
+    "id": 11,
+    "name": "Dian Nurkhasanah",
     "role": "Sales Executive",
     "phone": "",
     "isActive": 1,
@@ -127,6 +103,14 @@
     "id": 16,
     "name": "Faizin",
     "role": "ENG Supervisor",
+    "phone": "",
+    "isActive": 1,
+    "level": "Supervisor"
+  },
+  {
+    "id": 13,
+    "name": "Fajar Kuncoro",
+    "role": "Purchasing",
     "phone": "",
     "isActive": 1,
     "level": "Supervisor"
@@ -143,6 +127,32 @@
     "id": 18,
     "name": "Hendri",
     "role": "FBP",
+    "phone": "",
+    "isActive": 1,
+    "level": "Supervisor"
+  },
+  {
+    "id": 14,
+    "name": "Hendri D Prayogo",
+    "role": "AP/GC",
+    "phone": "",
+    "isActive": 1,
+    "level": "Supervisor"
+  },
+  {
+    "id": 20,
+    "name": "Ramadhan Cesario",
+    "role": "Front Office Shift Leader",
+    "level": "Supervisor",
+    "phone": "+62 82138015798",
+    "isActive": 1,
+    "createdAt": "2026-11-25T03:13:21.835Z",
+    "updatedAt": "2026-11-25T03:13:21.835Z"
+  },
+  {
+    "id": 15,
+    "name": "Septi Fira",
+    "role": "Sales Executive",
     "phone": "",
     "isActive": 1,
     "level": "Supervisor"

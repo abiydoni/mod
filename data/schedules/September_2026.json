@@ -48,6 +48,12 @@
       }
     },
     {
+      "name": "Bekti Utami",
+      "role": "Asst. Sales Marketing Manager",
+      "level": "Asst Manager",
+      "shifts": {}
+    },
+    {
       "name": "Iqbal",
       "role": "Junior Sous Chef",
       "level": "Asst Manager",
@@ -154,6 +160,12 @@
       "shifts": {}
     },
     {
+      "name": "Ramadhan Cesario",
+      "role": "Front Office Shift Leader",
+      "level": "Supervisor",
+      "shifts": {}
+    },
+    {
       "name": "Septi Fira",
       "role": "Sales Executive",
       "level": "Supervisor",
@@ -172,6 +184,6 @@
       }
     }
   ],
-  "lastUpdated": "2026-10-02T08:10:53.827Z",
+  "lastUpdated": "2026-11-25T04:39:35.787Z",
   "source": "live_google_sheet"
 }

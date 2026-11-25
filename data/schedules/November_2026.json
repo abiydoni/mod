@@ -156,6 +156,12 @@
       }
     },
     {
+      "name": "Ramadhan Cesario",
+      "role": "Front Office Shift Leader",
+      "level": "Supervisor",
+      "shifts": {}
+    },
+    {
       "name": "Septi Fira",
       "role": "Sales Executive",
       "level": "Supervisor",
@@ -174,6 +180,6 @@
       }
     }
   ],
-  "lastUpdated": "2026-11-04T07:24:33.756Z",
+  "lastUpdated": "2026-11-25T04:39:35.785Z",
   "source": "live_google_sheet"
 }

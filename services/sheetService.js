@@ -144,6 +144,59 @@ function parseCsv(csvText) {
   return rows;
 }
 
+
+function enrichScheduleWithActiveMasters(scheduleData, existingSchedule = null) {
+  if (!scheduleData || !Array.isArray(scheduleData.officers)) return scheduleData;
+  const activeMasters = storage.getAllOfficers(true);
+  if (!activeMasters || activeMasters.length === 0) return scheduleData;
+
+  const officers = [...scheduleData.officers];
+  const existingMap = new Map();
+  officers.forEach((o, idx) => {
+    existingMap.set((o.name || '').toLowerCase().trim(), idx);
+  });
+
+  // Map of shifts from existing schedule to preserve local shifts if officer not in Google Sheet CSV
+  const prevShiftsMap = new Map();
+  if (existingSchedule && Array.isArray(existingSchedule.officers)) {
+    existingSchedule.officers.forEach(po => {
+      if (po.shifts && Object.keys(po.shifts).length > 0) {
+        prevShiftsMap.set((po.name || '').toLowerCase().trim(), po.shifts);
+      }
+    });
+  }
+
+  let modified = false;
+
+  activeMasters.forEach(master => {
+    const masterName = (master.name || '').toLowerCase().trim();
+    if (existingMap.has(masterName)) {
+      const idx = existingMap.get(masterName);
+      if (officers[idx].role !== master.role || officers[idx].level !== master.level) {
+        officers[idx].role = master.role;
+        officers[idx].level = master.level || 'Supervisor';
+        modified = true;
+      }
+    } else {
+      const preservedShifts = prevShiftsMap.get(masterName) || {};
+      officers.push({
+        name: master.name,
+        role: master.role,
+        level: master.level || 'Supervisor',
+        shifts: preservedShifts
+      });
+      existingMap.set(masterName, officers.length - 1);
+      modified = true;
+    }
+  });
+
+  if (modified) {
+    scheduleData.officers = storage.sortOfficersByLevel(officers);
+  }
+
+  return scheduleData;
+}
+
 function parseSpreadsheetRows(rows, sheetName = null) {
   sheetName = sheetName || getCurrentCalendarSheetName();
   let dateRowIndex = -1;
