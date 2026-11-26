@@ -15,8 +15,9 @@
   <link rel="icon" type="image/x-icon" href="favicon.ico">
   <link rel="icon" type="image/svg+xml" href="favicon.svg">
   <link rel="apple-touch-icon" href="logo.png">
-  <link rel="stylesheet" href="style.css?v=1.8.3">
-  <link rel="stylesheet" href="jadwal.css?v=1.8.3">
+  <link rel="manifest" href="manifest.json?v=1.0.0">
+  <link rel="stylesheet" href="style.css?v=1.8.4">
+  <link rel="stylesheet" href="jadwal.css?v=1.8.4">
 </head>
 <body class="public-jadwal-body">
   <!-- Ambient background glow -->
@@ -25,6 +26,21 @@
 
   <!-- Main Content Container: Pure Matrix Card Only -->
   <main class="public-container">
+    <!-- Simple PWA Install Notification -->
+    <div id="pwa-install-banner" class="pwa-banner hidden">
+      <div class="pwa-banner-left">
+        <img src="logo.png" alt="Logo" class="pwa-app-logo">
+        <div class="pwa-banner-text">
+          <strong id="pwa-banner-title">Pasang Aplikasi Jadwal MOD</strong>
+          <span id="pwa-banner-desc">Instal ke layar utama HP agar cepat dibuka</span>
+        </div>
+      </div>
+      <div class="pwa-banner-right">
+        <button type="button" class="pwa-btn-install" id="btn-pwa-install">Instal</button>
+        <button type="button" class="pwa-btn-close" id="btn-pwa-close" onclick="jadwalApp.dismissPwaBanner()" aria-label="Tutup">&times;</button>
+      </div>
+    </div>
+
     <section class="panel-card matrix-main-card">
       <div class="matrix-header">
         <div>
@@ -282,6 +298,6 @@
   <!-- Toast Notification -->
   <div id="toast" class="toast hidden"></div>
 
-  <script src="jadwal.js?v=1.8.3"></script>
+  <script src="jadwal.js?v=1.8.4"></script>
 </body>
 </html>

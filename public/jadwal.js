@@ -30,6 +30,7 @@ const jadwalApp = {
     this.initCurrentPeriod();
     await this.loadInitialData();
     this.initSignaturePads();
+    this.initPwa();
 
     window.addEventListener('resize', () => {
       const modal = document.getElementById('modal-change-schedule');
@@ -637,6 +638,85 @@ const jadwalApp = {
       el.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
           },
+
+
+  // PWA Support & Install Notification
+  deferredPrompt: null,
+  initPwa() {
+    const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+    if (isStandalone) {
+      console.log('App running in standalone PWA mode');
+      return;
+    }
+
+    // Register Service Worker
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('/sw.js').then((reg) => {
+        console.log('Service Worker registered:', reg.scope);
+      }).catch((err) => {
+        console.log('Service Worker registration skipped:', err);
+      });
+    }
+
+    const banner = document.getElementById('pwa-install-banner');
+    if (!banner) return;
+
+    // Listen for native beforeinstallprompt (Chrome / Android / Edge)
+    window.addEventListener('beforeinstallprompt', (e) => {
+      e.preventDefault();
+      this.deferredPrompt = e;
+      if (sessionStorage.getItem('pwa_dismissed') !== '1') {
+        banner.classList.remove('hidden');
+      }
+    });
+
+    // Handle "Instal" button click
+    const btnInstall = document.getElementById('btn-pwa-install');
+    if (btnInstall) {
+      btnInstall.addEventListener('click', async () => {
+        if (this.deferredPrompt) {
+          this.deferredPrompt.prompt();
+          const { outcome } = await this.deferredPrompt.userChoice;
+          console.log('PWA prompt outcome:', outcome);
+          this.deferredPrompt = null;
+          this.dismissPwaBanner();
+        } else {
+          // iOS Safari fallback or manual
+          const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+          if (isIOS) {
+            alert('📲 Untuk memasang di iPhone/iPad:\n1. Tekan ikon Bagikan (Share) di bawah layar Safari.\n2. Pilih "Tambah ke Layar Utama" (Add to Home Screen).');
+          } else {
+            alert('📲 Untuk memasang aplikasi:\nTekan menu browser (ikon titik 3 di kanan atas) lalu pilih "Instal Aplikasi" atau "Tambahkan ke Layar Utama".');
+          }
+        }
+      });
+    }
+
+    // On mobile devices, show notification banner after a brief gentle delay
+    setTimeout(() => {
+      const isMobile = window.innerWidth <= 768 || /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+      if (isMobile && sessionStorage.getItem('pwa_dismissed') !== '1' && !isStandalone) {
+        const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+        if (isIOS) {
+          const desc = document.getElementById('pwa-banner-desc');
+          if (desc) desc.innerText = 'Tekan ikon Share lalu "Tambah ke Layar Utama"';
+        }
+        banner.classList.remove('hidden');
+      }
+    }, 1200);
+
+    window.addEventListener('appinstalled', () => {
+      this.deferredPrompt = null;
+      this.dismissPwaBanner();
+      this.showToast('✅ Aplikasi Jadwal MOD berhasil dipasang!', 'success');
+    });
+  },
+
+  dismissPwaBanner() {
+    const banner = document.getElementById('pwa-install-banner');
+    if (banner) banner.classList.add('hidden');
+    sessionStorage.setItem('pwa_dismissed', '1');
+  },
 
   onApplicantChange() {
     const appName = document.getElementById('cs-applicant')?.value.trim();
