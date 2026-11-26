@@ -156,7 +156,7 @@
     },
     {
       "name": "Ramadhan Cesario",
-      "role": "FO Shift Leader",
+      "role": "Front Office Shift Leader",
       "level": "Supervisor",
       "shifts": {
         "15": "MOD",
@@ -182,6 +182,6 @@
       }
     }
   ],
-  "lastUpdated": "2026-11-26T07:00:04.155Z",
+  "lastUpdated": "2026-11-26T08:00:03.012Z",
   "source": "live_google_sheet"
 }
