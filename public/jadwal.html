@@ -115,20 +115,22 @@
             <span class="cs-party-badge p1-badge">Pihak 1 (Pemohon)</span>
           </div>
 
-          <div class="cs-field">
-            <label for="cs-applicant" class="cs-label">Nama Anda</label>
-            <select id="cs-applicant" class="cs-select" onchange="jadwalApp.onApplicantChange()">
-              <option value="">-- Pilih Nama Pemohon --</option>
-            </select>
-            <div id="cs-p1-badge" class="cs-officer-meta hidden"></div>
-          </div>
+          <div class="cs-grid-2col">
+            <div class="cs-field">
+              <label for="cs-applicant" class="cs-label">Nama Anda</label>
+              <select id="cs-applicant" class="cs-select" onchange="jadwalApp.onApplicantChange()">
+                <option value="">-- Pilih Nama Pemohon --</option>
+              </select>
+              <div id="cs-p1-badge" class="cs-officer-meta hidden"></div>
+            </div>
 
-          <div class="cs-field">
-            <label for="cs-date-from" class="cs-label">Jadwal Shift Asal</label>
-            <select id="cs-date-from" class="cs-select" onchange="jadwalApp.onDateFromChange()">
-              <option value="">-- Pilih Jadwal Asal --</option>
-            </select>
-            <input type="hidden" id="cs-shift-from" value="MOD">
+            <div class="cs-field">
+              <label for="cs-date-from" class="cs-label">Jadwal Shift Asal</label>
+              <select id="cs-date-from" class="cs-select" onchange="jadwalApp.onDateFromChange()">
+                <option value="">-- Pilih Jadwal Asal --</option>
+              </select>
+              <input type="hidden" id="cs-shift-from" value="MOD">
+            </div>
           </div>
 
           <div class="cs-swap-divider">
@@ -139,20 +141,22 @@
             <span class="cs-party-badge p2-badge">Pihak 2 (Pengganti)</span>
           </div>
 
-          <div class="cs-field">
-            <label for="cs-target" class="cs-label">Nama Pengganti</label>
-            <select id="cs-target" class="cs-select" onchange="jadwalApp.onTargetChange()">
-              <option value="">-- Pilih Nama Pengganti --</option>
-            </select>
-            <div id="cs-p2-badge" class="cs-officer-meta hidden"></div>
-          </div>
+          <div class="cs-grid-2col">
+            <div class="cs-field">
+              <label for="cs-target" class="cs-label">Nama Pengganti</label>
+              <select id="cs-target" class="cs-select" onchange="jadwalApp.onTargetChange()">
+                <option value="">-- Pilih Nama Pengganti --</option>
+              </select>
+              <div id="cs-p2-badge" class="cs-officer-meta hidden"></div>
+            </div>
 
-          <div class="cs-field">
-            <label for="cs-date-to" class="cs-label">Jadwal Shift Pengganti</label>
-            <select id="cs-date-to" class="cs-select" onchange="jadwalApp.onDateToChange()">
-              <option value="">-- Pilih Jadwal Pengganti --</option>
-            </select>
-            <input type="hidden" id="cs-shift-to" value="MOD">
+            <div class="cs-field">
+              <label for="cs-date-to" class="cs-label">Jadwal Shift Pengganti</label>
+              <select id="cs-date-to" class="cs-select" onchange="jadwalApp.onDateToChange()">
+                <option value="">-- Pilih Jadwal Pengganti --</option>
+              </select>
+              <input type="hidden" id="cs-shift-to" value="MOD">
+            </div>
           </div>
         </div>
 
