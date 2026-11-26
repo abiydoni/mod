@@ -255,7 +255,7 @@ app.post('/api/schedule/change-request', async (req, res) => {
       const baseUrl = `${protocol}://${host}`;
 
       const finalWaMsg = waMessage || (
-        `🏨 *FORM PERUBAHAN JADWAL MOD (CHANGE SCHEDULE)*\n` +
+        `🏨 *FORM PERUBAHAN JADWAL MOD (SCHEDULE CHANGE MOD)*\n` +
         `━━━━━━━━━━━━━━━━━━━━━━━━━━\n` +
         `📌 *DETAIL PERUBAHAN JADWAL:*\n` +
         `👤 *1. Petugas Pemohon (Pihak 1):* ${applicant}\n` +
@@ -269,8 +269,8 @@ app.post('/api/schedule/change-request', async (req, res) => {
         `📋 *STATUS PERSETUJUAN DIGITAL (PAPERLESS):*\n` +
         `✅ *Pihak 1 (Pemohon):* Terverifikasi Digital E-Signature\n` +
         `✅ *Pihak 2 (Pengganti):* Terverifikasi Digital E-Signature\n` +
-        `✅ *HR Manager (HRM):* Terverifikasi Digital E-Signature\n` +
-        `✅ *General Manager (GM):* Approved & Disahkan Digital\n` +
+        `✅ *General Manager (Approved by):* Approved & Disahkan Digital\n` +
+        `✅ *HR Manager (Acknowledged by):* Terverifikasi Digital E-Signature\n` +
         `━━━━━━━━━━━━━━━━━━━━━━━━━━\n` +
         `⚠️ _Sistem Otomatis: Perubahan jadwal ini telah diverifikasi 4 Pihak dan tersinkronisasi di Web & Google Drive._\n\n` +
         `🔗 *Portal Jadwal:* ${baseUrl}/jadwal`

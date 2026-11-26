@@ -1886,7 +1886,7 @@ const app = {
             <span class="dafam-brand-name">dafam</span>
             <span class="dafam-brand-city">SEMARANG</span>
           </div>
-          <h1 class="dafam-main-title">SCHEDULE CHANGE</h1>
+          <h1 class="dafam-main-title">SCHEDULE CHANGE MOD</h1>
         </div>
 
         <!-- Main Form Table -->
@@ -1920,7 +1920,7 @@ const app = {
               <td class="col-value-field">${p2IdNo}</td>
             </tr>
             <tr>
-              <td colspan="3" class="col-section-divider">SCHEDULE CHANGE</td>
+              <td colspan="3" class="col-section-divider">SCHEDULE CHANGE MOD</td>
             </tr>
             <tr>
               <td class="col-label-field">FROM</td>
@@ -1947,9 +1947,9 @@ const app = {
           </tbody>
         </table>
 
-        <!-- Signatures Row (4 Columns) -->
+        <!-- Signatures Row (4 Columns - Matching HRD.18-Rev.00 Template) -->
         <div class="dafam-sig-grid">
-          <!-- 1. Requested by -->
+          <!-- 1. Requested by (Employee 1) -->
           <div class="dafam-sig-box">
             <div class="dafam-sig-header">Requested by</div>
             <div class="dafam-sig-canvas-box">
@@ -1957,10 +1957,9 @@ const app = {
             </div>
             <div class="dafam-sig-underline"></div>
             <div class="dafam-sig-role-label">Employee 1</div>
-            <div class="dafam-sig-person-name">(${p1Name})</div>
           </div>
 
-          <!-- 2. Agreed by -->
+          <!-- 2. Agreed by (Employee 2) -->
           <div class="dafam-sig-box">
             <div class="dafam-sig-header">Agreed by</div>
             <div class="dafam-sig-canvas-box">
@@ -1968,29 +1967,26 @@ const app = {
             </div>
             <div class="dafam-sig-underline"></div>
             <div class="dafam-sig-role-label">Employee 2</div>
-            <div class="dafam-sig-person-name">(${p2Name})</div>
           </div>
 
-          <!-- 3. Approved by (Department Head) -->
-          <div class="dafam-sig-box">
-            <div class="dafam-sig-header">Approved by</div>
-            <div class="dafam-sig-canvas-box">
-              ${sigs.hrm ? `<img src="${sigs.hrm}" alt="Tanda Tangan Dept Head / HRM" class="dafam-sig-render-img">` : '<span class="dafam-no-sig">(Belum ditandatangani)</span>'}
-            </div>
-            <div class="dafam-sig-underline"></div>
-            <div class="dafam-sig-role-label">Department Head</div>
-            <div class="dafam-sig-person-name">(HR Manager)</div>
-          </div>
-
-          <!-- 4. Approved by (HR Manager) -->
+          <!-- 3. Approved by (General Manager) -->
           <div class="dafam-sig-box">
             <div class="dafam-sig-header">Approved by</div>
             <div class="dafam-sig-canvas-box">
               ${sigs.gm ? `<img src="${sigs.gm}" alt="Tanda Tangan General Manager" class="dafam-sig-render-img">` : '<span class="dafam-no-sig">(Belum ditandatangani)</span>'}
             </div>
             <div class="dafam-sig-underline"></div>
+            <div class="dafam-sig-role-label">General Manager</div>
+          </div>
+
+          <!-- 4. Acknowledged by (HR Manager) -->
+          <div class="dafam-sig-box">
+            <div class="dafam-sig-header">Acknowledged by</div>
+            <div class="dafam-sig-canvas-box">
+              ${sigs.hrm ? `<img src="${sigs.hrm}" alt="Tanda Tangan HR Manager" class="dafam-sig-render-img">` : '<span class="dafam-no-sig">(Belum ditandatangani)</span>'}
+            </div>
+            <div class="dafam-sig-underline"></div>
             <div class="dafam-sig-role-label">HR Manager</div>
-            <div class="dafam-sig-person-name">(General Manager)</div>
           </div>
         </div>
 

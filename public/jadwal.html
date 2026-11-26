@@ -16,8 +16,8 @@
   <link rel="icon" type="image/svg+xml" href="favicon.svg">
   <link rel="apple-touch-icon" href="logo.png">
   <link rel="manifest" href="manifest.json?v=1.0.0">
-  <link rel="stylesheet" href="style.css?v=1.8.4">
-  <link rel="stylesheet" href="jadwal.css?v=1.8.4">
+  <link rel="stylesheet" href="style.css?v=1.8.6">
+  <link rel="stylesheet" href="jadwal.css?v=1.8.6">
 </head>
 <body class="public-jadwal-body">
   <!-- Ambient background glow -->
@@ -247,26 +247,10 @@
               </div>
             </div>
 
-            <!-- 3. HRM -->
-            <div class="sig-card" id="card-sig-hrm">
-              <div class="sig-card-header">
-                <span>3. HR Manager</span>
-                <button type="button" class="btn-sig-clear" onclick="jadwalApp.clearSig('hrm')">Ulangi</button>
-              </div>
-              <div class="sig-canvas-wrapper">
-                <canvas id="sig-canvas-hrm" class="sig-canvas"></canvas>
-                <div class="sig-canvas-guide"></div>
-                <div class="sig-canvas-hint" id="hint-sig-hrm">Tanda tangan di sini</div>
-              </div>
-              <div class="sig-card-footer">
-                <span id="status-sig-hrm" class="sig-status waiting">Belum tanda tangan</span>
-              </div>
-            </div>
-
-            <!-- 4. GM -->
+            <!-- 3. GM (Approved by) -->
             <div class="sig-card" id="card-sig-gm">
               <div class="sig-card-header">
-                <span>4. General Manager</span>
+                <span>3. General Manager (Approved by)</span>
                 <button type="button" class="btn-sig-clear" onclick="jadwalApp.clearSig('gm')">Ulangi</button>
               </div>
               <div class="sig-canvas-wrapper">
@@ -276,6 +260,22 @@
               </div>
               <div class="sig-card-footer">
                 <span id="status-sig-gm" class="sig-status waiting">Belum tanda tangan</span>
+              </div>
+            </div>
+
+            <!-- 4. HRM (Acknowledged by) -->
+            <div class="sig-card" id="card-sig-hrm">
+              <div class="sig-card-header">
+                <span>4. HR Manager (Acknowledged by)</span>
+                <button type="button" class="btn-sig-clear" onclick="jadwalApp.clearSig('hrm')">Ulangi</button>
+              </div>
+              <div class="sig-canvas-wrapper">
+                <canvas id="sig-canvas-hrm" class="sig-canvas"></canvas>
+                <div class="sig-canvas-guide"></div>
+                <div class="sig-canvas-hint" id="hint-sig-hrm">Tanda tangan di sini</div>
+              </div>
+              <div class="sig-card-footer">
+                <span id="status-sig-hrm" class="sig-status waiting">Belum tanda tangan</span>
               </div>
             </div>
           </div>
@@ -298,6 +298,6 @@
   <!-- Toast Notification -->
   <div id="toast" class="toast hidden"></div>
 
-  <script src="jadwal.js?v=1.8.4"></script>
+  <script src="jadwal.js?v=1.8.6"></script>
 </body>
 </html>

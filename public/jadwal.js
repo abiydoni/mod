@@ -35,7 +35,7 @@ const jadwalApp = {
     window.addEventListener('resize', () => {
       const modal = document.getElementById('modal-change-schedule');
       if (modal && !modal.classList.contains('hidden')) {
-        ['p1', 'p2', 'hrm', 'gm'].forEach(k => {
+        ['p1', 'p2', 'gm', 'hrm'].forEach(k => {
           const c = document.getElementById(`sig-canvas-${k}`);
           if (c) this.resizeCanvas(c);
         });
@@ -46,7 +46,7 @@ const jadwalApp = {
       setTimeout(() => {
         const modal = document.getElementById('modal-change-schedule');
         if (modal && !modal.classList.contains('hidden')) {
-          ['p1', 'p2', 'hrm', 'gm'].forEach(k => {
+          ['p1', 'p2', 'gm', 'hrm'].forEach(k => {
             const c = document.getElementById(`sig-canvas-${k}`);
             if (c) this.resizeCanvas(c);
           });
@@ -288,7 +288,7 @@ const jadwalApp = {
   // PAPERLESS DIGITAL SIGNATURE & CHANGE SCHEDULE
   // ==========================================
   initSignaturePads() {
-    ['p1', 'p2', 'hrm', 'gm'].forEach(key => {
+    ['p1', 'p2', 'gm', 'hrm'].forEach(key => {
       const canvas = document.getElementById(`sig-canvas-${key}`);
       if (!canvas) return;
 
@@ -419,7 +419,7 @@ const jadwalApp = {
 
   updateValidationState() {
     let signedCount = 0;
-    ['p1', 'p2', 'hrm', 'gm'].forEach(k => {
+    ['p1', 'p2', 'gm', 'hrm'].forEach(k => {
       if (this.sigPads[k] && this.sigPads[k].hasDrawn) signedCount++;
     });
 
@@ -527,7 +527,7 @@ const jadwalApp = {
         
     // Re-initialize / re-scale canvas dimensions after modal unhides
     setTimeout(() => {
-      ['p1', 'p2', 'hrm', 'gm'].forEach(k => {
+      ['p1', 'p2', 'gm', 'hrm'].forEach(k => {
         const c = document.getElementById(`sig-canvas-${k}`);
         if (c) this.resizeCanvas(c);
         this.clearSig(k);
@@ -913,8 +913,8 @@ const jadwalApp = {
     msg += `📋 *STATUS PERSETUJUAN DIGITAL (PAPERLESS):*\n`;
     msg += `✅ *Pihak 1 (Pemohon):* Terverifikasi Digital E-Signature\n`;
     msg += `✅ *Pihak 2 (Pengganti):* Terverifikasi Digital E-Signature\n`;
-    msg += `✅ *HR Manager (HRM):* Terverifikasi Digital E-Signature\n`;
-    msg += `✅ *General Manager (GM):* Approved & Disahkan Digital\n`;
+    msg += `✅ *General Manager (Approved by):* Approved & Disahkan Digital\n`;
+    msg += `✅ *HR Manager (Acknowledged by):* Terverifikasi Digital E-Signature\n`;
     msg += `━━━━━━━━━━━━━━━━━━━━━━━━━━\n`;
     msg += `⚠️ _Sistem Otomatis: Perubahan jadwal ini telah diverifikasi 4 Pihak dan tersinkronisasi di Web & Google Drive._\n\n`;
     msg += `🔗 *Portal Jadwal:* ${window.location.origin}/jadwal`;
@@ -946,12 +946,18 @@ const jadwalApp = {
 
     const reason = document.getElementById('cs-reason')?.value.trim() || 'Tukar jadwal MOD';
 
-    // Verify signatures
+    // Verify signatures (Order: P1, P2, GM, HRM)
     const signatures = {};
-    for (const key of ['p1', 'p2', 'hrm', 'gm']) {
+    const sigNames = {
+      p1: 'Pihak 1 (Pemohon)',
+      p2: 'Pihak 2 (Pengganti)',
+      gm: 'General Manager (Approved by)',
+      hrm: 'HR Manager (Acknowledged by)'
+    };
+    for (const key of ['p1', 'p2', 'gm', 'hrm']) {
       const pad = this.sigPads[key];
       if (!pad || !pad.hasDrawn) {
-        this.showToast(`Tanda tangan ${key.toUpperCase()} belum lengkap!`, 'error');
+        this.showToast(`Tanda tangan ${sigNames[key] || key.toUpperCase()} belum lengkap!`, 'error');
         return;
       }
       signatures[key] = pad.canvas.toDataURL('image/png');
