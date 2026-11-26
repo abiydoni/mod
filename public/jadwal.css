@@ -1974,3 +1974,126 @@ body.public-jadwal-body {
     opacity: 1;
   }
 }
+
+/* ====================================================
+   FINGER-FRIENDLY TOUCH CONTROLS FOR FILTER & SEARCH
+   ==================================================== */
+.public-jadwal-body .matrix-actions {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 8px !important;
+  width: 100% !important;
+  margin-top: 6px !important;
+}
+
+.public-jadwal-body .matrix-actions .form-row-compact {
+  display: grid !important;
+  grid-template-columns: 1.3fr 1fr auto !important;
+  gap: 8px !important;
+  width: 100% !important;
+  align-items: stretch !important;
+}
+
+.public-jadwal-body #matrix-month,
+.public-jadwal-body #matrix-year {
+  height: 44px !important;
+  min-height: 44px !important;
+  padding: 8px 12px !important;
+  font-size: 0.95rem !important;
+  font-weight: 600 !important;
+  color: #f8fafc !important;
+  background: #0f172a !important;
+  border: 1.5px solid rgba(255, 255, 255, 0.22) !important;
+  border-radius: 10px !important;
+  cursor: pointer !important;
+  touch-action: manipulation !important;
+  -webkit-appearance: none !important;
+  appearance: none !important;
+  background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2394a3b8' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e") !important;
+  background-repeat: no-repeat !important;
+  background-position: right 10px center !important;
+  background-size: 16px !important;
+  padding-right: 32px !important;
+}
+
+.public-jadwal-body #matrix-month:focus,
+.public-jadwal-body #matrix-year:focus {
+  border-color: #38bdf8 !important;
+  box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.25) !important;
+  outline: none !important;
+}
+
+.public-jadwal-body #btn-matrix-load {
+  height: 44px !important;
+  min-height: 44px !important;
+  padding: 0 16px !important;
+  font-size: 0.92rem !important;
+  font-weight: 700 !important;
+  border-radius: 10px !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  background: rgba(2, 132, 199, 0.18) !important;
+  border: 1.5px solid #0284c7 !important;
+  color: #38bdf8 !important;
+  cursor: pointer !important;
+  touch-action: manipulation !important;
+  transition: all 0.15s ease !important;
+  white-space: nowrap !important;
+}
+
+.public-jadwal-body #btn-matrix-load:active {
+  background: #0284c7 !important;
+  color: #ffffff !important;
+  transform: scale(0.96) !important;
+}
+
+.public-jadwal-body #matrix-search {
+  width: 100% !important;
+  height: 44px !important;
+  min-height: 44px !important;
+  padding: 8px 14px !important;
+  font-size: 0.95rem !important;
+  border-radius: 10px !important;
+  background: #0f172a !important;
+  border: 1.5px solid rgba(255, 255, 255, 0.22) !important;
+  color: #f8fafc !important;
+  box-sizing: border-box !important;
+  touch-action: manipulation !important;
+  transition: all 0.15s ease !important;
+}
+
+.public-jadwal-body #matrix-search::placeholder {
+  color: #94a3b8 !important;
+  font-size: 0.90rem !important;
+}
+
+.public-jadwal-body #matrix-search:focus {
+  border-color: #38bdf8 !important;
+  box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.25) !important;
+  outline: none !important;
+}
+
+.public-jadwal-body .matrix-btn-row {
+  display: grid !important;
+  grid-template-columns: 1fr 1fr 1fr !important;
+  gap: 8px !important;
+  width: 100% !important;
+}
+
+.public-jadwal-body .btn-matrix-action {
+  height: 44px !important;
+  min-height: 44px !important;
+  font-size: 1.25rem !important;
+  border-radius: 10px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  touch-action: manipulation !important;
+  cursor: pointer !important;
+  transition: transform 0.15s ease !important;
+}
+
+.public-jadwal-body .btn-matrix-action:active {
+  transform: scale(0.95) !important;
+}
