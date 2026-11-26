@@ -362,8 +362,10 @@ async function syncToGoogleAppsScript(sheetName, officers) {
 function saveLocalMonthSchedule(sheetName, data) {
   const filePath = getLocalSchedulePath(sheetName);
   try {
-    fs.writeFileSync(filePath, JSON.stringify(data, null, 2), 'utf8');
-    storage.saveCachedSchedule(data);
+    const existing = loadLocalMonthSchedule(sheetName);
+    const enriched = enrichScheduleWithActiveMasters(data, existing);
+    fs.writeFileSync(filePath, JSON.stringify(enriched, null, 2), 'utf8');
+    storage.saveCachedSchedule(enriched);
     return true;
   } catch (e) {
     console.error('Error saving local schedule file:', e);
@@ -592,8 +594,9 @@ async function fetchScheduleFromGoogle(sheetName = null, forceLive = false) {
           const parsed = parseSpreadsheetRows(rows, targetSheet);
           if (parsed && parsed.officers && parsed.officers.length > 0 && countScheduleShifts(parsed) > 0) {
             parsed.source = 'live_google_sheet';
-            saveLocalMonthSchedule(targetSheet, parsed);
-            return parsed;
+            const enriched = enrichScheduleWithActiveMasters(parsed, existingLocal);
+            saveLocalMonthSchedule(targetSheet, enriched);
+            return enriched;
           }
         }
       } catch (err) {

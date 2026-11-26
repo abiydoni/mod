@@ -43,7 +43,7 @@
       "role": "IT Asst Manager",
       "level": "Asst Manager",
       "shifts": {
-        "22": "MOD1",
+        "28": "MOD2",
         "30": "MOD"
       }
     },
@@ -53,7 +53,7 @@
       "level": "Asst Manager",
       "shifts": {
         "1": "MOD1",
-        "28": "MOD2"
+        "22": "MOD1"
       }
     },
     {
@@ -98,7 +98,7 @@
       "level": "Supervisor",
       "shifts": {
         "4": "MOD",
-        "19": "MOD"
+        "16": "MOD"
       }
     },
     {
@@ -107,7 +107,7 @@
       "level": "Supervisor",
       "shifts": {
         "5": "MOD",
-        "16": "MOD"
+        "9": "MOD"
       }
     },
     {
@@ -134,7 +134,7 @@
       "level": "Supervisor",
       "shifts": {
         "10": "MOD",
-        "23": "MOD"
+        "19": "MOD"
       }
     },
     {
@@ -166,7 +166,7 @@
       "role": "Sales Executive",
       "level": "Supervisor",
       "shifts": {
-        "9": "MOD",
+        "23": "MOD",
         "26": "MOD"
       }
     },
@@ -180,6 +180,6 @@
       }
     }
   ],
-  "lastUpdated": "2026-11-25T04:39:35.785Z",
+  "lastUpdated": "2026-11-26T04:24:18.215Z",
   "source": "live_google_sheet"
 }

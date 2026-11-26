@@ -468,7 +468,29 @@ function getCachedSchedule(sheetName = null) {
     const filePath = path.join(SCHEDULES_DIR, filename);
     if (fs.existsSync(filePath)) {
       const raw = fs.readFileSync(filePath, 'utf8');
-      return JSON.parse(raw);
+      const data = JSON.parse(raw);
+      if (data && Array.isArray(data.officers)) {
+        const activeMasters = getAllOfficers(true);
+        if (activeMasters && activeMasters.length > 0) {
+          const names = new Set(data.officers.map(o => (o.name || '').toLowerCase().trim()));
+          let modified = false;
+          activeMasters.forEach(m => {
+            if (!names.has((m.name || '').toLowerCase().trim())) {
+              data.officers.push({
+                name: m.name,
+                role: m.role,
+                level: m.level || 'Supervisor',
+                shifts: {}
+              });
+              modified = true;
+            }
+          });
+          if (modified) {
+            data.officers = sortOfficersByLevel(data.officers);
+          }
+        }
+      }
+      return data;
     }
   } catch (err) {
     console.error('Error reading cached schedule:', err);

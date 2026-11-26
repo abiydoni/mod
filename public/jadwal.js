@@ -459,6 +459,34 @@ const jadwalApp = {
       }
     }
 
+    
+    // Update Stepper
+    const step1 = document.getElementById('cs-step-1');
+    const step2 = document.getElementById('cs-step-2');
+    const step3 = document.getElementById('cs-step-3');
+
+    if (app && target) {
+      step1?.classList.add('completed');
+      step2?.classList.add('active');
+    } else {
+      step1?.classList.remove('completed');
+      step2?.classList.remove('active');
+    }
+
+    if (isPihakComplete) {
+      step2?.classList.add('completed');
+      step3?.classList.add('active');
+    } else {
+      step2?.classList.remove('completed');
+      step3?.classList.remove('active');
+    }
+
+    if (signedCount === 4) {
+      step3?.classList.add('completed');
+    } else {
+      step3?.classList.remove('completed');
+    }
+
     const isValid = isPihakComplete && (signedCount === 4);
 
     if (btnSubmit) {
@@ -495,6 +523,8 @@ const jadwalApp = {
     if (targetSelect) targetSelect.innerHTML = optionsHtml;
 
     document.getElementById('modal-change-schedule')?.classList.remove('hidden');
+    document.getElementById('tab-nav-change')?.classList.add('active');
+    document.getElementById('tab-nav-matrix')?.classList.remove('active');
 
     // Re-initialize / re-scale canvas dimensions after modal unhides
     setTimeout(() => {
@@ -509,6 +539,109 @@ const jadwalApp = {
 
   closeChangeScheduleModal() {
     document.getElementById('modal-change-schedule')?.classList.add('hidden');
+    document.getElementById('tab-nav-change')?.classList.remove('active');
+    document.getElementById('tab-nav-matrix')?.classList.add('active');
+  },
+
+  
+  updateOfficerBadge(side) {
+    const elId = side === 'p1' ? 'cs-applicant' : 'cs-target';
+    const badgeId = `cs-${side}-badge`;
+    const badgeEl = document.getElementById(badgeId);
+    if (!badgeEl) return;
+
+    const name = document.getElementById(elId)?.value.trim();
+    if (!name) {
+      badgeEl.innerHTML = '';
+      badgeEl.classList.add('hidden');
+      return;
+    }
+
+    const officers = (this.cachedMatrix && this.cachedMatrix.officers && this.cachedMatrix.officers.length > 0)
+      ? this.cachedMatrix.officers
+      : (this.masterOfficers || []);
+
+    const officer = officers.find(o => (o.name || '').toLowerCase().trim() === name.toLowerCase());
+    if (officer) {
+      const normLevel = this.normalizeLevel(officer.level);
+      let levelBadge = '<span class="badge badge-supervisor">Supervisor</span>';
+      if (normLevel === 'Manager') levelBadge = '<span class="badge badge-manager">Manager</span>';
+      else if (normLevel === 'Asst Manager') levelBadge = '<span class="badge badge-asst-manager">Asst Manager</span>';
+
+      badgeEl.innerHTML = `
+        <div class="cs-officer-info-pill">
+          ${levelBadge}
+          <span class="cs-officer-role">${officer.role || 'Petugas MOD'}</span>
+        </div>
+      `;
+      badgeEl.classList.remove('hidden');
+    } else {
+      badgeEl.classList.add('hidden');
+    }
+  },
+
+  updateSwapPreview() {
+    const appName = document.getElementById('cs-applicant')?.value.trim();
+    const dateFromEl = document.getElementById('cs-date-from');
+    const dateFromOpt = dateFromEl ? dateFromEl.options[dateFromEl.selectedIndex] : null;
+    const dateFrom = dateFromEl?.value;
+    const shiftFrom = dateFromOpt?.getAttribute('data-shift') || document.getElementById('cs-shift-from')?.value || 'MOD';
+
+    const targetName = document.getElementById('cs-target')?.value.trim();
+    const dateToEl = document.getElementById('cs-date-to');
+    const dateToOpt = dateToEl ? dateToEl.options[dateToEl.selectedIndex] : null;
+    const dateTo = dateToEl?.value;
+    const shiftTo = dateToOpt?.getAttribute('data-shift') || document.getElementById('cs-shift-to')?.value || 'MOD';
+
+    const card = document.getElementById('cs-swap-preview-card');
+    if (!card) return;
+
+    if (appName && targetName && dateFrom && dateTo) {
+      const shiftLabels = { 'MOD1': 'MOD 1 (Pagi 09:00)', 'MOD2': 'MOD 2 (Sore 16:00)', 'MOD': 'MOD (Sore 18:00)' };
+      
+      const p1NameEl = document.getElementById('prev-p1-name');
+      const p1ShiftEl = document.getElementById('prev-p1-shift');
+      const p1DateEl = document.getElementById('prev-p1-date');
+      if (p1NameEl) p1NameEl.innerText = appName;
+      if (p1ShiftEl) p1ShiftEl.innerText = shiftLabels[shiftFrom] || `Shift ${shiftFrom}`;
+      if (p1DateEl) p1DateEl.innerText = this.formatIndonesianDateStr(dateFrom);
+
+      const p2NameEl = document.getElementById('prev-p2-name');
+      const p2ShiftEl = document.getElementById('prev-p2-shift');
+      const p2DateEl = document.getElementById('prev-p2-date');
+      if (p2NameEl) p2NameEl.innerText = targetName;
+      if (p2ShiftEl) p2ShiftEl.innerText = shiftLabels[shiftTo] || `Shift ${shiftTo}`;
+      if (p2DateEl) p2DateEl.innerText = this.formatIndonesianDateStr(dateTo);
+
+      card.classList.remove('hidden');
+    } else {
+      card.classList.add('hidden');
+    }
+  },
+
+  setQuickReason(reason) {
+    const reasonInput = document.getElementById('cs-reason');
+    if (reasonInput) {
+      reasonInput.value = reason;
+    }
+    document.querySelectorAll('.cs-chip').forEach(btn => {
+      if (btn.innerText.includes(reason)) {
+        btn.classList.add('active');
+      } else {
+        btn.classList.remove('active');
+      }
+    });
+    this.updateValidationState();
+  },
+
+  scrollToMatrix() {
+    this.closeChangeScheduleModal();
+    const el = document.getElementById('matrix-table');
+    if (el) {
+      el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+    document.getElementById('tab-nav-matrix')?.classList.add('active');
+    document.getElementById('tab-nav-change')?.classList.remove('active');
   },
 
   onApplicantChange() {
@@ -534,7 +667,9 @@ const jadwalApp = {
       }).join('');
     }
 
+    this.updateOfficerBadge('p1');
     this.onDateFromChange();
+    this.updateSwapPreview();
   },
 
   onDateFromChange() {
@@ -543,6 +678,7 @@ const jadwalApp = {
     const shiftKey = selectedOpt?.getAttribute('data-shift') || 'MOD';
     const shiftSelect = document.getElementById('cs-shift-from');
     if (shiftSelect && shiftKey) shiftSelect.value = shiftKey;
+    this.updateSwapPreview();
     this.updateValidationState();
   },
 
@@ -571,7 +707,9 @@ const jadwalApp = {
     }
 
     dateSelect.innerHTML = optionsHtml;
+    this.updateOfficerBadge('p2');
     this.onDateToChange();
+    this.updateSwapPreview();
   },
 
   onDateToChange() {
