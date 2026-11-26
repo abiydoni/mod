@@ -897,27 +897,22 @@ const jadwalApp = {
       'MOD': 'MOD (Sore 18:00 - 02:00 WIB)'
     };
 
+    const portalUrl = 'https://mod.appsbee.my.id/jadwal';
+
     let msg = `🏨 *FORM PERUBAHAN JADWAL MOD (CHANGE SCHEDULE)*\n`;
     msg += `━━━━━━━━━━━━━━━━━━━━━━━━━━\n`;
     msg += `📌 *DETAIL PERUBAHAN JADWAL:*\n`;
-    msg += `👤 *1. Petugas Pemohon (Pihak 1):* ${applicant}\n`;
+    msg += `👤 *1. Petugas Pemohon:* ${applicant}\n`;
     msg += `📅 *Jadwal Asal:* ${this.formatIndonesianDateStr(dateFrom)}\n`;
     msg += `⏰ *Shift Asal:* ${shiftLabels[shiftFrom] || shiftFrom}\n\n`;
 
-    msg += `🔄 *2. Petugas Pengganti (Pihak 2):* ${target}\n`;
+    msg += `🔄 *2. Petugas Pengganti:* ${target}\n`;
     msg += `📅 *Jadwal Pengganti:* ${this.formatIndonesianDateStr(dateTo)}\n`;
     msg += `⏰ *Shift Pengganti:* ${shiftLabels[shiftTo] || shiftTo}\n\n`;
 
     msg += `📝 *Alasan Perubahan:* ${reason}\n`;
     msg += `━━━━━━━━━━━━━━━━━━━━━━━━━━\n`;
-    msg += `📋 *STATUS PERSETUJUAN DIGITAL (PAPERLESS):*\n`;
-    msg += `✅ *Pihak 1 (Pemohon):* Terverifikasi Digital E-Signature\n`;
-    msg += `✅ *Pihak 2 (Pengganti):* Terverifikasi Digital E-Signature\n`;
-    msg += `✅ *General Manager (Approved by):* Approved & Disahkan Digital\n`;
-    msg += `✅ *HR Manager (Acknowledged by):* Terverifikasi Digital E-Signature\n`;
-    msg += `━━━━━━━━━━━━━━━━━━━━━━━━━━\n`;
-    msg += `⚠️ _Sistem Otomatis: Perubahan jadwal ini telah diverifikasi 4 Pihak dan tersinkronisasi di Web & Google Drive._\n\n`;
-    msg += `🔗 *Portal Jadwal:* ${window.location.origin}/jadwal`;
+    msg += `🔗 *Portal Jadwal:* ${portalUrl}`;
 
     return msg;
   },

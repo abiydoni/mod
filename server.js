@@ -254,26 +254,21 @@ app.post('/api/schedule/change-request', async (req, res) => {
       const host = req.get('host') || 'localhost:3000';
       const baseUrl = `${protocol}://${host}`;
 
+      const portalUrl = 'https://mod.appsbee.my.id/jadwal';
+
       const finalWaMsg = waMessage || (
-        `🏨 *FORM PERUBAHAN JADWAL MOD (SCHEDULE CHANGE MOD)*\n` +
+        `🏨 *FORM PERUBAHAN JADWAL MOD (CHANGE SCHEDULE)*\n` +
         `━━━━━━━━━━━━━━━━━━━━━━━━━━\n` +
         `📌 *DETAIL PERUBAHAN JADWAL:*\n` +
-        `👤 *1. Petugas Pemohon (Pihak 1):* ${applicant}\n` +
+        `👤 *1. Petugas Pemohon:* ${applicant}\n` +
         `📅 *Jadwal Asal:* ${formatIndoDate(applicantDate)}\n` +
         `⏰ *Shift Asal:* ${shiftLabels[applicantShift] || applicantShift}\n\n` +
-        `🔄 *2. Petugas Pengganti (Pihak 2):* ${target}\n` +
+        `🔄 *2. Petugas Pengganti:* ${target}\n` +
         `📅 *Jadwal Pengganti:* ${formatIndoDate(targetDate || applicantDate)}\n` +
         `⏰ *Shift Pengganti:* ${shiftLabels[targetShift] || targetShift}\n\n` +
         `📝 *Alasan Perubahan:* ${reason}\n` +
         `━━━━━━━━━━━━━━━━━━━━━━━━━━\n` +
-        `📋 *STATUS PERSETUJUAN DIGITAL (PAPERLESS):*\n` +
-        `✅ *Pihak 1 (Pemohon):* Terverifikasi Digital E-Signature\n` +
-        `✅ *Pihak 2 (Pengganti):* Terverifikasi Digital E-Signature\n` +
-        `✅ *General Manager (Approved by):* Approved & Disahkan Digital\n` +
-        `✅ *HR Manager (Acknowledged by):* Terverifikasi Digital E-Signature\n` +
-        `━━━━━━━━━━━━━━━━━━━━━━━━━━\n` +
-        `⚠️ _Sistem Otomatis: Perubahan jadwal ini telah diverifikasi 4 Pihak dan tersinkronisasi di Web & Google Drive._\n\n` +
-        `🔗 *Portal Jadwal:* ${baseUrl}/jadwal`
+        `🔗 *Portal Jadwal:* ${portalUrl}`
       );
 
       waSendResult = await waService.sendWhatsAppMessage({
