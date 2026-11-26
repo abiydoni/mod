@@ -1477,12 +1477,16 @@ textarea {
   max-width: 440px;
 }
 
-#modal-change-schedule .modal-box-large {
-  max-width: 650px;
-  height: 90vh;
-  max-height: 90vh;
-  border-radius: 12px;
-  padding: 0;
+#modal-change-schedule .modal-box,
+#modal-change-schedule .modal-box-large,
+#modal-change-schedule .cs-clean-sheet {
+  max-width: 100% !important;
+  width: 100% !important;
+  height: 100% !important;
+  max-height: 100% !important;
+  border-radius: 0 !important;
+  padding: 0 !important;
+  border: none !important;
 }
 
 .modal-header {
