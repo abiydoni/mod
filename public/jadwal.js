@@ -523,9 +523,7 @@ const jadwalApp = {
     if (targetSelect) targetSelect.innerHTML = optionsHtml;
 
     document.getElementById('modal-change-schedule')?.classList.remove('hidden');
-    document.getElementById('tab-nav-change')?.classList.add('active');
-    document.getElementById('tab-nav-matrix')?.classList.remove('active');
-
+        
     // Re-initialize / re-scale canvas dimensions after modal unhides
     setTimeout(() => {
       ['p1', 'p2', 'hrm', 'gm'].forEach(k => {
@@ -539,9 +537,7 @@ const jadwalApp = {
 
   closeChangeScheduleModal() {
     document.getElementById('modal-change-schedule')?.classList.add('hidden');
-    document.getElementById('tab-nav-change')?.classList.remove('active');
-    document.getElementById('tab-nav-matrix')?.classList.add('active');
-  },
+          },
 
   
   updateOfficerBadge(side) {
@@ -640,9 +636,7 @@ const jadwalApp = {
     if (el) {
       el.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
-    document.getElementById('tab-nav-matrix')?.classList.add('active');
-    document.getElementById('tab-nav-change')?.classList.remove('active');
-  },
+          },
 
   onApplicantChange() {
     const appName = document.getElementById('cs-applicant')?.value.trim();

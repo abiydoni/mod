@@ -15,8 +15,8 @@
   <link rel="icon" type="image/x-icon" href="favicon.ico">
   <link rel="icon" type="image/svg+xml" href="favicon.svg">
   <link rel="apple-touch-icon" href="logo.png">
-  <link rel="stylesheet" href="style.css?v=1.8.2">
-  <link rel="stylesheet" href="jadwal.css?v=1.8.2">
+  <link rel="stylesheet" href="style.css?v=1.8.3">
+  <link rel="stylesheet" href="jadwal.css?v=1.8.3">
 </head>
 <body class="public-jadwal-body">
   <!-- Ambient background glow -->
@@ -55,13 +55,11 @@
             <button class="btn btn-sm btn-outline" id="btn-matrix-load" onclick="jadwalApp.loadMatrix(true)">📂 Buka</button>
           </div>
           <input type="text" id="matrix-search" class="form-input-sm" placeholder="🔍 Cari nama petugas..." oninput="jadwalApp.filterMatrix(this.value)">
-          <button class="btn btn-outline btn-sm" id="btn-refresh-matrix" onclick="jadwalApp.loadMatrix(true)">🔄 Refresh</button>
-          <button class="btn btn-warning btn-sm" id="btn-change-schedule" onclick="jadwalApp.openChangeScheduleModal()" title="Form Pengajuan Tukar / Perubahan Jadwal">
-            <span>🔄</span> Change Schedule
-          </button>
-          <button class="btn btn-primary btn-sm" onclick="jadwalApp.shareWhatsAppLink()" title="Bagikan Link Jadwal">
-            <span>📲</span> Bagikan
-          </button>
+          <div class="matrix-btn-row">
+            <button class="btn btn-outline btn-matrix-action" id="btn-refresh-matrix" onclick="jadwalApp.loadMatrix(true)" title="Refresh Jadwal" aria-label="Refresh">🔄</button>
+            <button class="btn btn-warning btn-matrix-action" id="btn-change-schedule" onclick="jadwalApp.openChangeScheduleModal()" title="Tukar Jadwal (Change Schedule)" aria-label="Tukar Jadwal">⇄</button>
+            <button class="btn btn-primary btn-matrix-action" id="btn-share-matrix" onclick="jadwalApp.shareWhatsAppLink()" title="Bagikan ke WhatsApp" aria-label="Bagikan">📲</button>
+          </div>
         </div>
       </div>
 
@@ -279,27 +277,11 @@
     </div>
   </div>
 
-  <!-- Mobile Bottom Navigation Bar (Familiar Mobile App Navigation) -->
-  <nav class="cs-mobile-bottom-nav">
-    <button type="button" class="cs-nav-tab active" id="tab-nav-matrix" onclick="jadwalApp.scrollToMatrix()">
-      <span class="cs-nav-icon">📅</span>
-      <span class="cs-nav-text">Kalender</span>
-    </button>
-    <button type="button" class="cs-nav-tab cs-nav-tab-featured" id="tab-nav-change" onclick="jadwalApp.openChangeScheduleModal()">
-      <span class="cs-nav-featured-circle">
-        <span class="cs-nav-featured-icon">🔄</span>
-      </span>
-      <span class="cs-nav-text">Tukar Jadwal</span>
-    </button>
-    <button type="button" class="cs-nav-tab" id="tab-nav-share" onclick="jadwalApp.shareWhatsAppLink()">
-      <span class="cs-nav-icon">📲</span>
-      <span class="cs-nav-text">Bagikan</span>
-    </button>
-  </nav>
+  
 
   <!-- Toast Notification -->
   <div id="toast" class="toast hidden"></div>
 
-  <script src="jadwal.js?v=1.8.2"></script>
+  <script src="jadwal.js?v=1.8.3"></script>
 </body>
 </html>

@@ -1239,9 +1239,7 @@ body.public-jadwal-body {
    100% EDGE-TO-EDGE FULL WIDTH & TOUCHSCREEN OPTIMIZED
    =================================================== */
 
-.public-jadwal-body {
-  padding-bottom: 74px !important;
-}
+
 
 /* Modal Backdrop: Completely zero padding so sheet fills entire screen */
 #modal-change-schedule.modal-backdrop {
@@ -1815,75 +1813,43 @@ body.public-jadwal-body {
   box-shadow: 0 4px 14px rgba(2, 132, 199, 0.4) !important;
 }
 
-/* Mobile Bottom Navigation */
-.cs-mobile-bottom-nav {
-  position: fixed !important;
-  bottom: 0 !important;
-  left: 0 !important;
-  right: 0 !important;
-  height: 60px !important;
-  background: rgba(15, 23, 42, 0.95) !important;
-  backdrop-filter: blur(14px) !important;
-  -webkit-backdrop-filter: blur(14px) !important;
-  border-top: 1px solid rgba(255, 255, 255, 0.1) !important;
-  display: flex !important;
-  justify-content: space-around !important;
-  align-items: center !important;
-  z-index: 900 !important;
-  padding-bottom: env(safe-area-inset-bottom, 0px) !important;
+
+/* Action Buttons: Refresh, Change Schedule, and Share in 1 horizontal row with icons */
+.matrix-btn-row {
+  display: grid !important;
+  grid-template-columns: 1fr 1fr 1fr !important;
+  gap: 8px !important;
+  width: 100% !important;
+  margin-top: 4px !important;
 }
 
-.cs-nav-tab {
-  flex: 1 !important;
-  height: 100% !important;
-  background: transparent !important;
-  border: none !important;
-  color: #94a3b8 !important;
-  display: flex !important;
-  flex-direction: column !important;
-  align-items: center !important;
-  justify-content: center !important;
-  gap: 2px !important;
-  cursor: pointer !important;
-  font-family: inherit !important;
-}
-
-.cs-nav-icon {
+.btn-matrix-action {
+  height: 44px !important;
+  min-height: 44px !important;
   font-size: 20px !important;
-}
-
-.cs-nav-text {
-  font-size: 11px !important;
-  font-weight: 600 !important;
-}
-
-.cs-nav-tab.active {
-  color: #38bdf8 !important;
-}
-
-.cs-nav-tab-featured {
-  position: relative !important;
-  top: -12px !important;
-}
-
-.cs-nav-featured-circle {
-  width: 50px !important;
-  height: 50px !important;
-  border-radius: 50% !important;
-  background: #0284c7 !important;
-  border: 3.5px solid #080c14 !important;
-  box-shadow: 0 4px 14px rgba(2, 132, 199, 0.5) !important;
   display: flex !important;
   align-items: center !important;
   justify-content: center !important;
+  border-radius: 10px !important;
+  padding: 0 !important;
+  cursor: pointer !important;
+  touch-action: manipulation !important;
+  transition: transform 0.15s ease, opacity 0.15s ease !important;
+  width: 100% !important;
 }
 
-.cs-nav-featured-icon {
-  font-size: 22px !important;
-  color: #ffffff !important;
+.btn-matrix-action:active {
+  transform: scale(0.94) !important;
 }
 
-.cs-nav-tab-featured .cs-nav-text {
-  margin-top: 2px !important;
-  color: #38bdf8 !important;
+@media (min-width: 768px) {
+  .matrix-btn-row {
+    display: inline-flex !important;
+    width: auto !important;
+    gap: 8px !important;
+    margin-top: 0 !important;
+  }
+  .btn-matrix-action {
+    width: 44px !important;
+  }
 }
