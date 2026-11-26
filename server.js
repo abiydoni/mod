@@ -291,6 +291,7 @@ app.post('/api/schedule/change-request', async (req, res) => {
 // 4e. Get Change Schedule History / Audit Logs
 app.get('/api/schedule/swaps', (req, res) => {
   try {
+    res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
     const swaps = storage.getScheduleSwaps();
     res.json(swaps);
   } catch (err) {

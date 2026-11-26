@@ -1678,7 +1678,12 @@ const app = {
 
   async loadScheduleSwaps() {
     try {
-      const res = await fetch('/api/schedule/swaps');
+      // If already cached, render immediately for instant responsiveness
+      if (this.cachedSwaps && this.cachedSwaps.length > 0) {
+        this.renderScheduleSwapsTable(this.cachedSwaps);
+      }
+
+      const res = await fetch(`/api/schedule/swaps?_t=${Date.now()}`);
       const swaps = await res.json();
       this.cachedSwaps = Array.isArray(swaps) ? swaps : [];
       
@@ -1689,7 +1694,7 @@ const app = {
     } catch (err) {
       console.error('Failed to load schedule swaps:', err);
       const tbody = document.getElementById('swaps-tbody');
-      if (tbody) {
+      if (tbody && (!this.cachedSwaps || this.cachedSwaps.length === 0)) {
         tbody.innerHTML = '<tr><td colspan="8" class="text-center py-4 text-danger">Gagal memuat data laporan tukar jadwal.</td></tr>';
       }
     }
@@ -1717,28 +1722,25 @@ const app = {
       const p2Dept = p2Off?.department || this.getDepartmentFromRole(p2Role);
 
       const dateObj = new Date(s.timestamp || Date.now());
-      const dateFormatted = dateObj.toLocaleDateString('id-ID', {
-        day: '2-digit',
-        month: 'short',
-        year: 'numeric'
-      });
-      const timeFormatted = dateObj.toLocaleTimeString('id-ID', {
-        hour: '2-digit',
-        minute: '2-digit'
-      });
+      const dateFormatted = !isNaN(dateObj.getTime())
+        ? dateObj.toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' })
+        : '-';
+      const timeFormatted = !isNaN(dateObj.getTime())
+        ? dateObj.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })
+        : '-';
 
-      const shiftFromText = `${shiftLabels[s.applicantShift] || s.applicantShift} (Tgl ${s.applicantDay || '-'})`;
-      const shiftToText = `${shiftLabels[s.targetShift] || s.targetShift} (Tgl ${s.targetDay || '-'})`;
+      const shiftFromText = `${shiftLabels[s.applicantShift] || s.applicantShift || 'MOD'} (Tgl ${s.applicantDay || '-'})`;
+      const shiftToText = `${shiftLabels[s.targetShift] || s.targetShift || 'MOD'} (Tgl ${s.targetDay || '-'})`;
 
       return `
-        <tr onclick="app.showScheduleChangeReport('${s.id}')" class="clickable-swap-row" title="Klik baris ini untuk membuka Dokumen Resmi HRD.18-Rev.00">
+        <tr onclick="app.showScheduleChangeReport('${s.id}')" class="clickable-swap-row" title="Klik baris ini untuk membuka Dokumen Resmi SCHEDULE CHANGE MOD">
           <td>${idx + 1}</td>
           <td>
             <strong>${dateFormatted}</strong><br>
             <span class="text-muted text-xs">${timeFormatted} WIB</span>
           </td>
           <td>
-            <strong>${s.applicant}</strong><br>
+            <strong>${s.applicant || '-'}</strong><br>
             <span class="text-muted text-xs">${p1Role} &bull; ${p1Dept}</span>
           </td>
           <td>
@@ -1747,7 +1749,7 @@ const app = {
             <span class="swap-pill-shift">${shiftToText}</span>
           </td>
           <td>
-            <strong>${s.target}</strong><br>
+            <strong>${s.target || '-'}</strong><br>
             <span class="text-muted text-xs">${p2Role} &bull; ${p2Dept}</span>
           </td>
           <td>
@@ -1772,7 +1774,7 @@ const app = {
       this.renderScheduleSwapsTable(this.cachedSwaps);
       return;
     }
-    const filtered = this.cachedSwaps.filter(s =>
+    const filtered = (this.cachedSwaps || []).filter(s =>
       (s.applicant || '').toLowerCase().includes(q) ||
       (s.target || '').toLowerCase().includes(q) ||
       (s.reason || '').toLowerCase().includes(q)
@@ -1780,25 +1782,32 @@ const app = {
     this.renderScheduleSwapsTable(filtered);
   },
 
-  showScheduleChangeReport(swapId) {
-    const swap = this.cachedSwaps.find(s => s.id === swapId);
+  async showScheduleChangeReport(swapId) {
+    if (!this.cachedSwaps || this.cachedSwaps.length === 0) {
+      await this.loadScheduleSwaps();
+    }
+    const swap = (this.cachedSwaps || []).find(s => String(s.id) === String(swapId));
     if (!swap) {
       this.showToast('Data laporan tidak ditemukan.', 'error');
       return;
     }
 
-    const container = document.getElementById('printable-schedule-change-form');
-    if (container) {
-      container.innerHTML = this.renderDafamScheduleChangeDoc(swap);
-    }
+    try {
+      const container = document.getElementById('printable-schedule-change-form');
+      if (container) {
+        container.innerHTML = this.renderDafamScheduleChangeDoc(swap);
+      }
 
-    const modal = document.getElementById('modal-schedule-change-report');
-    if (modal) modal.classList.remove('hidden');
+      // Use robust openModal to reset display, visibility, and pointer-events
+      this.openModal('modal-schedule-change-report');
+    } catch (err) {
+      console.error('Error opening schedule change report:', err);
+      this.showToast(`Gagal membuka laporan: ${err.message}`, 'error');
+    }
   },
 
   closeScheduleChangeReport() {
-    const modal = document.getElementById('modal-schedule-change-report');
-    if (modal) modal.classList.add('hidden');
+    this.closeModal('modal-schedule-change-report');
   },
 
   printScheduleChangeReport() {
