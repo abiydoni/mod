@@ -102,7 +102,8 @@ const app = {
       this.loadMatrixData(),
       this.loadMasterOfficers(),
       this.loadLogs(),
-      this.loadUsersList()
+      this.loadUsersList(),
+      this.loadScheduleSwaps()
     ]);
 
     this.setProgress(100, false);
@@ -175,6 +176,8 @@ const app = {
           this.loadMasterOfficers();
         } else if (tabId === 'tab-settings') {
           this.loadUsersList();
+        } else if (tabId === 'tab-swaps') {
+          this.loadScheduleSwaps();
         }
       });
     });
@@ -569,6 +572,7 @@ const app = {
       'tab-matrix': 'Kalender Matrix Jadwal MOD',
       'tab-broadcast': 'Kirim Pesan Manual / Pengumuman',
       'tab-logs': 'Riwayat Log Pengiriman',
+      'tab-swaps': 'Laporan Penukaran Jadwal (Schedule Change)',
       'tab-settings': 'Pengaturan Sistem & Cron'
     };
     const titleEl = document.getElementById('page-title');
@@ -1669,6 +1673,334 @@ const app = {
     } catch (e) {
       console.error('Failed to load logs:', e);
     }
+  },
+
+  
+  // ==========================================
+  // SCHEDULE CHANGE REPORT (HRD.18-Rev.00)
+  // ==========================================
+  cachedSwaps: [],
+
+  async loadScheduleSwaps() {
+    try {
+      const res = await fetch('/api/schedule/swaps');
+      const swaps = await res.json();
+      this.cachedSwaps = Array.isArray(swaps) ? swaps : [];
+      
+      const badge = document.getElementById('swaps-count');
+      if (badge) badge.innerText = this.cachedSwaps.length;
+
+      this.renderScheduleSwapsTable(this.cachedSwaps);
+    } catch (err) {
+      console.error('Failed to load schedule swaps:', err);
+      const tbody = document.getElementById('swaps-tbody');
+      if (tbody) {
+        tbody.innerHTML = '<tr><td colspan="8" class="text-center py-4 text-danger">Gagal memuat data laporan tukar jadwal.</td></tr>';
+      }
+    }
+  },
+
+  renderScheduleSwapsTable(swaps) {
+    const tbody = document.getElementById('swaps-tbody');
+    if (!tbody) return;
+
+    if (!swaps || swaps.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="8" class="text-center py-4">Belum ada permohonan penukaran jadwal.</td></tr>';
+      return;
+    }
+
+    const shiftLabels = { 'MOD1': 'MOD 1', 'MOD2': 'MOD 2', 'MOD': 'MOD' };
+    const officers = this.masterOfficers || [];
+
+    tbody.innerHTML = swaps.map((s, idx) => {
+      const p1Off = officers.find(o => (o.name || '').toLowerCase() === (s.applicant || '').toLowerCase());
+      const p2Off = officers.find(o => (o.name || '').toLowerCase() === (s.target || '').toLowerCase());
+
+      const p1Role = p1Off ? (p1Off.role || p1Off.level) : 'Petugas MOD';
+      const p2Role = p2Off ? (p2Off.role || p2Off.level) : 'Petugas MOD';
+      const p1Dept = p1Off?.department || this.getDepartmentFromRole(p1Role);
+      const p2Dept = p2Off?.department || this.getDepartmentFromRole(p2Role);
+
+      const dateObj = new Date(s.timestamp || Date.now());
+      const dateFormatted = dateObj.toLocaleDateString('id-ID', {
+        day: '2-digit',
+        month: 'short',
+        year: 'numeric'
+      });
+      const timeFormatted = dateObj.toLocaleTimeString('id-ID', {
+        hour: '2-digit',
+        minute: '2-digit'
+      });
+
+      const shiftFromText = `${shiftLabels[s.applicantShift] || s.applicantShift} (Tgl ${s.applicantDay || '-'})`;
+      const shiftToText = `${shiftLabels[s.targetShift] || s.targetShift} (Tgl ${s.targetDay || '-'})`;
+
+      return `
+        <tr onclick="app.showScheduleChangeReport('${s.id}')" class="clickable-swap-row" title="Klik baris ini untuk membuka Dokumen Resmi HRD.18-Rev.00">
+          <td>${idx + 1}</td>
+          <td>
+            <strong>${dateFormatted}</strong><br>
+            <span class="text-muted text-xs">${timeFormatted} WIB</span>
+          </td>
+          <td>
+            <strong>${s.applicant}</strong><br>
+            <span class="text-muted text-xs">${p1Role} &bull; ${p1Dept}</span>
+          </td>
+          <td>
+            <span class="swap-pill-shift">${shiftFromText}</span>
+            <span class="swap-arrow-icon">⇄</span>
+            <span class="swap-pill-shift">${shiftToText}</span>
+          </td>
+          <td>
+            <strong>${s.target}</strong><br>
+            <span class="text-muted text-xs">${p2Role} &bull; ${p2Dept}</span>
+          </td>
+          <td>
+            <span>${s.reason || 'Tukar jadwal MOD'}</span>
+          </td>
+          <td>
+            <span class="badge badge-manager">✅ 4 Pihak Lengkap</span>
+          </td>
+          <td style="text-align: center;">
+            <button type="button" class="btn btn-outline btn-xs" onclick="event.stopPropagation(); app.showScheduleChangeReport('${s.id}')" title="Buka Dokumen Resmi">
+              📄 Lihat Form
+            </button>
+          </td>
+        </tr>
+      `;
+    }).join('');
+  },
+
+  filterSwaps(query) {
+    const q = (query || '').toLowerCase().trim();
+    if (!q) {
+      this.renderScheduleSwapsTable(this.cachedSwaps);
+      return;
+    }
+    const filtered = this.cachedSwaps.filter(s =>
+      (s.applicant || '').toLowerCase().includes(q) ||
+      (s.target || '').toLowerCase().includes(q) ||
+      (s.reason || '').toLowerCase().includes(q)
+    );
+    this.renderScheduleSwapsTable(filtered);
+  },
+
+  showScheduleChangeReport(swapId) {
+    const swap = this.cachedSwaps.find(s => s.id === swapId);
+    if (!swap) {
+      this.showToast('Data laporan tidak ditemukan.', 'error');
+      return;
+    }
+
+    const container = document.getElementById('printable-schedule-change-form');
+    if (container) {
+      container.innerHTML = this.renderDafamScheduleChangeDoc(swap);
+    }
+
+    const modal = document.getElementById('modal-schedule-change-report');
+    if (modal) modal.classList.remove('hidden');
+  },
+
+  closeScheduleChangeReport() {
+    const modal = document.getElementById('modal-schedule-change-report');
+    if (modal) modal.classList.add('hidden');
+  },
+
+  printScheduleChangeReport() {
+    window.print();
+  },
+
+  getDepartmentFromRole(role = '') {
+    const r = (role || '').toLowerCase();
+    if (r.includes('hr') || r.includes('human') || r.includes('personalia')) return 'Human Resources';
+    if (r.includes('front office') || r.includes('fo') || r.includes('reception') || r.includes('guest')) return 'Front Office';
+    if (r.includes('it') || r.includes('tech') || r.includes('system')) return 'Information Technology';
+    if (r.includes('sales') || r.includes('marketing') || r.includes('marcom')) return 'Sales & Marketing';
+    if (r.includes('fb') || r.includes('food') || r.includes('beverage') || r.includes('restaurant') || r.includes('kitchen') || r.includes('bar')) return 'Food & Beverage';
+    if (r.includes('housekeeping') || r.includes('hk') || r.includes('laundry')) return 'Housekeeping';
+    if (r.includes('engineering') || r.includes('maintenance')) return 'Engineering';
+    if (r.includes('accounting') || r.includes('finance') || r.includes('purchasing')) return 'Finance & Accounting';
+    if (r.includes('security') || r.includes('safety')) return 'Security';
+    return 'Operational';
+  },
+
+  renderDafamScheduleChangeDoc(swap) {
+    if (!swap) return '';
+
+    const officers = this.masterOfficers || [];
+    const p1Officer = officers.find(o => (o.name || '').trim().toLowerCase() === (swap.applicant || '').trim().toLowerCase()) || {};
+    const p2Officer = officers.find(o => (o.name || '').trim().toLowerCase() === (swap.target || '').trim().toLowerCase()) || {};
+
+    const p1Name = swap.applicant || '-';
+    const p2Name = swap.target || '-';
+
+    const p1Dept = p1Officer.department || this.getDepartmentFromRole(p1Officer.role || 'Operational');
+    const p2Dept = p2Officer.department || this.getDepartmentFromRole(p2Officer.role || 'Operational');
+
+    const p1Pos = p1Officer.role || 'Petugas MOD';
+    const p2Pos = p2Officer.role || 'Petugas MOD';
+
+    const p1IdNo = p1Officer.id ? `EMP-${String(p1Officer.id).padStart(3, '0')}` : '-';
+    const p2IdNo = p2Officer.id ? `EMP-${String(p2Officer.id).padStart(3, '0')}` : '-';
+
+    const shiftLabels = {
+      'MOD1': 'MOD 1 (Pagi 09:00 - 17:00 WIB)',
+      'MOD2': 'MOD 2 (Sore 16:00 - 00:00 WIB)',
+      'MOD': 'MOD (Sore 18:00 - 02:00 WIB)'
+    };
+
+    const formatDateStr = (dStr) => {
+      if (!dStr) return '-';
+      if (typeof dStr === 'string' && dStr.includes('-')) {
+        const parts = dStr.split('-');
+        if (parts.length === 3) {
+          const dObj = new Date(parseInt(parts[0], 10), parseInt(parts[1], 10) - 1, parseInt(parts[2], 10));
+          const dayNames = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
+          const monthNames = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
+          return `${dayNames[dObj.getDay()]}, ${dObj.getDate()} ${monthNames[dObj.getMonth()]} ${dObj.getFullYear()}`;
+        }
+      }
+      return dStr;
+    };
+
+    const p1FromShift = shiftLabels[swap.applicantShift] || swap.applicantShift || 'MOD';
+    const p1FromDate = formatDateStr(swap.applicantDate);
+
+    const p2FromShift = shiftLabels[swap.targetShift] || swap.targetShift || 'MOD';
+    const p2FromDate = formatDateStr(swap.targetDate || swap.applicantDate);
+
+    const p1ToShift = p2FromShift;
+    const p1ToDate = p2FromDate;
+
+    const p2ToShift = p1FromShift;
+    const p2ToDate = p1FromDate;
+
+    const sigs = swap.signatures || {};
+
+    return `
+      <div class="dafam-doc-wrapper">
+        <!-- Logo Hotel Dafam Semarang -->
+        <div class="dafam-header-area">
+          <div class="dafam-logo-brand">
+            <span class="dafam-brand-hotel">HOTEL</span>
+            <span class="dafam-brand-name">dafam</span>
+            <span class="dafam-brand-city">SEMARANG</span>
+          </div>
+          <h1 class="dafam-main-title">SCHEDULE CHANGE</h1>
+        </div>
+
+        <!-- Main Form Table -->
+        <table class="dafam-form-table">
+          <thead>
+            <tr>
+              <th class="col-head-blank"></th>
+              <th class="col-head-emp">1<sup>ST</sup> EMPLOYEE</th>
+              <th class="col-head-emp">2<sup>ND</sup> EMPLOYEE</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="col-label-field">NAME</td>
+              <td class="col-value-field">${p1Name}</td>
+              <td class="col-value-field">${p2Name}</td>
+            </tr>
+            <tr>
+              <td class="col-label-field">DEPARTMENT/SECTION</td>
+              <td class="col-value-field">${p1Dept}</td>
+              <td class="col-value-field">${p2Dept}</td>
+            </tr>
+            <tr>
+              <td class="col-label-field">POSITION</td>
+              <td class="col-value-field">${p1Pos}</td>
+              <td class="col-value-field">${p2Pos}</td>
+            </tr>
+            <tr>
+              <td class="col-label-field">ID No.</td>
+              <td class="col-value-field">${p1IdNo}</td>
+              <td class="col-value-field">${p2IdNo}</td>
+            </tr>
+            <tr>
+              <td colspan="3" class="col-section-divider">SCHEDULE CHANGE</td>
+            </tr>
+            <tr>
+              <td class="col-label-field">FROM</td>
+              <td class="col-value-field">
+                <strong>${p1FromShift}</strong><br>
+                <span>${p1FromDate}</span>
+              </td>
+              <td class="col-value-field">
+                <strong>${p2FromShift}</strong><br>
+                <span>${p2FromDate}</span>
+              </td>
+            </tr>
+            <tr>
+              <td class="col-label-field">TO</td>
+              <td class="col-value-field">
+                <strong>${p1ToShift}</strong><br>
+                <span>${p1ToDate}</span>
+              </td>
+              <td class="col-value-field">
+                <strong>${p2ToShift}</strong><br>
+                <span>${p2ToDate}</span>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+
+        <!-- Signatures Row (4 Columns) -->
+        <div class="dafam-sig-grid">
+          <!-- 1. Requested by -->
+          <div class="dafam-sig-box">
+            <div class="dafam-sig-header">Requested by</div>
+            <div class="dafam-sig-canvas-box">
+              ${sigs.p1 ? `<img src="${sigs.p1}" alt="Tanda Tangan Pemohon" class="dafam-sig-render-img">` : '<span class="dafam-no-sig">(Belum ditandatangani)</span>'}
+            </div>
+            <div class="dafam-sig-underline"></div>
+            <div class="dafam-sig-role-label">Employee 1</div>
+            <div class="dafam-sig-person-name">(${p1Name})</div>
+          </div>
+
+          <!-- 2. Agreed by -->
+          <div class="dafam-sig-box">
+            <div class="dafam-sig-header">Agreed by</div>
+            <div class="dafam-sig-canvas-box">
+              ${sigs.p2 ? `<img src="${sigs.p2}" alt="Tanda Tangan Pengganti" class="dafam-sig-render-img">` : '<span class="dafam-no-sig">(Belum ditandatangani)</span>'}
+            </div>
+            <div class="dafam-sig-underline"></div>
+            <div class="dafam-sig-role-label">Employee 2</div>
+            <div class="dafam-sig-person-name">(${p2Name})</div>
+          </div>
+
+          <!-- 3. Approved by (Department Head) -->
+          <div class="dafam-sig-box">
+            <div class="dafam-sig-header">Approved by</div>
+            <div class="dafam-sig-canvas-box">
+              ${sigs.hrm ? `<img src="${sigs.hrm}" alt="Tanda Tangan Dept Head / HRM" class="dafam-sig-render-img">` : '<span class="dafam-no-sig">(Belum ditandatangani)</span>'}
+            </div>
+            <div class="dafam-sig-underline"></div>
+            <div class="dafam-sig-role-label">Department Head</div>
+            <div class="dafam-sig-person-name">(HR Manager)</div>
+          </div>
+
+          <!-- 4. Approved by (HR Manager) -->
+          <div class="dafam-sig-box">
+            <div class="dafam-sig-header">Approved by</div>
+            <div class="dafam-sig-canvas-box">
+              ${sigs.gm ? `<img src="${sigs.gm}" alt="Tanda Tangan General Manager" class="dafam-sig-render-img">` : '<span class="dafam-no-sig">(Belum ditandatangani)</span>'}
+            </div>
+            <div class="dafam-sig-underline"></div>
+            <div class="dafam-sig-role-label">HR Manager</div>
+            <div class="dafam-sig-person-name">(General Manager)</div>
+          </div>
+        </div>
+
+        <!-- Document Code Footer -->
+        <div class="dafam-doc-code-row">
+          <span>Alasan: <em>"${swap.reason || 'Tukar jadwal MOD'}"</em></span>
+          <span class="dafam-doc-code-text">HRD.18-Rev.00</span>
+        </div>
+      </div>
+    `;
   },
 
   timeToCron(timeStr) {

@@ -2193,3 +2193,304 @@ textarea {
 }
 
 
+
+
+/* ===================================================
+   OFFICIAL DAFAM SCHEDULE CHANGE REPORT (HRD.18-Rev.00)
+   =================================================== */
+
+.modal-box-report {
+  width: 95% !important;
+  max-width: 900px !important;
+  max-height: 94vh !important;
+  background: #111827 !important;
+  border-radius: 16px !important;
+  display: flex !important;
+  flex-direction: column !important;
+  padding: 0 !important;
+  overflow: hidden !important;
+}
+
+.report-modal-scroll {
+  overflow-y: auto !important;
+  padding: 24px !important;
+  background: #0b0f19 !important;
+  display: flex !important;
+  justify-content: center !important;
+}
+
+/* Clickable table rows in tab-swaps */
+.clickable-swap-row {
+  cursor: pointer !important;
+  transition: background-color 0.15s ease !important;
+}
+
+.clickable-swap-row:hover {
+  background-color: rgba(56, 189, 248, 0.12) !important;
+}
+
+.swap-pill-shift {
+  display: inline-block;
+  padding: 2px 7px;
+  border-radius: 4px;
+  background: rgba(2, 132, 199, 0.2);
+  color: #38bdf8;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.swap-arrow-icon {
+  margin: 0 4px;
+  color: #fbbf24;
+  font-weight: bold;
+}
+
+/* Official Dafam Document Paper (Standard Hotel Form) */
+.dafam-doc-paper {
+  background: #ffffff !important;
+  color: #000000 !important;
+  width: 100% !important;
+  max-width: 800px !important;
+  padding: 36px 42px !important;
+  box-shadow: 0 10px 35px rgba(0, 0, 0, 0.7) !important;
+  font-family: Arial, Helvetica, 'Plus Jakarta Sans', sans-serif !important;
+  box-sizing: border-box !important;
+  border-radius: 4px !important;
+}
+
+/* Header Area */
+.dafam-header-area {
+  text-align: center !important;
+  margin-bottom: 24px !important;
+}
+
+.dafam-logo-brand {
+  display: flex !important;
+  align-items: baseline !important;
+  justify-content: center !important;
+  gap: 6px !important;
+  margin-bottom: 12px !important;
+}
+
+.dafam-brand-hotel {
+  font-size: 13px !important;
+  font-weight: 800 !important;
+  color: #0088cc !important;
+  letter-spacing: 1px !important;
+}
+
+.dafam-brand-name {
+  font-size: 28px !important;
+  font-weight: 800 !important;
+  color: #0088cc !important;
+  letter-spacing: -0.5px !important;
+}
+
+.dafam-brand-city {
+  font-size: 13px !important;
+  font-weight: 800 !important;
+  color: #0088cc !important;
+  letter-spacing: 1px !important;
+}
+
+.dafam-main-title {
+  font-size: 20px !important;
+  font-weight: 800 !important;
+  color: #000000 !important;
+  letter-spacing: 1px !important;
+  margin: 0 !important;
+  text-transform: uppercase !important;
+}
+
+/* Table Form */
+.dafam-form-table {
+  width: 100% !important;
+  border-collapse: collapse !important;
+  border: 2px solid #000000 !important;
+  margin-bottom: 0 !important;
+}
+
+.dafam-form-table th,
+.dafam-form-table td {
+  border: 1.5px solid #000000 !important;
+  padding: 8px 12px !important;
+  font-size: 12px !important;
+  color: #000000 !important;
+  vertical-align: middle !important;
+}
+
+.col-head-blank {
+  width: 24% !important;
+  background: #ffffff !important;
+  border: 1.5px solid #000000 !important;
+}
+
+.col-head-emp {
+  width: 38% !important;
+  background: #000000 !important;
+  color: #ffffff !important;
+  font-weight: 800 !important;
+  text-align: center !important;
+  font-size: 13px !important;
+  padding: 8px !important;
+  letter-spacing: 0.5px !important;
+}
+
+.col-label-field {
+  width: 24% !important;
+  font-weight: 800 !important;
+  color: #000000 !important;
+  font-size: 11.5px !important;
+  letter-spacing: 0.3px !important;
+  background: #fafafa !important;
+}
+
+.col-value-field {
+  width: 38% !important;
+  color: #000000 !important;
+  font-size: 12.5px !important;
+  font-weight: 600 !important;
+}
+
+.col-section-divider {
+  background: #000000 !important;
+  color: #ffffff !important;
+  font-weight: 800 !important;
+  text-align: center !important;
+  font-size: 13px !important;
+  padding: 7px 12px !important;
+  letter-spacing: 1px !important;
+  border: 1.5px solid #000000 !important;
+}
+
+/* Signatures Grid (4 Columns) */
+.dafam-sig-grid {
+  display: grid !important;
+  grid-template-columns: repeat(4, 1fr) !important;
+  border: 2px solid #000000 !important;
+  border-top: none !important;
+  width: 100% !important;
+  box-sizing: border-box !important;
+  background: #ffffff !important;
+}
+
+.dafam-sig-box {
+  border-right: 1.5px solid #000000 !important;
+  padding: 10px 8px !important;
+  text-align: center !important;
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  box-sizing: border-box !important;
+}
+
+.dafam-sig-box:last-child {
+  border-right: none !important;
+}
+
+.dafam-sig-header {
+  font-size: 12px !important;
+  font-weight: 700 !important;
+  color: #000000 !important;
+  margin-bottom: 4px !important;
+}
+
+.dafam-sig-canvas-box {
+  width: 100% !important;
+  height: 85px !important;
+  min-height: 85px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+}
+
+.dafam-sig-render-img {
+  max-width: 100% !important;
+  max-height: 80px !important;
+  object-fit: contain !important;
+  filter: contrast(150%) !important;
+}
+
+.dafam-no-sig {
+  font-size: 11px !important;
+  color: #94a3b8 !important;
+  font-style: italic !important;
+}
+
+.dafam-sig-underline {
+  width: 85% !important;
+  height: 1px !important;
+  border-bottom: 1.5px solid #000000 !important;
+  margin: 6px 0 4px 0 !important;
+}
+
+.dafam-sig-role-label {
+  font-size: 11.5px !important;
+  font-weight: 700 !important;
+  color: #000000 !important;
+}
+
+.dafam-sig-person-name {
+  font-size: 10.5px !important;
+  color: #334155 !important;
+}
+
+.dafam-doc-code-row {
+  display: flex !important;
+  justify-content: space-between !important;
+  align-items: center !important;
+  margin-top: 8px !important;
+  font-size: 10.5px !important;
+  color: #475569 !important;
+}
+
+.dafam-doc-code-text {
+  font-style: italic !important;
+  font-weight: 700 !important;
+  color: #000000 !important;
+}
+
+/* Print Styles: Clean A4 Format */
+@media print {
+  body * {
+    visibility: hidden !important;
+  }
+  #modal-schedule-change-report,
+  #modal-schedule-change-report *,
+  #printable-schedule-change-form,
+  #printable-schedule-change-form * {
+    visibility: visible !important;
+  }
+  #modal-schedule-change-report {
+    position: absolute !important;
+    left: 0 !important;
+    top: 0 !important;
+    width: 100% !important;
+    height: 100% !important;
+    background: transparent !important;
+    padding: 0 !important;
+    margin: 0 !important;
+  }
+  .modal-box-report {
+    max-width: 100% !important;
+    width: 100% !important;
+    border: none !important;
+    box-shadow: none !important;
+    background: transparent !important;
+  }
+  .modal-header,
+  .modal-footer {
+    display: none !important;
+  }
+  .report-modal-scroll {
+    padding: 0 !important;
+    background: transparent !important;
+  }
+  .dafam-doc-paper {
+    box-shadow: none !important;
+    padding: 15mm 15mm !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    margin: 0 auto !important;
+  }
+}

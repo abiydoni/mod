@@ -10,7 +10,7 @@
   <link rel="icon" type="image/x-icon" href="favicon.ico">
   <link rel="icon" type="image/svg+xml" href="favicon.svg">
   <link rel="apple-touch-icon" href="logo.png">
-  <link rel="stylesheet" href="style.css?v=1.8.0">
+  <link rel="stylesheet" href="style.css?v=1.8.5">
   <link rel="stylesheet" href="jadwal.css?v=1.8.0">
 </head>
 <body>
@@ -52,6 +52,11 @@
         <button class="nav-item" data-tab="tab-broadcast">
           <span class="nav-icon">📢</span>
           <span>Kirim Bebas / Manual</span>
+        </button>
+        <button class="nav-item" data-tab="tab-swaps">
+          <span class="nav-icon">🔄</span>
+          <span>Laporan Tukar Jadwal</span>
+          <span class="badge" id="swaps-count">0</span>
         </button>
         <button class="nav-item" data-tab="tab-logs">
           <span class="nav-icon">📜</span>
@@ -480,6 +485,41 @@
         </div>
       </section>
 
+      <!-- Tab Tukar Jadwal: Laporan Resmi Penukaran Jadwal (HRD.18-Rev.00) -->
+      <section id="tab-swaps" class="tab-pane">
+        <div class="panel-card">
+          <div class="card-header flex justify-between items-center flex-wrap gap-4">
+            <div>
+              <h3>🔄 Laporan Penukaran Jadwal (Schedule Change Report)</h3>
+              <p class="text-muted text-sm">Daftar penukaran shift yang diajukan oleh user. Klik pada baris untuk melihat dan mencetak dokumen resmi <strong>HRD.18-Rev.00</strong> beserta tanda tangannya.</p>
+            </div>
+            <div class="flex items-center gap-2">
+              <input type="text" id="input-search-swaps" class="form-input form-input-sm" placeholder="🔍 Cari nama karyawan / shift..." oninput="app.filterSwaps(this.value)" style="width: 250px;">
+              <button class="btn btn-outline btn-sm" onclick="app.loadScheduleSwaps()">🔄 Segarkan</button>
+            </div>
+          </div>
+          <div class="logs-table-wrapper">
+            <table class="logs-table table-hover">
+              <thead>
+                <tr>
+                  <th style="width: 45px;">No</th>
+                  <th style="width: 140px;">Tgl Dilakukan Penukaran</th>
+                  <th>Karyawan 1 (Pemohon)</th>
+                  <th>Pertukaran Shift</th>
+                  <th>Karyawan 2 (Pengganti)</th>
+                  <th>Alasan</th>
+                  <th style="width: 130px; text-align: center;">Status TTD</th>
+                  <th style="width: 120px; text-align: center;">Aksi</th>
+                </tr>
+              </thead>
+              <tbody id="swaps-tbody">
+                <tr><td colspan="8" class="text-center py-4">Memuat data penukaran jadwal...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
       <!-- Tab 5: Settings (Restructured & Highly Informative) -->
       <section id="tab-settings" class="tab-pane">
         <!-- Settings Header Overview -->
@@ -684,6 +724,35 @@
   </div>
 
   <!-- Modal Add/Edit Officer -->
+  
+  <!-- Modal Schedule Change Official Report (Dafam Format HRD.18-Rev.00) -->
+  <div id="modal-schedule-change-report" class="modal-backdrop hidden">
+    <div class="modal-box modal-box-report">
+      <div class="modal-header">
+        <div>
+          <h3>📋 Dokumen Resmi Perubahan Jadwal</h3>
+          <p class="text-muted text-xs">Form Standar Hotel Dafam Semarang (Dokumen HRD.18-Rev.00)</p>
+        </div>
+        <div class="modal-header-actions">
+          <button type="button" class="btn btn-primary btn-sm" onclick="app.printScheduleChangeReport()">
+            🖨️ Cetak / Print Form
+          </button>
+          <button type="button" class="modal-close" onclick="app.closeScheduleChangeReport()">&times;</button>
+        </div>
+      </div>
+      <div class="modal-body report-modal-scroll">
+        <!-- The Printable Dafam Document matching the user's template exactly -->
+        <div id="printable-schedule-change-form" class="dafam-doc-paper">
+          <!-- Populated by app.renderDafamScheduleChangeDoc(record) -->
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-outline" onclick="app.closeScheduleChangeReport()">Tutup</button>
+        <button type="button" class="btn btn-primary" onclick="app.printScheduleChangeReport()">🖨️ Cetak / Simpan PDF</button>
+      </div>
+    </div>
+  </div>
+
   <div id="modal-officer" class="modal-backdrop hidden">
     <div class="modal-box">
       <div class="modal-header">
@@ -1125,6 +1194,6 @@
   <!-- Toast Notification -->
   <div id="toast" class="toast hidden"></div>
 
-  <script src="app.js?v=1.8.0"></script>
+  <script src="app.js?v=1.8.5"></script>
 </body>
 </html>
