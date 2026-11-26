@@ -405,13 +405,13 @@ const jadwalApp = {
       card?.classList.add('signed');
       if (statusEl) {
         statusEl.className = 'sig-status verified';
-        statusEl.innerHTML = '✅ Terverifikasi (Digital Signature)';
+        statusEl.innerHTML = '✅ Sudah tanda tangan';
       }
     } else {
       card?.classList.remove('signed');
       if (statusEl) {
         statusEl.className = 'sig-status waiting';
-        statusEl.innerHTML = '❌ Belum Ditandatangani';
+        statusEl.innerHTML = 'Belum tanda tangan';
       }
     }
   },
@@ -424,10 +424,10 @@ const jadwalApp = {
 
     const badge = document.getElementById('sig-counter-badge');
     if (badge) {
-      badge.innerText = `${signedCount} / 4 Tanda Tangan`;
+      badge.innerText = `${signedCount} / 4`;
       if (signedCount === 4) {
         badge.className = 'sig-counter-badge complete';
-        badge.innerText = '✅ 4 / 4 Tanda Tangan Lengkap';
+        badge.innerText = '✅ 4 / 4 Lengkap';
       } else {
         badge.className = 'sig-counter-badge';
       }
@@ -448,13 +448,13 @@ const jadwalApp = {
         sigSection.classList.remove('sig-locked');
         if (sigBanner) {
           sigBanner.className = 'sig-lock-banner unlocked';
-          sigBanner.innerHTML = '🔓 Data Pihak 1 & 2 Lengkap. Silakan bubuhkan 4 Tanda Tangan Digital di bawah.';
+          sigBanner.innerHTML = 'Silakan bubuhkan tanda tangan di bawah';
         }
       } else {
         sigSection.classList.add('sig-locked');
         if (sigBanner) {
           sigBanner.className = 'sig-lock-banner';
-          sigBanner.innerHTML = '🔒 Lengkapi data Pihak 1 & Pihak 2 terlebih dahulu untuk membuka lembar tanda tangan';
+          sigBanner.innerHTML = 'Lengkapi data di atas untuk membuka tanda tangan';
         }
       }
     }
