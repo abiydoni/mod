@@ -2494,3 +2494,22 @@ textarea {
     margin: 0 auto !important;
   }
 }
+
+/* Tab Swaps Table: prevent horizontal scroll and fit neatly */
+#tab-swaps .logs-table {
+  width: 100% !important;
+  table-layout: auto !important;
+}
+
+#tab-swaps .logs-table th,
+#tab-swaps .logs-table td {
+  white-space: normal !important;
+  word-break: break-word !important;
+}
+
+#tab-swaps .logs-table th:first-child,
+#tab-swaps .logs-table td:first-child,
+#tab-swaps .logs-table th:last-child,
+#tab-swaps .logs-table td:last-child {
+  white-space: nowrap !important;
+}

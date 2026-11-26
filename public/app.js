@@ -1695,7 +1695,7 @@ const app = {
       console.error('Failed to load schedule swaps:', err);
       const tbody = document.getElementById('swaps-tbody');
       if (tbody && (!this.cachedSwaps || this.cachedSwaps.length === 0)) {
-        tbody.innerHTML = '<tr><td colspan="8" class="text-center py-4 text-danger">Gagal memuat data laporan tukar jadwal.</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="6" class="text-center py-4 text-danger">Gagal memuat data laporan tukar jadwal.</td></tr>';
       }
     }
   },
@@ -1705,7 +1705,7 @@ const app = {
     if (!tbody) return;
 
     if (!swaps || swaps.length === 0) {
-      tbody.innerHTML = '<tr><td colspan="8" class="text-center py-4">Belum ada permohonan penukaran jadwal.</td></tr>';
+      tbody.innerHTML = '<tr><td colspan="6" class="text-center py-4">Belum ada permohonan penukaran jadwal.</td></tr>';
       return;
     }
 
@@ -1734,7 +1734,7 @@ const app = {
 
       return `
         <tr onclick="app.showScheduleChangeReport('${s.id}')" class="clickable-swap-row" title="Klik baris ini untuk membuka Dokumen Resmi SCHEDULE CHANGE MOD">
-          <td>${idx + 1}</td>
+          <td style="text-align: center;">${idx + 1}</td>
           <td>
             <strong>${dateFormatted}</strong><br>
             <span class="text-muted text-xs">${timeFormatted} WIB</span>
@@ -1752,16 +1752,8 @@ const app = {
             <strong>${s.target || '-'}</strong><br>
             <span class="text-muted text-xs">${p2Role} &bull; ${p2Dept}</span>
           </td>
-          <td>
-            <span>${s.reason || 'Tukar jadwal MOD'}</span>
-          </td>
-          <td>
-            <span class="badge badge-manager">✅ 4 Pihak Lengkap</span>
-          </td>
           <td style="text-align: center;">
-            <button type="button" class="btn btn-outline btn-xs" onclick="event.stopPropagation(); app.showScheduleChangeReport('${s.id}')" title="Buka Dokumen Resmi">
-              📄 Lihat Form
-            </button>
+            <span class="badge badge-manager">✅ 4 Pihak Lengkap</span>
           </td>
         </tr>
       `;

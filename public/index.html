@@ -10,7 +10,7 @@
   <link rel="icon" type="image/x-icon" href="favicon.ico">
   <link rel="icon" type="image/svg+xml" href="favicon.svg">
   <link rel="apple-touch-icon" href="logo.png">
-  <link rel="stylesheet" href="style.css?v=1.8.8">
+  <link rel="stylesheet" href="style.css?v=1.8.9">
   <link rel="stylesheet" href="jadwal.css?v=1.8.0">
 </head>
 <body>
@@ -502,18 +502,16 @@
             <table class="logs-table table-hover">
               <thead>
                 <tr>
-                  <th style="width: 45px;">No</th>
-                  <th style="width: 140px;">Tgl Dilakukan Penukaran</th>
+                  <th style="width: 45px; text-align: center;">No</th>
+                  <th style="width: 150px;">Tgl Dilakukan Penukaran</th>
                   <th>Karyawan 1 (Pemohon)</th>
                   <th>Pertukaran Shift</th>
                   <th>Karyawan 2 (Pengganti)</th>
-                  <th>Alasan</th>
-                  <th style="width: 130px; text-align: center;">Status TTD</th>
-                  <th style="width: 120px; text-align: center;">Aksi</th>
+                  <th style="width: 140px; text-align: center;">Status TTD</th>
                 </tr>
               </thead>
               <tbody id="swaps-tbody">
-                <tr><td colspan="8" class="text-center py-4">Memuat data penukaran jadwal...</td></tr>
+                <tr><td colspan="6" class="text-center py-4">Memuat data penukaran jadwal...</td></tr>
               </tbody>
             </table>
           </div>
@@ -1194,6 +1192,6 @@
   <!-- Toast Notification -->
   <div id="toast" class="toast hidden"></div>
 
-  <script src="app.js?v=1.8.8"></script>
+  <script src="app.js?v=1.8.9"></script>
 </body>
 </html>
